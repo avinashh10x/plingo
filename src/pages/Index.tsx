@@ -41,16 +41,20 @@ const Index = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <a href="/">
           <motion.div
             className="flex items-center gap-2"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">P</span>
+              <span className="text-primary-foreground font-bold text-lg">
+                <img src="/logo2.png" alt="Plingo Logo" />
+              </span>
             </div>
             <span className="text-xl font-bold text-foreground">Plingo</span>
           </motion.div>
+          </a>
 
           <motion.div
             className="flex items-center gap-4"

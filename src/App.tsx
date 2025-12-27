@@ -45,17 +45,17 @@ const AppContent = () => {
           <Route 
             path="/dashboard" 
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             } 
           />
           <Route 
             path="/profile" 
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <Profile />
-              </ProtectedRoute>
+              // </ProtectedRoute>
             } 
           />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
