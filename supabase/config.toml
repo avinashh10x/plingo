@@ -1,0 +1,22 @@
+project_id = "ifiepvnwrpozlxruibll"
+
+[functions.oauth-init]
+verify_jwt = false
+
+[functions.oauth-callback]
+verify_jwt = false
+
+[functions.schedule-post]
+verify_jwt = false
+
+[functions.publish-post]
+verify_jwt = false
+
+[functions.bulk-schedule]
+verify_jwt = false
+
+[functions.fetch-user-timeline]
+verify_jwt = false
+
+[functions.generate-content]
+verify_jwt = false
