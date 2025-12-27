@@ -20,9 +20,25 @@ type TabType = 'twitter' | 'linkedin' | 'editor';
 const validTabs: TabType[] = ['twitter', 'linkedin', 'editor'];
 
 const Dashboard = () => {
-  const { theme, activeTab, setActiveTab, isAIPanelOpen, activeLeftPanel } = useAppStore();
+  const { theme, activeTab, setActiveTab, isAIPanelOpen, activeLeftPanel, setActiveLeftPanel, setAIPanelOpen } = useAppStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const isMobile = useIsMobile();
+
+  // Default dashboard state when navigating to /dashboard:
+  // - Open left panel (platforms)
+  // - Open right AI panel
+  // - Use Twitter feed as the active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab') as TabType | null;
+
+    if (!tabParam) {
+      // Only set defaults when the URL doesn't explicitly set a tab
+      if (activeTab !== 'twitter') setActiveTab('twitter');
+      if (!activeLeftPanel) setActiveLeftPanel('queue');
+      if (!isAIPanelOpen) setAIPanelOpen(true);
+    }
+  }, []);
+
 
   const leftPanelRef = useRef<ImperativePanelHandle>(null);
   const rightPanelRef = useRef<ImperativePanelHandle>(null);

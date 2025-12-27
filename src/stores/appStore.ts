@@ -67,20 +67,36 @@ export const useAppStore = create<AppState>((set, get) => ({
     return { theme: newTheme };
   }),
 
-  // AI Panel
-  isAIPanelOpen: false,
-  toggleAIPanel: () => set((state) => ({ isAIPanelOpen: !state.isAIPanelOpen })),
-  setAIPanelOpen: (open) => set({ isAIPanelOpen: open }),
+  // AI Panel (persisted to localStorage)
+  isAIPanelOpen: ((): boolean => {
+    try { return JSON.parse(localStorage.getItem('plingo:isAIPanelOpen') ?? 'true'); } catch { return true; }
+  })(),
+  toggleAIPanel: () => set((state) => {
+    const next = !state.isAIPanelOpen;
+    try { localStorage.setItem('plingo:isAIPanelOpen', JSON.stringify(next)); } catch {}
+    return { isAIPanelOpen: next };
+  }),
+  setAIPanelOpen: (open) => {
+    try { localStorage.setItem('plingo:isAIPanelOpen', JSON.stringify(open)); } catch {}
+    return set({ isAIPanelOpen: open });
+  },
 
-  // Active panels
-  activeLeftPanel: null,
-  setActiveLeftPanel: (panel) => set({ activeLeftPanel: panel }),
-  toggleLeftPanel: (panel) => set((state) => ({
-    activeLeftPanel: state.activeLeftPanel === panel ? null : panel,
-  })),
+  // Active panels (persist active left panel)
+  activeLeftPanel: ((): 'queue' | 'calendar' | 'platforms' | null => {
+    try { return JSON.parse(localStorage.getItem('plingo:activeLeftPanel') ?? '"queue"'); } catch { return 'queue'; }
+  })(),
+  setActiveLeftPanel: (panel) => {
+    try { localStorage.setItem('plingo:activeLeftPanel', JSON.stringify(panel)); } catch {}
+    return set({ activeLeftPanel: panel });
+  },
+  toggleLeftPanel: (panel) => set((state) => {
+    const next = state.activeLeftPanel === panel ? null : panel;
+    try { localStorage.setItem('plingo:activeLeftPanel', JSON.stringify(next)); } catch {}
+    return ({ activeLeftPanel: next });
+  }),
 
   // Active tab
-  activeTab: 'editor',
+  activeTab: 'twitter',
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   // Editor posts (local UI state)

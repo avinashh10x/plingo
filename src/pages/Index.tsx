@@ -105,16 +105,14 @@ const Index = () => {
             {isAuthenticated && profile ? (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-foreground hidden sm:inline">
-                  Hello, {profile.name ?? profile.email}
+                  Hey, <span className="font-semibold uppercase">{profile.name ?? profile.email}</span>
                 </span>
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm">
                     Dashboard
                   </Button>
                 </Link>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  Sign Out
-                </Button>
+                
               </div>
             ) : (
               <>
@@ -140,8 +138,8 @@ const Index = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-8">
-              <Sparkles className="h-4 w-4" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
+              {/* <Sparkles className="h-4 w-4" /> */}
               Now with AI-powered content suggestions
             </div>
 
@@ -230,7 +228,7 @@ const Index = () => {
                 <div className="w-3 h-3 rounded-full bg-success/60" />
               </div>
               <div className="flex-1 text-center text-xs text-muted-foreground">
-                plingo.app/dashboard
+                plingo.byavi.in/dashboard
               </div>
             </div>
             <div className="h-[400px] bg-gradient-to-br from-background via-muted/30 to-primary/5 flex items-center justify-center">
@@ -331,7 +329,7 @@ const Index = () => {
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">
-                P
+                <img src="/logo2.png" alt="Plingo Logo" />
               </span>
             </div>
             <span className="text-sm text-muted-foreground">
