@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const iconVariants = {
+export const iconVariants = {
   initial: { scale: 1, rotate: 0 },
   hover: { scale: 1.15, rotate: 15 },
   tap: { scale: 0.9 },

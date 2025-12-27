@@ -1,38 +1,59 @@
-import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Calendar, Clock, Sparkles, Zap, BarChart3, Users } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAppStore } from '@/stores/appStore';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon, AnimatedInstagramIcon } from '@/components/ui/animated-icon';
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Calendar,
+  Clock,
+  Sparkles,
+  Zap,
+  BarChart3,
+  Users,
+  Sun,
+  Moon,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/stores/appStore";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+  AnimatedInstagramIcon,
+} from "@/components/ui/animated-icon";
+import { iconVariants } from "@/components/layout/Header";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const { theme, toggleTheme } = useAppStore();
+  const { profile, isAuthenticated, signOut } = useAuth();
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   const features = [
     {
       icon: Calendar,
-      title: 'Smart Scheduling',
-      description: 'Plan and schedule your posts up to a month in advance with our intuitive calendar.',
+      title: "Smart Scheduling",
+      description:
+        "Plan and schedule your posts up to a month in advance with our intuitive calendar.",
     },
     {
       icon: Zap,
-      title: 'Multi-Platform',
-      description: 'Connect Twitter, LinkedIn, and more. Publish everywhere from one dashboard.',
+      title: "Multi-Platform",
+      description:
+        "Connect Twitter, LinkedIn, and more. Publish everywhere from one dashboard.",
     },
     {
       icon: Sparkles,
-      title: 'AI Assistant',
-      description: 'Generate engaging content ideas with our built-in AI writing assistant.',
+      title: "AI Assistant",
+      description:
+        "Generate engaging content ideas with our built-in AI writing assistant.",
     },
     {
       icon: BarChart3,
-      title: 'Analytics',
-      description: 'Track performance and optimize your content strategy with insights.',
+      title: "Analytics",
+      description:
+        "Track performance and optimize your content strategy with insights.",
     },
   ];
 
@@ -42,18 +63,18 @@ const Index = () => {
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/">
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">
-                <img src="/logo2.png" alt="Plingo Logo" />
-              </span>
-            </div>
-            <span className="text-xl font-bold text-foreground">Plingo</span>
-          </motion.div>
+            <motion.div
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-lg">
+                  <img src="/logo2.png" alt="Plingo Logo" />
+                </span>
+              </div>
+              <span className="text-xl font-bold text-foreground">Plingo</span>
+            </motion.div>
           </a>
 
           <motion.div
@@ -61,19 +82,52 @@ const Index = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <Button variant="ghost" size="sm" onClick={toggleTheme}>
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </Button>
-            <Link to="/dashboard">
-              <Button variant="outline" size="sm">
-                Sign In
+            <motion.div whileHover="hover" whileTap="tap" initial="initial">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="h-8 w-8"
+              >
+                <motion.div
+                  variants={iconVariants}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                >
+                  {theme === "dark" ? (
+                    <Sun className="h-4 w-4" />
+                  ) : (
+                    <Moon className="h-4 w-4" />
+                  )}
+                </motion.div>
               </Button>
-            </Link>
-            <Link to="/dashboard">
-              <Button size="sm">
-                Get Started
-              </Button>
-            </Link>
+            </motion.div>
+
+            {isAuthenticated && profile ? (
+              <div className="flex items-center gap-3">
+                <span className="text-sm text-foreground hidden sm:inline">
+                  Hello, {profile.name ?? profile.email}
+                </span>
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm">
+                    Dashboard
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" onClick={signOut}>
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="outline" size="sm">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/dashboard">
+                  <Button size="sm">Get Started</Button>
+                </Link>
+              </>
+            )}
           </motion.div>
         </div>
       </header>
@@ -98,13 +152,16 @@ const Index = () => {
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              The all-in-one social media scheduling platform. Plan, create, and publish 
-              your content with a powerful VS Code-inspired interface.
+              The all-in-one social media scheduling platform. Plan, create, and
+              publish your content with a powerful VS Code-inspired interface.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
               <Link to="/dashboard">
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <Button size="lg" className="gap-2 text-lg px-8">
                     Open Dashboard
                     <motion.div
@@ -128,25 +185,27 @@ const Index = () => {
                 <motion.div
                   className="w-12 h-12 rounded-xl bg-twitter/10 flex items-center justify-center text-twitter"
                   whileHover={{ scale: 1.1, y: -5 }}
-                  transition={{ type: 'spring', stiffness: 400 }}
+                  transition={{ type: "spring", stiffness: 400 }}
                 >
                   <AnimatedTwitterIcon className="h-6 w-6" />
                 </motion.div>
                 <motion.div
                   className="w-12 h-12 rounded-xl bg-linkedin/10 flex items-center justify-center text-linkedin"
                   whileHover={{ scale: 1.1, y: -5 }}
-                  transition={{ type: 'spring', stiffness: 400 }}
+                  transition={{ type: "spring", stiffness: 400 }}
                 >
                   <AnimatedLinkedInIcon className="h-6 w-6" />
                 </motion.div>
                 <motion.div
                   className="w-12 h-12 rounded-xl bg-instagram/10 flex items-center justify-center text-instagram"
                   whileHover={{ scale: 1.1, y: -5 }}
-                  transition={{ type: 'spring', stiffness: 400 }}
+                  transition={{ type: "spring", stiffness: 400 }}
                 >
                   <AnimatedInstagramIcon className="h-6 w-6" />
                 </motion.div>
-                <span className="text-sm text-muted-foreground ml-2">& more coming</span>
+                <span className="text-sm text-muted-foreground ml-2">
+                  & more coming
+                </span>
               </div>
             </div>
           </motion.div>
@@ -182,7 +241,9 @@ const Index = () => {
                 >
                   <Calendar className="h-20 w-20 text-primary/30 mx-auto mb-4" />
                 </motion.div>
-                <p className="text-muted-foreground">VS Code-inspired Dashboard</p>
+                <p className="text-muted-foreground">
+                  VS Code-inspired Dashboard
+                </p>
               </div>
             </div>
           </motion.div>
@@ -223,8 +284,12 @@ const Index = () => {
                 >
                   <feature.icon className="h-6 w-6" />
                 </motion.div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground text-sm">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  {feature.title}
+                </h3>
+                <p className="text-muted-foreground text-sm">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </div>
@@ -246,7 +311,10 @@ const Index = () => {
               Join thousands of creators using Plingo to grow their audience.
             </p>
             <Link to="/dashboard">
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Button size="lg" className="gap-2 text-lg px-10 py-6">
                   Start Scheduling Now
                   <ArrowRight className="h-5 w-5" />
@@ -262,14 +330,24 @@ const Index = () => {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">P</span>
+              <span className="text-primary-foreground font-bold text-sm">
+                P
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">© 2024 Plingo. All rights reserved.</span>
+            <span className="text-sm text-muted-foreground">
+              © 2024 Plingo. All rights reserved.
+            </span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-            <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-            <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Terms
+            </a>
+            <a href="#" className="hover:text-foreground transition-colors">
+              Contact
+            </a>
           </div>
         </div>
       </footer>
