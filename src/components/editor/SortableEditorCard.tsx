@@ -1,19 +1,22 @@
-import { useState } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
-import { GripVertical, X, Send, Loader2 } from 'lucide-react';
-import { useAppStore, Platform, EditorPost } from '@/stores/appStore';
-import { usePosts } from '@/hooks/usePosts';
-import { usePlatforms } from '@/hooks/usePlatforms';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { format } from 'date-fns';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon } from '@/components/ui/animated-icon';
-import { RichTextEditor } from './RichTextEditor';
+import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
+import { GripVertical, X, Send, Loader2 } from "lucide-react";
+import { useAppStore, Platform, EditorPost } from "@/stores/appStore";
+import { usePosts } from "@/hooks/usePosts";
+import { usePlatforms } from "@/hooks/usePlatforms";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { format } from "date-fns";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+} from "@/components/ui/animated-icon";
+import { RichTextEditor } from "./RichTextEditor";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +26,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const MAX_CHARS = 280;
 
@@ -33,9 +36,13 @@ const iconVariants = {
   tap: { scale: 0.9 },
 };
 
-const PlatformBadge = ({ platform, selected, onClick }: { 
-  platform: Platform; 
-  selected: boolean; 
+const PlatformBadge = ({
+  platform,
+  selected,
+  onClick,
+}: {
+  platform: Platform;
+  selected: boolean;
   onClick: () => void;
 }) => {
   const icons = {
@@ -47,16 +54,16 @@ const PlatformBadge = ({ platform, selected, onClick }: {
     <motion.button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border',
+        "inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border",
         selected
-          ? 'bg-primary/10 border-primary text-primary'
-          : 'bg-muted border-transparent text-muted-foreground hover:text-foreground'
+          ? "bg-primary/10 border-primary text-primary"
+          : "bg-muted border-transparent text-muted-foreground hover:text-foreground"
       )}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      transition={{ type: "spring", stiffness: 400, damping: 15 }}
     >
-      {icons[platform as 'twitter' | 'linkedin']}
+      {icons[platform as "twitter" | "linkedin"]}
       <span className="capitalize">{platform}</span>
     </motion.button>
   );
@@ -64,9 +71,9 @@ const PlatformBadge = ({ platform, selected, onClick }: {
 
 // Helper to strip HTML and get plain text for character counting
 const stripHtml = (html: string): string => {
-  const tmp = document.createElement('div');
+  const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
+  return tmp.textContent || tmp.innerText || "";
 };
 
 interface SortableEditorCardProps {
@@ -75,7 +82,11 @@ interface SortableEditorCardProps {
   selectedCount: number;
 }
 
-export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: SortableEditorCardProps) => {
+export const SortableEditorCard = ({
+  post,
+  onScheduleClick,
+  selectedCount,
+}: SortableEditorCardProps) => {
   const {
     editorPosts,
     updateEditorPost,
@@ -89,7 +100,7 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState('12:00');
+  const [selectedTime, setSelectedTime] = useState("12:00");
   const [isPosting, setIsPosting] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
 
@@ -110,15 +121,15 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
   const hasContent = stripHtml(post.content).trim().length > 0;
 
   // Get available connected platforms
-  const availablePlatforms: Platform[] = ['twitter', 'linkedin'];
+  const availablePlatforms: Platform[] = ["twitter", "linkedin"];
 
   // Toggle platform selection
   const togglePlatform = (platform: Platform) => {
     const currentPlatforms = post.platforms || [];
     const newPlatforms = currentPlatforms.includes(platform)
-      ? currentPlatforms.filter(p => p !== platform)
+      ? currentPlatforms.filter((p) => p !== platform)
       : [...currentPlatforms, platform];
-    
+
     // Ensure at least one platform is selected
     if (newPlatforms.length > 0) {
       updateEditorPost(post.id, { platforms: newPlatforms });
@@ -140,24 +151,24 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
 
   const handlePostNow = async () => {
     const plainText = stripHtml(post.content).trim();
-    
+
     if (!plainText) {
       toast({
-        title: 'Cannot post',
-        description: 'Please enter some content first.',
-        variant: 'destructive',
+        title: "Cannot post",
+        description: "Please enter some content first.",
+        variant: "destructive",
       });
       return;
     }
 
-    const platforms = post.platforms || ['twitter'];
-    const connectedPlatform = platforms.find(p => isConnected(p));
-    
+    const platforms = post.platforms || ["twitter"];
+    const connectedPlatform = platforms.find((p) => isConnected(p));
+
     if (!connectedPlatform) {
       toast({
-        title: 'No connected platform',
-        description: 'Please connect a platform first.',
-        variant: 'destructive',
+        title: "No connected platform",
+        description: "Please connect a platform first.",
+        variant: "destructive",
       });
       return;
     }
@@ -167,12 +178,21 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
     try {
       // Create the post in the database first
       const newPost = await createPost(post.content, platforms as any);
-      
-      if (newPost) {
-        // Publish immediately
-        await publishNow(newPost.id, connectedPlatform as any);
-        
-        // Remove from editor
+
+      if (!newPost) {
+        toast({
+          title: "Failed to create post",
+          description: "Unable to save your post. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Publish immediately
+      const success = await publishNow(newPost.id, connectedPlatform as any);
+
+      if (success) {
+        // Remove from editor only on success
         if (editorPosts.length === 1) {
           clearEditorPosts();
         } else {
@@ -180,7 +200,15 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
         }
       }
     } catch (error) {
-      console.error('Post error:', error);
+      console.error("Post error:", error);
+      toast({
+        title: "Posting failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred while posting.",
+        variant: "destructive",
+      });
     } finally {
       setIsPosting(false);
     }
@@ -188,40 +216,44 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
 
   const handleSchedule = async () => {
     const plainText = stripHtml(post.content).trim();
-    
+
     if (!plainText) {
       toast({
-        title: 'Cannot schedule',
-        description: 'Please enter some content first.',
-        variant: 'destructive',
+        title: "Cannot schedule",
+        description: "Please enter some content first.",
+        variant: "destructive",
       });
       return;
     }
 
     if (!selectedDate) {
       toast({
-        title: 'Select a date',
-        description: 'Please pick a date and time for scheduling.',
-        variant: 'destructive',
+        title: "Select a date",
+        description: "Please pick a date and time for scheduling.",
+        variant: "destructive",
       });
       return;
     }
 
-    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const [hours, minutes] = selectedTime.split(":").map(Number);
     const scheduledAt = new Date(selectedDate);
     scheduledAt.setHours(hours, minutes, 0, 0);
 
     setIsScheduling(true);
 
     try {
-      const platforms = post.platforms || ['twitter'];
-      
+      const platforms = post.platforms || ["twitter"];
+
       // Create the post in the database
       const newPost = await createPost(post.content, platforms as any);
-      
+
       if (newPost) {
         // Schedule it
-        const ok = await schedulePost(newPost.id, scheduledAt, platforms as any);
+        const ok = await schedulePost(
+          newPost.id,
+          scheduledAt,
+          platforms as any
+        );
 
         if (!ok) return;
 
@@ -235,7 +267,7 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
         setSelectedDate(undefined);
       }
     } catch (error) {
-      console.error('Schedule error:', error);
+      console.error("Schedule error:", error);
     } finally {
       setIsScheduling(false);
     }
@@ -256,7 +288,8 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
         className={cn(
           "editor-card relative transition-all duration-200",
           isDragging && "opacity-50 scale-[1.02] shadow-lg",
-          post.selected && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+          post.selected &&
+            "ring-2 ring-primary ring-offset-2 ring-offset-background"
         )}
       >
         {/* Top Controls */}
@@ -268,7 +301,7 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
               onCheckedChange={() => toggleEditorPostSelection(post.id)}
               className="h-5 w-5"
             />
-            
+
             {/* Drag Handle */}
             <button
               {...attributes}
@@ -288,7 +321,10 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
                 onClick={handleDeleteClick}
               >
-                <motion.div variants={iconVariants} transition={{ type: 'spring', stiffness: 400 }}>
+                <motion.div
+                  variants={iconVariants}
+                  transition={{ type: "spring", stiffness: 400 }}
+                >
                   <X className="h-4 w-4" />
                 </motion.div>
               </Button>
@@ -298,7 +334,9 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
 
         {/* Platform Selection */}
         <div className="mb-4">
-          <p className="text-sm text-muted-foreground mb-2">Select platforms:</p>
+          <p className="text-sm text-muted-foreground mb-2">
+            Select platforms:
+          </p>
           <div className="flex gap-2">
             {availablePlatforms.map((platform) => (
               <PlatformBadge
@@ -355,12 +393,12 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
               ) : (
                 <motion.div
                   whileHover={{ x: 3, rotate: -15 }}
-                  transition={{ type: 'spring', stiffness: 300 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
                   <Send className="h-4 w-4" />
                 </motion.div>
               )}
-              {isPosting ? 'Posting...' : 'Post Now'}
+              {isPosting ? "Posting..." : "Post Now"}
             </Button>
           </motion.div>
         </div>
@@ -372,12 +410,16 @@ export const SortableEditorCard = ({ post, onScheduleClick, selectedCount }: Sor
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this post?</AlertDialogTitle>
             <AlertDialogDescription>
-              This post has content. Are you sure you want to delete it? This action cannot be undone.
+              This post has content. Are you sure you want to delete it? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
