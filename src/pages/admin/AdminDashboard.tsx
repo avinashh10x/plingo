@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { useUserRole } from '@/hooks/useUserRole';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { 
-  Users, 
-  UserCheck, 
-  UserX, 
-  Clock, 
-  Shield, 
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  Clock,
+  Shield,
   Search,
   Edit2,
   Save,
@@ -25,8 +31,8 @@ import {
   BarChart3,
   ArrowUpCircle,
   ArrowDownCircle,
-  Crown
-} from 'lucide-react';
+  Crown,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -34,24 +40,24 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface UserProfile {
   id: string;
@@ -66,7 +72,7 @@ interface UserProfile {
 
 interface UserRole {
   user_id: string;
-  role: 'admin' | 'user';
+  role: "admin" | "user";
 }
 
 interface UserLimit {
@@ -86,17 +92,17 @@ interface PlatformUsage {
   writePercentage: number;
 }
 
-const platforms = ['twitter', 'linkedin', 'instagram', 'facebook', 'threads'];
+const platforms = ["twitter", "linkedin", "instagram", "facebook", "threads"];
 
 // Platform API limits (these are calculated by aggregating user usage)
 // We track our own usage since we can't fetch from Twitter API dashboard
 const PLATFORM_API_LIMITS = {
   twitter: {
-    read: 100,      // Free tier: ~100 read requests per 15 min window
-    write: 500,     // Free tier: 500 posts per month (corrected)
+    read: 100, // Free tier: ~100 read requests per 15 min window
+    write: 500, // Free tier: 500 posts per month (corrected)
   },
   linkedin: {
-    read: 10000,    // LinkedIn is more generous
+    read: 10000, // LinkedIn is more generous
     write: 10000,
   },
   instagram: {
@@ -124,22 +130,22 @@ export const AdminDashboard = () => {
   const { user, profile, signOut } = useAuth();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [userRoles, setUserRoles] = useState<Record<string, 'admin' | 'user'>>({});
+  const [userRoles, setUserRoles] = useState<Record<string, "admin" | "user">>(
+    {}
+  );
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userLimits, setUserLimits] = useState<UserLimit[]>([]);
-  const [editingLimits, setEditingLimits] = useState<Record<string, number>>({});
+  const [editingLimits, setEditingLimits] = useState<Record<string, number>>(
+    {}
+  );
   const [isLimitsDialogOpen, setIsLimitsDialogOpen] = useState(false);
   const [platformUsage, setPlatformUsage] = useState<PlatformUsage[]>([]);
 
-  // Check if current user is admin
-  useEffect(() => {
-    if (!roleLoading && !isAdmin) {
-      navigate('/dashboard');
-      toast.error('Access denied. Admin only.');
-    }
-  }, [isAdmin, roleLoading, navigate]);
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Admin check is now handled by AdminRoute in App.tsx
 
   // Fetch all users and platform usage
   useEffect(() => {
@@ -154,15 +160,15 @@ export const AdminDashboard = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setUsers((data as UserProfile[]) || []);
     } catch (error) {
-      console.error('Error fetching users:', error);
-      toast.error('Failed to fetch users');
+      console.error("Error fetching users:", error);
+      toast.error("Failed to fetch users");
     } finally {
       setIsLoading(false);
     }
@@ -171,52 +177,52 @@ export const AdminDashboard = () => {
   const fetchUserRoles = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_roles')
-        .select('user_id, role');
+        .from("user_roles")
+        .select("user_id, role");
 
       if (error) throw error;
-      
-      const rolesMap: Record<string, 'admin' | 'user'> = {};
+
+      const rolesMap: Record<string, "admin" | "user"> = {};
       (data || []).forEach((r: { user_id: string; role: string }) => {
-        rolesMap[r.user_id] = r.role as 'admin' | 'user';
+        rolesMap[r.user_id] = r.role as "admin" | "user";
       });
       setUserRoles(rolesMap);
     } catch (error) {
-      console.error('Error fetching user roles:', error);
+      console.error("Error fetching user roles:", error);
     }
   };
 
-  const updateUserRole = async (userId: string, newRole: 'admin' | 'user') => {
+  const updateUserRole = async (userId: string, newRole: "admin" | "user") => {
     try {
       // Check if role record exists
       const { data: existing } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', userId)
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", userId)
         .maybeSingle();
 
       if (existing) {
         // Update existing role
         const { error } = await supabase
-          .from('user_roles')
+          .from("user_roles")
           .update({ role: newRole })
-          .eq('user_id', userId);
+          .eq("user_id", userId);
 
         if (error) throw error;
       } else {
         // Insert new role
         const { error } = await supabase
-          .from('user_roles')
+          .from("user_roles")
           .insert({ user_id: userId, role: newRole });
 
         if (error) throw error;
       }
 
-      setUserRoles(prev => ({ ...prev, [userId]: newRole }));
+      setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
       toast.success(`User role updated to ${newRole}`);
     } catch (error) {
-      console.error('Error updating role:', error);
-      toast.error('Failed to update user role');
+      console.error("Error updating role:", error);
+      toast.error("Failed to update user role");
     }
   };
 
@@ -224,31 +230,38 @@ export const AdminDashboard = () => {
     try {
       // Get current month
       const now = new Date();
-      const monthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const monthYear = `${now.getFullYear()}-${String(
+        now.getMonth() + 1
+      ).padStart(2, "0")}`;
 
       // Fetch all usage for current month (write operations = posts)
       const { data: usageData, error: usageError } = await supabase
-        .from('user_usage')
-        .select('platform, posts_used')
-        .eq('month_year', monthYear);
+        .from("user_usage")
+        .select("platform, posts_used")
+        .eq("month_year", monthYear);
 
       if (usageError) throw usageError;
 
       // Aggregate write usage by platform
       const writeByPlatform: Record<string, number> = {};
-      (usageData || []).forEach((row: { platform: string; posts_used: number }) => {
-        writeByPlatform[row.platform] = (writeByPlatform[row.platform] || 0) + row.posts_used;
-      });
+      (usageData || []).forEach(
+        (row: { platform: string; posts_used: number }) => {
+          writeByPlatform[row.platform] =
+            (writeByPlatform[row.platform] || 0) + row.posts_used;
+        }
+      );
 
       // For read operations, we'd need to track API calls separately
       // For now, we estimate based on connected accounts and feed fetches
       // In production, you'd have a separate table for API call tracking
 
       // Create platform usage array with read/write breakdown
-      const usage: PlatformUsage[] = platforms.map(platform => {
-        const limits = PLATFORM_API_LIMITS[platform as keyof typeof PLATFORM_API_LIMITS] || { read: 10000, write: 10000 };
+      const usage: PlatformUsage[] = platforms.map((platform) => {
+        const limits = PLATFORM_API_LIMITS[
+          platform as keyof typeof PLATFORM_API_LIMITS
+        ] || { read: 10000, write: 10000 };
         const writeUsed = writeByPlatform[platform] || 0;
-        
+
         // Estimate read usage (in production, track this in a separate table)
         // For now, assume read is proportional to connected accounts
         const readUsed = 0; // Would come from api_calls tracking table
@@ -257,52 +270,56 @@ export const AdminDashboard = () => {
           platform,
           readUsed,
           readLimit: limits.read,
-          readPercentage: limits.read > 0 ? Math.min((readUsed / limits.read) * 100, 100) : 0,
+          readPercentage:
+            limits.read > 0 ? Math.min((readUsed / limits.read) * 100, 100) : 0,
           writeUsed,
           writeLimit: limits.write,
-          writePercentage: limits.write > 0 ? Math.min((writeUsed / limits.write) * 100, 100) : 0,
+          writePercentage:
+            limits.write > 0
+              ? Math.min((writeUsed / limits.write) * 100, 100)
+              : 0,
         };
       });
 
       setPlatformUsage(usage);
     } catch (error) {
-      console.error('Error fetching platform usage:', error);
+      console.error("Error fetching platform usage:", error);
     }
   };
 
   const approveUser = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .update({
-          status: 'approved',
+          status: "approved",
           approved_at: new Date().toISOString(),
-          approved_by: user?.id
+          approved_by: user?.id,
         })
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
       if (error) throw error;
-      toast.success('User approved successfully');
+      toast.success("User approved successfully");
       fetchUsers();
     } catch (error) {
-      console.error('Error approving user:', error);
-      toast.error('Failed to approve user');
+      console.error("Error approving user:", error);
+      toast.error("Failed to approve user");
     }
   };
 
   const rejectUser = async (userId: string) => {
     try {
       const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'rejected' })
-        .eq('user_id', userId);
+        .from("profiles")
+        .update({ status: "rejected" })
+        .eq("user_id", userId);
 
       if (error) throw error;
-      toast.success('User rejected');
+      toast.success("User rejected");
       fetchUsers();
     } catch (error) {
-      console.error('Error rejecting user:', error);
-      toast.error('Failed to reject user');
+      console.error("Error rejecting user:", error);
+      toast.error("Failed to reject user");
     }
   };
 
@@ -311,22 +328,22 @@ export const AdminDashboard = () => {
     setIsLimitsDialogOpen(true);
 
     const { data, error } = await supabase
-      .from('user_limits')
-      .select('*')
-      .eq('user_id', userProfile.user_id);
+      .from("user_limits")
+      .select("*")
+      .eq("user_id", userProfile.user_id);
 
     if (error) {
-      console.error('Error fetching limits:', error);
+      console.error("Error fetching limits:", error);
       return;
     }
 
     setUserLimits((data as UserLimit[]) || []);
-    
+
     const limitsMap: Record<string, number> = {};
-    (data as UserLimit[])?.forEach(limit => {
+    (data as UserLimit[])?.forEach((limit) => {
       limitsMap[limit.platform] = limit.monthly_limit;
     });
-    platforms.forEach(p => {
+    platforms.forEach((p) => {
       if (!limitsMap[p]) limitsMap[p] = 30;
     });
     setEditingLimits(limitsMap);
@@ -337,77 +354,81 @@ export const AdminDashboard = () => {
 
     try {
       for (const platform of platforms) {
-        const existingLimit = userLimits.find(l => l.platform === platform);
-        
+        const existingLimit = userLimits.find((l) => l.platform === platform);
+
         if (existingLimit) {
           await supabase
-            .from('user_limits')
+            .from("user_limits")
             .update({ monthly_limit: editingLimits[platform] })
-            .eq('id', existingLimit.id);
+            .eq("id", existingLimit.id);
         } else {
-          await supabase
-            .from('user_limits')
-            .insert({
-              user_id: selectedUser.user_id,
-              platform,
-              monthly_limit: editingLimits[platform]
-            });
+          await supabase.from("user_limits").insert({
+            user_id: selectedUser.user_id,
+            platform,
+            monthly_limit: editingLimits[platform],
+          });
         }
       }
 
-      toast.success('Limits updated successfully');
+      toast.success("Limits updated successfully");
       setIsLimitsDialogOpen(false);
     } catch (error) {
-      console.error('Error saving limits:', error);
-      toast.error('Failed to save limits');
+      console.error("Error saving limits:", error);
+      toast.error("Failed to save limits");
     }
   };
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate("/auth");
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter((u) => {
+    // Search Filter
+    const matchesSearch =
+      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.name?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status Filter
+    if (statusFilter === "all") return matchesSearch;
+    if (statusFilter === "waitlist")
+      return matchesSearch && u.status === "pending";
+    return matchesSearch && u.status === statusFilter;
+  });
 
   const stats = {
     total: users.length,
-    pending: users.filter(u => u.status === 'pending').length,
-    approved: users.filter(u => u.status === 'approved').length,
-    rejected: users.filter(u => u.status === 'rejected').length,
+    pending: users.filter((u) => u.status === "pending").length,
+    approved: users.filter((u) => u.status === "approved").length,
+    rejected: users.filter((u) => u.status === "rejected").length,
   };
 
-  if (!isAdmin) {
-    return null;
+  // Show loading while role is being determined
+  if (roleLoading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
   }
 
   const getUsageColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-red-500';
-    if (percentage >= 70) return 'bg-yellow-500';
-    return 'bg-green-500';
+    if (percentage >= 90) return "bg-red-500";
+    if (percentage >= 70) return "bg-yellow-500";
+    return "bg-green-500";
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="h-14 border-b border-border bg-card flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
-          <Shield className="h-6 w-6 text-primary" />
-          <h1 className="text-xl font-bold">Admin Dashboard</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-muted-foreground">{user?.email}</span>
-          <Button variant="outline" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Sign Out
-          </Button>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Normalized Page Header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+        <p className="text-muted-foreground">
+          Manage users, approvals, and platform limits.
+        </p>
+      </div>
 
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="bg-card">
@@ -472,20 +493,30 @@ export const AdminDashboard = () => {
               <CardTitle>Platform API Usage (This Month)</CardTitle>
             </div>
             <CardDescription>
-              Monitor your app's usage against platform API limits. Usage is calculated from our database records.
+              Monitor your app's usage against platform API limits. Usage is
+              calculated from our database records.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {platformUsage.map((usage) => (
-                <div key={usage.platform} className="p-4 rounded-lg border border-border bg-muted/20">
+                <div
+                  key={usage.platform}
+                  className="p-4 rounded-lg border border-border bg-muted/20"
+                >
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-primary/10">
-                      {platformIcons[usage.platform] || <BarChart3 className="h-4 w-4" />}
+                      {platformIcons[usage.platform] || (
+                        <BarChart3 className="h-4 w-4" />
+                      )}
                     </div>
                     <div>
-                      <p className="font-semibold capitalize text-foreground">{usage.platform}</p>
-                      <p className="text-xs text-muted-foreground">API Rate Limits</p>
+                      <p className="font-semibold capitalize text-foreground">
+                        {usage.platform}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        API Rate Limits
+                      </p>
                     </div>
                   </div>
 
@@ -494,15 +525,20 @@ export const AdminDashboard = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <ArrowDownCircle className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">Read Operations</span>
+                        <span className="text-sm font-medium">
+                          Read Operations
+                        </span>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {usage.readUsed.toLocaleString()} / {usage.readLimit.toLocaleString()}
+                        {usage.readUsed.toLocaleString()} /{" "}
+                        {usage.readLimit.toLocaleString()}
                       </span>
                     </div>
-                    <Progress 
-                      value={usage.readPercentage} 
-                      className={`h-2 [&>div]:${getUsageColor(usage.readPercentage)}`}
+                    <Progress
+                      value={usage.readPercentage}
+                      className={`h-2 [&>div]:${getUsageColor(
+                        usage.readPercentage
+                      )}`}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       {usage.readPercentage.toFixed(1)}% used
@@ -514,25 +550,31 @@ export const AdminDashboard = () => {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <ArrowUpCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">Write Operations</span>
+                        <span className="text-sm font-medium">
+                          Write Operations
+                        </span>
                       </div>
                       <span className="text-xs text-muted-foreground">
-                        {usage.writeUsed.toLocaleString()} / {usage.writeLimit.toLocaleString()}
+                        {usage.writeUsed.toLocaleString()} /{" "}
+                        {usage.writeLimit.toLocaleString()}
                       </span>
                     </div>
-                    <Progress 
-                      value={usage.writePercentage} 
-                      className={`h-2 [&>div]:${getUsageColor(usage.writePercentage)}`}
+                    <Progress
+                      value={usage.writePercentage}
+                      className={`h-2 [&>div]:${getUsageColor(
+                        usage.writePercentage
+                      )}`}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       {usage.writePercentage.toFixed(1)}% used
                     </p>
                   </div>
 
-                  {usage.platform === 'twitter' && (
+                  {usage.platform === "twitter" && (
                     <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
                       <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                        ⚠️ Free tier limits: {PLATFORM_API_LIMITS.twitter.read} reads, {PLATFORM_API_LIMITS.twitter.write} writes/month
+                        ⚠️ Free tier limits: {PLATFORM_API_LIMITS.twitter.read}{" "}
+                        reads, {PLATFORM_API_LIMITS.twitter.write} writes/month
                       </p>
                     </div>
                   )}
@@ -546,10 +588,22 @@ export const AdminDashboard = () => {
                 How Usage is Tracked
               </h4>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• <strong>Write operations:</strong> Counted from posts in our database with status = 'posted'</li>
-                <li>• <strong>Read operations:</strong> Would require separate API call tracking (not yet implemented)</li>
-                <li>• <strong>Limits:</strong> Based on platform's free tier API quotas</li>
-                <li>• We calculate usage by counting records, not by fetching from platform dashboards</li>
+                <li>
+                  • <strong>Write operations:</strong> Counted from posts in our
+                  database with status = 'posted'
+                </li>
+                <li>
+                  • <strong>Read operations:</strong> Would require separate API
+                  call tracking (not yet implemented)
+                </li>
+                <li>
+                  • <strong>Limits:</strong> Based on platform's free tier API
+                  quotas
+                </li>
+                <li>
+                  • We calculate usage by counting records, not by fetching from
+                  platform dashboards
+                </li>
               </ul>
             </div>
           </CardContent>
@@ -558,19 +612,34 @@ export const AdminDashboard = () => {
         {/* Users Table */}
         <Card className="bg-card">
           <CardHeader>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle>User Management</CardTitle>
-                <CardDescription>Manage user accounts and their posting limits</CardDescription>
+                <CardDescription>
+                  Manage user accounts and their posting limits
+                </CardDescription>
               </div>
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <Tabs
+                  value={statusFilter}
+                  onValueChange={setStatusFilter}
+                  className="w-full sm:w-auto"
+                >
+                  <TabsList>
+                    <TabsTrigger value="all">All</TabsTrigger>
+                    <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
+                    <TabsTrigger value="approved">Approved</TabsTrigger>
+                  </TabsList>
+                </Tabs>
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
               </div>
             </div>
           </CardHeader>
@@ -594,7 +663,10 @@ export const AdminDashboard = () => {
                   </TableRow>
                 ) : filteredUsers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
                       No users found
                     </TableCell>
                   </TableRow>
@@ -603,16 +675,20 @@ export const AdminDashboard = () => {
                     <TableRow key={u.id}>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{u.name || 'No name'}</p>
-                          <p className="text-sm text-muted-foreground">{u.email}</p>
+                          <p className="font-medium">{u.name || "No name"}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {u.email}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge 
+                        <Badge
                           variant={
-                            u.status === 'approved' ? 'default' :
-                            u.status === 'pending' ? 'secondary' :
-                            'destructive'
+                            u.status === "approved"
+                              ? "default"
+                              : u.status === "pending"
+                              ? "secondary"
+                              : "destructive"
                           }
                         >
                           {u.status}
@@ -620,8 +696,10 @@ export const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={userRoles[u.user_id] || 'user'}
-                          onValueChange={(value: 'admin' | 'user') => updateUserRole(u.user_id, value)}
+                          value={userRoles[u.user_id] || "user"}
+                          onValueChange={(value: "admin" | "user") =>
+                            updateUserRole(u.user_id, value)
+                          }
                         >
                           <SelectTrigger className="w-24">
                             <SelectValue />
@@ -647,7 +725,7 @@ export const AdminDashboard = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          {u.status === 'pending' && (
+                          {u.status === "pending" && (
                             <>
                               <Button
                                 size="sm"
@@ -668,7 +746,7 @@ export const AdminDashboard = () => {
                               </Button>
                             </>
                           )}
-                          {u.status === 'approved' && (
+                          {u.status === "approved" && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -700,26 +778,36 @@ export const AdminDashboard = () => {
             </DialogHeader>
             <div className="space-y-4 py-4">
               {platforms.map((platform) => (
-                <div key={platform} className="flex items-center justify-between">
+                <div
+                  key={platform}
+                  className="flex items-center justify-between"
+                >
                   <div className="flex items-center gap-2">
-                    {platformIcons[platform] || <BarChart3 className="h-4 w-4" />}
+                    {platformIcons[platform] || (
+                      <BarChart3 className="h-4 w-4" />
+                    )}
                     <Label className="capitalize">{platform}</Label>
                   </div>
                   <Input
                     type="number"
                     min={0}
                     value={editingLimits[platform] || 30}
-                    onChange={(e) => setEditingLimits({
-                      ...editingLimits,
-                      [platform]: parseInt(e.target.value) || 0
-                    })}
+                    onChange={(e) =>
+                      setEditingLimits({
+                        ...editingLimits,
+                        [platform]: parseInt(e.target.value) || 0,
+                      })
+                    }
                     className="w-24 text-right"
                   />
                 </div>
               ))}
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsLimitsDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsLimitsDialogOpen(false)}
+              >
                 <X className="h-4 w-4 mr-2" />
                 Cancel
               </Button>

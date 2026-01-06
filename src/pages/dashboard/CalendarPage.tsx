@@ -1,26 +1,41 @@
-import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Clock, Trash2, Filter } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, isPast, isFuture, isToday as isDateToday } from 'date-fns';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { usePosts } from '@/hooks/usePosts';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon } from '@/components/ui/animated-icon';
-import { cn, htmlToPlainText } from '@/lib/utils';
+import { useState, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Clock, Trash2, Filter } from "lucide-react";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+  isPast,
+  isFuture,
+  isToday as isDateToday,
+} from "date-fns";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePosts } from "@/hooks/usePosts";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+} from "@/components/ui/animated-icon";
+import { cn, htmlToPlainText } from "@/lib/utils";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const PlatformIcon = ({ platform }: { platform: string }) => {
-  if (platform === 'twitter') return <AnimatedTwitterIcon />;
-  if (platform === 'linkedin') return <AnimatedLinkedInIcon />;
+  if (platform === "twitter") return <AnimatedTwitterIcon />;
+  if (platform === "linkedin") return <AnimatedLinkedInIcon />;
   return <span className="text-xs font-medium uppercase">{platform[0]}</span>;
 };
 
@@ -28,9 +43,13 @@ export const CalendarPage = () => {
   const { posts, isLoading, deletePost } = usePosts();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState<'week' | 'month'>('month');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'scheduled' | 'posted' | 'failed'>('all');
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'twitter' | 'linkedin'>('all');
+  const [viewMode, setViewMode] = useState<"week" | "month">("month");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "scheduled" | "posted" | "failed"
+  >("all");
+  const [platformFilter, setPlatformFilter] = useState<
+    "all" | "twitter" | "linkedin"
+  >("all");
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -38,30 +57,28 @@ export const CalendarPage = () => {
 
   // Pad the start of the calendar
   const startPadding = monthStart.getDay();
-  const paddedDays = [
-    ...Array(startPadding).fill(null),
-    ...daysInMonth,
-  ];
+  const paddedDays = [...Array(startPadding).fill(null), ...daysInMonth];
 
   // Filter posts that have a scheduled_at date (includes scheduled, posted, failed)
   const calendarPosts = useMemo(() => {
-    return posts.filter(p => {
+    return posts.filter((p) => {
       // Must have a scheduled_at or posted_at date
       const hasDate = p.scheduled_at || p.posted_at;
       if (!hasDate) return false;
-      
+
       // Apply status filter
-      if (statusFilter !== 'all' && p.status !== statusFilter) return false;
-      
+      if (statusFilter !== "all" && p.status !== statusFilter) return false;
+
       // Apply platform filter
-      if (platformFilter !== 'all' && !p.platforms?.includes(platformFilter)) return false;
-      
+      if (platformFilter !== "all" && !p.platforms?.includes(platformFilter))
+        return false;
+
       return true;
     });
   }, [posts, statusFilter, platformFilter]);
 
   const getPostsForDay = (date: Date) => {
-    return calendarPosts.filter(post => {
+    return calendarPosts.filter((post) => {
       const postDate = new Date(post.scheduled_at || post.posted_at!);
       return isSameDay(postDate, date);
     });
@@ -143,16 +160,21 @@ export const CalendarPage = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-          <p className="text-muted-foreground mt-1">View all your posts - past, present, and future.</p>
+          <p className="text-muted-foreground mt-1">
+            View all your posts - past, present, and future.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Filters */}
-          <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v: any) => setStatusFilter(v)}
+          >
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -163,8 +185,11 @@ export const CalendarPage = () => {
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>
           </Select>
-          
-          <Select value={platformFilter} onValueChange={(v: any) => setPlatformFilter(v)}>
+
+          <Select
+            value={platformFilter}
+            onValueChange={(v: any) => setPlatformFilter(v)}
+          >
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
@@ -174,18 +199,18 @@ export const CalendarPage = () => {
               <SelectItem value="linkedin">LinkedIn</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Button
-            variant={viewMode === 'week' ? 'default' : 'outline'}
+            variant={viewMode === "week" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode('week')}
+            onClick={() => setViewMode("week")}
           >
             Week
           </Button>
           <Button
-            variant={viewMode === 'month' ? 'default' : 'outline'}
+            variant={viewMode === "month" ? "default" : "outline"}
             size="sm"
-            onClick={() => setViewMode('month')}
+            onClick={() => setViewMode("month")}
           >
             Month
           </Button>
@@ -193,15 +218,23 @@ export const CalendarPage = () => {
       </div>
 
       {/* Calendar Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+          >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <h2 className="text-xl font-semibold text-foreground min-w-[160px] text-center">
-            {format(currentMonth, 'MMMM yyyy')}
+            {format(currentMonth, "MMMM yyyy")}
           </h2>
-          <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+          >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
@@ -211,12 +244,15 @@ export const CalendarPage = () => {
       </div>
 
       {/* Calendar Grid */}
-      <Card className="bg-card border-border mb-8">
+      <Card className="bg-card border-border">
         <CardContent className="p-4">
           {/* Weekday headers */}
           <div className="grid grid-cols-7 mb-2">
             {WEEKDAYS.map((day) => (
-              <div key={day} className="text-center text-sm font-medium text-muted-foreground py-2">
+              <div
+                key={day}
+                className="text-center text-sm font-medium text-muted-foreground py-2"
+              >
                 {day}
               </div>
             ))}
@@ -226,7 +262,12 @@ export const CalendarPage = () => {
           <div className="grid grid-cols-7 gap-1">
             {paddedDays.map((day, index) => {
               if (!day) {
-                return <div key={`empty-${index}`} className="h-24 bg-muted/30 rounded-lg" />;
+                return (
+                  <div
+                    key={`empty-${index}`}
+                    className="h-24 bg-muted/30 rounded-lg"
+                  />
+                );
               }
 
               const dayPosts = getPostsForDay(day);
@@ -238,19 +279,21 @@ export const CalendarPage = () => {
                   key={day.toISOString()}
                   onClick={() => setSelectedDate(day)}
                   className={cn(
-                    'h-24 p-2 rounded-lg border transition-colors text-left flex flex-col',
-                    isSelected 
-                      ? 'border-primary bg-primary/5' 
-                      : 'border-transparent hover:bg-muted/50',
-                    !isSameMonth(day, currentMonth) && 'opacity-50'
+                    "h-24 p-2 rounded-lg border transition-colors text-left flex flex-col",
+                    isSelected
+                      ? "border-primary bg-primary/5"
+                      : "border-transparent hover:bg-muted/50",
+                    !isSameMonth(day, currentMonth) && "opacity-50"
                   )}
                 >
-                  <span className={cn(
-                    'text-sm font-medium',
-                    isToday && 'text-primary',
-                    isSelected && 'text-primary'
-                  )}>
-                    {format(day, 'd')}
+                  <span
+                    className={cn(
+                      "text-sm font-medium",
+                      isToday && "text-primary",
+                      isSelected && "text-primary"
+                    )}
+                  >
+                    {format(day, "d")}
                   </span>
                   <div className="flex-1 mt-1 space-y-1 overflow-hidden">
                     {dayPosts.slice(0, 2).map((post) => (
@@ -258,15 +301,25 @@ export const CalendarPage = () => {
                         key={post.id}
                         className={cn(
                           "flex items-center gap-1 px-1.5 py-0.5 rounded text-xs truncate",
-                          post.status === 'posted' && "bg-green-500/10 text-green-600",
-                          post.status === 'scheduled' && "bg-primary/10 text-primary",
-                          post.status === 'failed' && "bg-destructive/10 text-destructive"
+                          post.status === "posted" &&
+                            "bg-green-500/10 text-green-600",
+                          post.status === "scheduled" &&
+                            "bg-primary/10 text-primary",
+                          post.status === "failed" &&
+                            "bg-destructive/10 text-destructive"
                         )}
                       >
-                        <PlatformIcon platform={post.platforms?.[0] || 'twitter'} />
-                        <span className="truncate">{htmlToPlainText(post.content).slice(0, 15)}...</span>
+                        <PlatformIcon
+                          platform={post.platforms?.[0] || "twitter"}
+                        />
+                        <span className="truncate">
+                          {htmlToPlainText(post.content).slice(0, 15)}...
+                        </span>
                         <span className="text-[10px] text-muted-foreground ml-auto">
-                          {format(new Date(post.scheduled_at || post.posted_at!), 'h:mm a')}
+                          {format(
+                            new Date(post.scheduled_at || post.posted_at!),
+                            "h:mm a"
+                          )}
                         </span>
                       </div>
                     ))}
@@ -287,12 +340,14 @@ export const CalendarPage = () => {
       <div>
         <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          Posts on {format(selectedDate, 'MMMM d, yyyy')}
+          Posts on {format(selectedDate, "MMMM d, yyyy")}
         </h2>
         {selectedDayPosts.length === 0 ? (
           <Card className="bg-card border-border">
             <CardContent className="p-6 text-center">
-              <p className="text-muted-foreground">No posts scheduled for this day</p>
+              <p className="text-muted-foreground">
+                No posts scheduled for this day
+              </p>
             </CardContent>
           </Card>
         ) : (
@@ -302,26 +357,39 @@ export const CalendarPage = () => {
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className="p-2 rounded-lg bg-muted">
-                      <PlatformIcon platform={post.platforms?.[0] || 'twitter'} />
+                      <PlatformIcon
+                        platform={post.platforms?.[0] || "twitter"}
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge 
-                          variant={post.status === 'posted' ? 'default' : post.status === 'failed' ? 'destructive' : 'secondary'}
+                        <Badge
+                          variant={
+                            post.status === "posted"
+                              ? "default"
+                              : post.status === "failed"
+                              ? "destructive"
+                              : "secondary"
+                          }
                           className="text-xs"
                         >
                           {post.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-foreground">{htmlToPlainText(post.content)}</p>
+                      <p className="text-sm text-foreground">
+                        {htmlToPlainText(post.content)}
+                      </p>
                       <div className="flex items-center gap-2 mt-2">
                         <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-xs text-muted-foreground">
-                          {format(new Date(post.scheduled_at || post.posted_at!), 'h:mm a')}
+                          {format(
+                            new Date(post.scheduled_at || post.posted_at!),
+                            "h:mm a"
+                          )}
                         </span>
                       </div>
                     </div>
-                    {post.status === 'scheduled' && (
+                    {post.status === "scheduled" && (
                       <Button
                         variant="ghost"
                         size="icon"

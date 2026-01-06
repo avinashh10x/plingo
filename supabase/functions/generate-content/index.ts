@@ -6,12 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Free Google Gemini Models
+// Free Google Gemini Models - Verified current model IDs
 // Get your API key at: https://aistudio.google.com/app/apikey
 const GEMINI_MODELS: Record<string, string> = {
-  "gemini-2.0-flash": "gemini-2.0-flash-exp", // Fast, free, latest
-  "gemini-1.5-flash": "gemini-1.5-flash", // Free tier available
-  "gemini-1.5-flash-8b": "gemini-1.5-flash-8b", // Lightweight, free
+  "gemini-2.0-flash": "gemini-2.5-flash", // Latest 2.5 flash
+  "gemini-1.5-flash": "gemini-2.5-flash", // Map to 2.5 flash
+  "gemini-1.5-flash-8b": "gemini-2.5-flash", // Use 2.5 flash
 };
 
 // Buggy AI Agent Character - Content Writer Specialist
@@ -96,8 +96,14 @@ async function callGeminiAPI(
   systemPrompt: string,
   userPrompt: string
 ) {
-  const modelId = GEMINI_MODELS[model] || "gemini-2.0-flash-exp";
+  const modelId = GEMINI_MODELS[model] || "gemini-2.5-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+
+  console.log("Calling Gemini API:", {
+    model,
+    modelId,
+    promptLength: userPrompt.length,
+  });
 
   const response = await fetch(url, {
     method: "POST",
@@ -117,7 +123,11 @@ async function callGeminiAPI(
     const errorData = await response.json().catch(() => ({}));
     const errorMessage =
       errorData?.error?.message || `API error: ${response.status}`;
-    console.error("Gemini API error:", response.status, errorMessage);
+    console.error(
+      "Gemini API error:",
+      response.status,
+      JSON.stringify(errorData)
+    );
 
     if (response.status === 429) {
       throw {
@@ -125,10 +135,16 @@ async function callGeminiAPI(
         message: "Rate limit exceeded. Please wait a moment and try again.",
       };
     }
-    if (response.status === 400 && errorMessage.includes("API key")) {
+    if (response.status === 400) {
       throw {
         status: 400,
-        message: "Invalid API key. Please check your GOOGLE_AI_API_KEY.",
+        message: `Bad request: ${errorMessage}`,
+      };
+    }
+    if (response.status === 403) {
+      throw {
+        status: 403,
+        message: "API key doesn't have access to this model or feature.",
       };
     }
     throw new Error(errorMessage);

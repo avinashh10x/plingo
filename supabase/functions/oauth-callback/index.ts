@@ -56,7 +56,7 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   
   // Base redirect URL (falls back for error cases where `state` isn't available)
-  let redirectBaseUrl = Deno.env.get('APP_URL') || 'https://plingo.lovable.app';
+  let redirectBaseUrl = Deno.env.get('APP_URL') || 'https://plingo.byavi.in';
   
   if (error) {
     console.error('OAuth error:', error);

@@ -1,29 +1,67 @@
-import { Link2, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { usePlatforms, PlatformType } from '@/hooks/usePlatforms';
-import { useUsage } from '@/hooks/useUsage';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon, AnimatedInstagramIcon } from '@/components/ui/animated-icon';
-import { UsageBar } from '@/components/usage/UsageBar';
-import { cn } from '@/lib/utils';
+import { Link2, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePlatforms, PlatformType } from "@/hooks/usePlatforms";
+import { useUsage } from "@/hooks/useUsage";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+  AnimatedInstagramIcon,
+} from "@/components/ui/animated-icon";
+import { UsageBar } from "@/components/usage/UsageBar";
+import { cn } from "@/lib/utils";
 
-const SUPPORTED_PLATFORMS: { id: PlatformType; name: string; description: string }[] = [
-  { id: 'twitter', name: 'Twitter / X', description: 'Post tweets and threads' },
-  { id: 'linkedin', name: 'LinkedIn', description: 'Share professional content' },
-  { id: 'instagram', name: 'Instagram', description: 'Share photos and reels' },
+const SUPPORTED_PLATFORMS: {
+  id: PlatformType;
+  name: string;
+  description: string;
+}[] = [
+  {
+    id: "twitter",
+    name: "Twitter / X",
+    description: "Post tweets and threads",
+  },
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    description: "Share professional content",
+  },
+  { id: "instagram", name: "Instagram", description: "Share photos and reels" },
 ];
 
-const PlatformIcon = ({ platform, className }: { platform: string; className?: string }) => {
-  if (platform === 'twitter') return <AnimatedTwitterIcon className={className} />;
-  if (platform === 'linkedin') return <AnimatedLinkedInIcon className={className} />;
-  if (platform === 'instagram') return <AnimatedInstagramIcon className={className} />;
+const PlatformIcon = ({
+  platform,
+  className,
+}: {
+  platform: string;
+  className?: string;
+}) => {
+  if (platform === "twitter")
+    return <AnimatedTwitterIcon className={className} />;
+  if (platform === "linkedin")
+    return <AnimatedLinkedInIcon className={className} />;
+  if (platform === "instagram")
+    return <AnimatedInstagramIcon className={className} />;
   return null;
 };
 
 export const AccountsPage = () => {
-  const { isLoading, isConnecting, connectPlatform, disconnectPlatform, isConnected, getPlatformStatus } = usePlatforms();
+  const {
+    isLoading,
+    isConnecting,
+    connectPlatform,
+    disconnectPlatform,
+    isConnected,
+    getPlatformStatus,
+  } = usePlatforms();
   const { usage, isLoading: isUsageLoading } = useUsage();
 
   if (isLoading) {
@@ -73,15 +111,20 @@ export const AccountsPage = () => {
     );
   }
 
-  const connectedCount = SUPPORTED_PLATFORMS.filter(p => isConnected(p.id)).length;
+  const connectedCount = SUPPORTED_PLATFORMS.filter((p) =>
+    isConnected(p.id)
+  ).length;
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-foreground">Connected Accounts</h1>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">
+          Connected Accounts
+        </h1>
         <p className="text-muted-foreground mt-1">
-          Connect your social media accounts to start posting. {connectedCount} of {SUPPORTED_PLATFORMS.length} connected.
+          Connect your social media accounts to start posting. {connectedCount}{" "}
+          of {SUPPORTED_PLATFORMS.length} connected.
         </p>
       </div>
 
@@ -94,26 +137,36 @@ export const AccountsPage = () => {
           const connecting = isConnecting === platform.id;
 
           return (
-            <Card key={platform.id} className={cn(
-              "bg-card border-border transition-all",
-              connected && "border-primary/30 bg-primary/5"
-            )}>
+            <Card
+              key={platform.id}
+              className={cn(
+                "bg-card border-border transition-all",
+                connected && "border-primary/30 bg-primary/5"
+              )}
+            >
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">
                   {/* Platform Icon */}
-                  <div className={cn(
-                    "w-14 h-14 rounded-xl flex items-center justify-center",
-                    connected ? "bg-primary/10" : "bg-muted"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-14 h-14 rounded-xl flex items-center justify-center",
+                      connected ? "bg-primary/10" : "bg-muted"
+                    )}
+                  >
                     <PlatformIcon platform={platform.id} className="h-7 w-7" />
                   </div>
 
                   {/* Platform Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold text-foreground">{platform.name}</h3>
+                      <h3 className="font-semibold text-foreground">
+                        {platform.name}
+                      </h3>
                       {connected ? (
-                        <Badge variant="default" className="bg-green-500/10 text-green-600 border-0">
+                        <Badge
+                          variant="default"
+                          className="bg-green-500/10 text-green-600 border-0"
+                        >
                           <CheckCircle className="h-3 w-3 mr-1" />
                           Connected
                         </Badge>
@@ -121,8 +174,10 @@ export const AccountsPage = () => {
                         <Badge variant="secondary">Not connected</Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground">{platform.description}</p>
-                    
+                    <p className="text-sm text-muted-foreground">
+                      {platform.description}
+                    </p>
+
                     {connected && status?.platform_username && (
                       <p className="text-sm text-foreground mt-1">
                         @{status.platform_username}
@@ -132,9 +187,9 @@ export const AccountsPage = () => {
                     {/* Usage Bar */}
                     {connected && !isUsageLoading && platformUsage && (
                       <div className="mt-3">
-                        <UsageBar 
-                          postsUsed={platformUsage.postsUsed} 
-                          platform={platform.id} 
+                        <UsageBar
+                          postsUsed={platformUsage.postsUsed}
+                          platform={platform.id}
                         />
                       </div>
                     )}
@@ -184,10 +239,13 @@ export const AccountsPage = () => {
           <div className="flex items-start gap-3">
             <AlertCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-foreground">Why connect accounts?</p>
+              <p className="text-sm font-medium text-foreground">
+                Why connect accounts?
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Connecting your social accounts allows Plingo to publish posts on your behalf. 
-                We use secure OAuth authentication and never store your passwords.
+                Connecting your social accounts allows Plingo to publish posts
+                on your behalf. We use secure OAuth authentication and never
+                store your passwords.
               </p>
             </div>
           </div>

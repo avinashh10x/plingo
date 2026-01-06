@@ -1,32 +1,30 @@
-import { useState } from 'react';
-import { FileText, Edit, Trash2, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import { usePosts } from '@/hooks/usePosts';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon } from '@/components/ui/animated-icon';
-import { format } from 'date-fns';
-import { htmlToPlainText } from '@/lib/utils';
-import { useAppStore, Platform } from '@/stores/appStore';
+import { useState } from "react";
+import { FileText, Edit, Trash2, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePosts } from "@/hooks/usePosts";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+} from "@/components/ui/animated-icon";
+import { format } from "date-fns";
+import { htmlToPlainText } from "@/lib/utils";
+import { useAppStore, Platform } from "@/stores/appStore";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PlatformIcon = ({ platform }: { platform: string }) => {
-  if (platform === 'twitter') return <AnimatedTwitterIcon />;
-  if (platform === 'linkedin') return <AnimatedLinkedInIcon />;
+  if (platform === "twitter") return <AnimatedTwitterIcon />;
+  if (platform === "linkedin") return <AnimatedLinkedInIcon />;
   return <span className="text-xs font-medium uppercase">{platform[0]}</span>;
 };
 
@@ -34,24 +32,28 @@ export const DraftsPage = () => {
   const navigate = useNavigate();
   const { posts, isLoading, deletePost } = usePosts();
   const { addEditorPostWithData, clearEditorPosts } = useAppStore();
-  const [platformFilter, setPlatformFilter] = useState<'all' | 'twitter' | 'linkedin'>('all');
-  const [activeTab, setActiveTab] = useState<'drafts' | 'all'>('drafts');
+  const [platformFilter, setPlatformFilter] = useState<
+    "all" | "twitter" | "linkedin"
+  >("all");
+  const [activeTab, setActiveTab] = useState<"drafts" | "all">("drafts");
 
-  const handleEditDraft = (post: typeof posts[0]) => {
+  const handleEditDraft = (post: (typeof posts)[0]) => {
     // Clear existing editor posts and add this draft's content
     clearEditorPosts();
-    const platforms = (post.platforms || ['twitter']) as Platform[];
+    const platforms = (post.platforms || ["twitter"]) as Platform[];
     addEditorPostWithData(post.content, platforms);
-    navigate('/dashboard/studio');
+    navigate("/dashboard/studio");
   };
 
-  const drafts = posts.filter(p => p.status === 'draft');
+  const drafts = posts.filter((p) => p.status === "draft");
   const allPosts = posts;
-  
-  const filteredPosts = (activeTab === 'drafts' ? drafts : allPosts).filter(post => {
-    if (platformFilter === 'all') return true;
-    return post.platforms?.includes(platformFilter);
-  });
+
+  const filteredPosts = (activeTab === "drafts" ? drafts : allPosts).filter(
+    (post) => {
+      if (platformFilter === "all") return true;
+      return post.platforms?.includes(platformFilter);
+    }
+  );
 
   if (isLoading) {
     return (
@@ -99,18 +101,23 @@ export const DraftsPage = () => {
   }
 
   return (
-    <div className="h-full overflow-y-auto px-6 py-4">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Drafts & Library</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Drafts & Library
+          </h1>
           <p className="text-muted-foreground mt-1">
             Manage your saved drafts and all content.
           </p>
         </div>
-        
+
         {/* Platform Filter */}
-        <Select value={platformFilter} onValueChange={(v: any) => setPlatformFilter(v)}>
+        <Select
+          value={platformFilter}
+          onValueChange={(v: any) => setPlatformFilter(v)}
+        >
           <SelectTrigger className="w-[150px]">
             <SelectValue placeholder="All Platforms" />
           </SelectTrigger>
@@ -123,7 +130,11 @@ export const DraftsPage = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="mb-6">
+      <Tabs
+        value={activeTab}
+        onValueChange={(v: any) => setActiveTab(v)}
+        className="mb-6"
+      >
         <TabsList>
           <TabsTrigger value="drafts">Drafts ({drafts.length})</TabsTrigger>
           <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
@@ -138,14 +149,14 @@ export const DraftsPage = () => {
               <FileText className="h-8 w-8 text-muted-foreground" />
             </div>
             <h3 className="font-medium text-foreground mb-2">
-              {activeTab === 'drafts' ? 'No drafts yet' : 'No posts found'}
+              {activeTab === "drafts" ? "No drafts yet" : "No posts found"}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {activeTab === 'drafts' 
-                ? 'Start creating content and save drafts for later.'
-                : 'Create your first post to get started.'}
+              {activeTab === "drafts"
+                ? "Start creating content and save drafts for later."
+                : "Create your first post to get started."}
             </p>
-            <Button onClick={() => navigate('/dashboard/studio')}>
+            <Button onClick={() => navigate("/dashboard/studio")}>
               Create New Post
             </Button>
           </CardContent>
@@ -153,7 +164,10 @@ export const DraftsPage = () => {
       ) : (
         <div className="space-y-4">
           {filteredPosts.map((post) => (
-            <Card key={post.id} className="bg-card border-border hover:border-primary/30 transition-colors">
+            <Card
+              key={post.id}
+              className="bg-card border-border hover:border-primary/30 transition-colors"
+            >
               <CardContent className="p-5">
                 <div className="flex items-start gap-4">
                   {/* Platform Icons */}
@@ -167,33 +181,47 @@ export const DraftsPage = () => {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <p className="text-foreground whitespace-pre-wrap">{htmlToPlainText(post.content)}</p>
+                    <p className="text-foreground whitespace-pre-wrap">
+                      {htmlToPlainText(post.content)}
+                    </p>
                     <div className="flex items-center gap-3 mt-3">
-                      <Badge 
+                      <Badge
                         variant={
-                          post.status === 'posted' ? 'default' : 
-                          post.status === 'scheduled' ? 'secondary' : 
-                          post.status === 'failed' ? 'destructive' : 
-                          'outline'
-                        } 
+                          post.status === "posted"
+                            ? "default"
+                            : post.status === "scheduled"
+                            ? "secondary"
+                            : post.status === "failed"
+                            ? "destructive"
+                            : "outline"
+                        }
                         className="text-xs"
                       >
                         {post.status}
                       </Badge>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {post.status === 'posted' && post.posted_at
-                          ? `Posted ${format(new Date(post.posted_at), 'MMM d, h:mm a')}`
-                          : post.status === 'scheduled' && post.scheduled_at
-                          ? `Scheduled ${format(new Date(post.scheduled_at), 'MMM d, h:mm a')}`
-                          : `Created ${format(new Date(post.created_at), 'MMM d, h:mm a')}`}
+                        {post.status === "posted" && post.posted_at
+                          ? `Posted ${format(
+                              new Date(post.posted_at),
+                              "MMM d, h:mm a"
+                            )}`
+                          : post.status === "scheduled" && post.scheduled_at
+                          ? `Scheduled ${format(
+                              new Date(post.scheduled_at),
+                              "MMM d, h:mm a"
+                            )}`
+                          : `Created ${format(
+                              new Date(post.created_at),
+                              "MMM d, h:mm a"
+                            )}`}
                       </span>
                     </div>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
-                    {post.status === 'draft' && (
+                    {post.status === "draft" && (
                       <Button
                         variant="ghost"
                         size="icon"
