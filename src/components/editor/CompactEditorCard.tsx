@@ -1,18 +1,21 @@
-import { useState } from 'react';
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { motion } from 'framer-motion';
-import { GripVertical, X, Send, Calendar, Loader2 } from 'lucide-react';
-import { useAppStore, Platform, EditorPost } from '@/stores/appStore';
-import { usePosts } from '@/hooks/usePosts';
-import { usePlatforms } from '@/hooks/usePlatforms';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
-import { DateTimePicker } from '@/components/ui/date-time-picker';
-import { AnimatedTwitterIcon, AnimatedLinkedInIcon } from '@/components/ui/animated-icon';
+import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
+import { GripVertical, X, Send, Calendar, Loader2 } from "lucide-react";
+import { useAppStore, Platform, EditorPost } from "@/stores/appStore";
+import { usePosts } from "@/hooks/usePosts";
+import { usePlatforms } from "@/hooks/usePlatforms";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
+import {
+  AnimatedTwitterIcon,
+  AnimatedLinkedInIcon,
+} from "@/components/ui/animated-icon";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,13 +25,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+} from "@/components/ui/alert-dialog";
 
 const MAX_CHARS = 280;
 
-const PlatformIcon = ({ platform, selected, onClick }: { 
-  platform: Platform; 
-  selected: boolean; 
+const PlatformIcon = ({
+  platform,
+  selected,
+  onClick,
+}: {
+  platform: Platform;
+  selected: boolean;
   onClick: () => void;
 }) => {
   const icons = {
@@ -40,16 +47,16 @@ const PlatformIcon = ({ platform, selected, onClick }: {
     <motion.button
       onClick={onClick}
       className={cn(
-        'p-1.5 rounded-md transition-colors',
+        "p-1.5 rounded-md transition-colors",
         selected
-          ? 'bg-primary/10 text-primary'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted"
       )}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       title={platform}
     >
-      {icons[platform as 'twitter' | 'linkedin']}
+      {icons[platform as "twitter" | "linkedin"]}
     </motion.button>
   );
 };
@@ -64,7 +71,15 @@ interface CompactEditorCardProps {
   onBlur?: () => void;
 }
 
-export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDragging: parentDragging, isActive, onFocus, onBlur }: CompactEditorCardProps) => {
+export const CompactEditorCard = ({
+  post,
+  onScheduleClick,
+  selectedCount,
+  isDragging: parentDragging,
+  isActive,
+  onFocus,
+  onBlur,
+}: CompactEditorCardProps) => {
   const {
     editorPosts,
     updateEditorPost,
@@ -78,7 +93,7 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>();
-  const [selectedTime, setSelectedTime] = useState('12:00');
+  const [selectedTime, setSelectedTime] = useState("12:00");
   const [isPosting, setIsPosting] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
 
@@ -96,17 +111,17 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
     transition,
   };
 
-  const plainText = post.content.replace(/<[^>]*>/g, '').trim();
+  const plainText = post.content.replace(/<[^>]*>/g, "").trim();
   const charCount = plainText.length;
   const hasContent = charCount > 0;
-  const availablePlatforms: Platform[] = ['twitter', 'linkedin'];
+  const availablePlatforms: Platform[] = ["twitter", "linkedin"];
 
   const togglePlatform = (platform: Platform) => {
     const currentPlatforms = post.platforms || [];
     const newPlatforms = currentPlatforms.includes(platform)
-      ? currentPlatforms.filter(p => p !== platform)
+      ? currentPlatforms.filter((p) => p !== platform)
       : [...currentPlatforms, platform];
-    
+
     if (newPlatforms.length > 0) {
       updateEditorPost(post.id, { platforms: newPlatforms });
     }
@@ -127,31 +142,58 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
 
   const handlePostNow = async () => {
     if (!plainText) {
-      toast({ title: 'Cannot post', description: 'Please enter some content first.', variant: 'destructive' });
+      toast({
+        title: "Cannot post",
+        description: "Please enter some content first.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const platforms = post.platforms || ['twitter'];
-    const connectedPlatform = platforms.find(p => isConnected(p));
-    
+    const platforms = post.platforms || ["twitter"];
+    const connectedPlatform = platforms.find((p) => isConnected(p));
+
     if (!connectedPlatform) {
-      toast({ title: 'No connected platform', description: 'Please connect a platform first.', variant: 'destructive' });
+      toast({
+        title: "No connected platform",
+        description: "Please connect a platform first.",
+        variant: "destructive",
+      });
       return;
     }
 
     setIsPosting(true);
     try {
       const newPost = await createPost(post.content, platforms as any);
-      if (newPost) {
-        await publishNow(newPost.id, connectedPlatform as any);
+      if (!newPost) {
+        toast({
+          title: "Failed to create post",
+          description: "Could not create post in database. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const success = await publishNow(newPost.id, connectedPlatform as any);
+      if (success) {
+        // Only remove from editor if posting succeeded
         if (editorPosts.length === 1) {
           clearEditorPosts();
         } else {
           removeEditorPost(post.id);
         }
       }
+      // publishNow already shows error toast if it fails
     } catch (error) {
-      console.error('Post error:', error);
+      console.error("Post error:", error);
+      toast({
+        title: "Unexpected error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred while posting.",
+        variant: "destructive",
+      });
     } finally {
       setIsPosting(false);
     }
@@ -159,26 +201,38 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
 
   const handleSchedule = async () => {
     if (!plainText) {
-      toast({ title: 'Cannot schedule', description: 'Please enter some content first.', variant: 'destructive' });
+      toast({
+        title: "Cannot schedule",
+        description: "Please enter some content first.",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!selectedDate) {
-      toast({ title: 'Select a date', description: 'Please pick a date and time for scheduling.', variant: 'destructive' });
+      toast({
+        title: "Select a date",
+        description: "Please pick a date and time for scheduling.",
+        variant: "destructive",
+      });
       return;
     }
 
-    const [hours, minutes] = selectedTime.split(':').map(Number);
+    const [hours, minutes] = selectedTime.split(":").map(Number);
     const scheduledAt = new Date(selectedDate);
     scheduledAt.setHours(hours, minutes, 0, 0);
 
     setIsScheduling(true);
     try {
-      const platforms = post.platforms || ['twitter'];
+      const platforms = post.platforms || ["twitter"];
       const newPost = await createPost(post.content, platforms as any);
-      
+
       if (newPost) {
-        const ok = await schedulePost(newPost.id, scheduledAt, platforms as any);
+        const ok = await schedulePost(
+          newPost.id,
+          scheduledAt,
+          platforms as any
+        );
         if (!ok) return;
 
         if (editorPosts.length === 1) {
@@ -189,7 +243,7 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
         setSelectedDate(undefined);
       }
     } catch (error) {
-      console.error('Schedule error:', error);
+      console.error("Schedule error:", error);
     } finally {
       setIsScheduling(false);
     }
@@ -211,7 +265,8 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
         className={cn(
           "group relative bg-card border border-border rounded-lg p-3 transition-all duration-200",
           isCurrentlyDragging && "opacity-90 shadow-xl ring-2 ring-primary/50",
-          post.selected && "ring-2 ring-primary ring-offset-1 ring-offset-background"
+          post.selected &&
+            "ring-2 ring-primary ring-offset-1 ring-offset-background"
         )}
       >
         {/* Left side: drag + checkbox */}
@@ -235,13 +290,20 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
           <div className="flex-1 min-w-0">
             {/* Textarea */}
             <Textarea
-              value={post.content.replace(/<[^>]*>/g, '')}
-              onChange={(e) => updateEditorPost(post.id, { content: e.target.value })}
+              value={post.content.replace(/<[^>]*>/g, "")}
+              onChange={(e) =>
+                updateEditorPost(post.id, { content: e.target.value })
+              }
               onFocus={() => onFocus?.(post.id)}
               onBlur={onBlur}
               placeholder="What's on your mind?"
-              className="min-h-[80px] max-h-[400px] resize-none border-0 bg-transparent p-0 text-sm focus-visible:ring-0 placeholder:text-muted-foreground/50 overflow-hidden"
-              style={{ height: 'auto', fieldSizing: 'content' } as React.CSSProperties}
+              className="min-h-[80px] max-h-[400px] resize-none border-0 bg-transparent p-2 text-sm focus-visible:ring-0 placeholder:text-muted-foreground/50 overflow-hidden"
+              style={
+                {
+                  height: "auto",
+                  fieldSizing: "content",
+                } as React.CSSProperties
+              }
             />
 
             {/* Bottom row: platforms + char count + actions */}
@@ -258,12 +320,16 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
                     />
                   ))}
                 </div>
-                <span className={cn(
-                  "text-xs tabular-nums",
-                  charCount > MAX_CHARS ? "text-destructive" : 
-                  charCount > MAX_CHARS * 0.9 ? "text-amber-500" : 
-                  "text-muted-foreground"
-                )}>
+                <span
+                  className={cn(
+                    "text-xs tabular-nums",
+                    charCount > MAX_CHARS
+                      ? "text-destructive"
+                      : charCount > MAX_CHARS * 0.9
+                      ? "text-amber-500"
+                      : "text-muted-foreground"
+                  )}
+                >
                   {charCount}/{MAX_CHARS}
                 </span>
               </div>
@@ -332,7 +398,10 @@ export const CompactEditorCard = ({ post, onScheduleClick, selectedCount, isDrag
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
