@@ -9,6 +9,7 @@ CREATE POLICY "Users can read own role" ON public.user_roles
     FOR SELECT USING (auth.uid() = user_id);
 
 -- Allow service role to manage all (for admin updates)
+DROP POLICY IF EXISTS "Service role full access" ON public.user_roles;
 CREATE POLICY "Service role full access" ON public.user_roles
     FOR ALL USING (true) WITH CHECK (true);
 

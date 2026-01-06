@@ -189,6 +189,7 @@ export const AccountsPage = () => {
                       <div className="mt-3">
                         <UsageBar
                           postsUsed={platformUsage.postsUsed}
+                          limit={platformUsage.limit}
                           platform={platform.id}
                         />
                       </div>

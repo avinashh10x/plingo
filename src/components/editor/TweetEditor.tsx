@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef } from 'react';
-import { Plus, CheckSquare, Square, Calendar } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useCallback, useRef } from "react";
+import { Plus, CheckSquare, Square, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   DndContext,
   closestCenter,
@@ -10,18 +10,18 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { useAppStore } from '@/stores/appStore';
-import { Button } from '@/components/ui/button';
-import { CompactEditorCard } from './CompactEditorCard';
-import { BulkSchedulerModal } from './BulkSchedulerModal';
-import { toast } from '@/hooks/use-toast';
+} from "@dnd-kit/sortable";
+import { useAppStore } from "@/stores/appStore";
+import { Button } from "@/components/ui/button";
+import { CompactEditorCard } from "./CompactEditorCard";
+import { BulkSchedulerModal } from "./BulkSchedulerModal";
+import { toast } from "@/hooks/use-toast";
 
 const MAX_CARDS = 30;
 
@@ -42,7 +42,8 @@ export const TweetEditor = () => {
 
   const selectedPosts = getSelectedEditorPosts();
   const selectedCount = selectedPosts.length;
-  const allSelected = selectedCount === editorPosts.length && editorPosts.length > 0;
+  const allSelected =
+    selectedCount === editorPosts.length && editorPosts.length > 0;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -55,16 +56,19 @@ export const TweetEditor = () => {
     setActiveCardId(dragId);
   }, []);
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setDraggingId(null);
-    setActiveCardId(null);
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = editorPosts.findIndex((post) => post.id === active.id);
-      const newIndex = editorPosts.findIndex((post) => post.id === over.id);
-      reorderEditorPosts(arrayMove(editorPosts, oldIndex, newIndex));
-    }
-  }, [editorPosts, reorderEditorPosts]);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setDraggingId(null);
+      setActiveCardId(null);
+      const { active, over } = event;
+      if (over && active.id !== over.id) {
+        const oldIndex = editorPosts.findIndex((post) => post.id === active.id);
+        const newIndex = editorPosts.findIndex((post) => post.id === over.id);
+        reorderEditorPosts(arrayMove(editorPosts, oldIndex, newIndex));
+      }
+    },
+    [editorPosts, reorderEditorPosts]
+  );
 
   const handleCardFocus = useCallback((postId: string) => {
     setActiveCardId(postId);
@@ -99,7 +103,7 @@ export const TweetEditor = () => {
     const postId = editorPosts[index]?.id;
     setActiveCardId(postId);
     const el = cardRefs.current.get(postId);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   return (
@@ -115,11 +119,17 @@ export const TweetEditor = () => {
                 onClick={handleToggleSelectAll}
                 className="h-7 gap-1.5 text-xs"
               >
-                {allSelected ? <CheckSquare className="h-3.5 w-3.5" /> : <Square className="h-3.5 w-3.5" />}
-                {allSelected ? 'Deselect' : 'Select All'}
+                {allSelected ? (
+                  <CheckSquare className="h-3.5 w-3.5" />
+                ) : (
+                  <Square className="h-3.5 w-3.5" />
+                )}
+                {allSelected ? "Deselect" : "Select All"}
               </Button>
               {selectedCount > 0 && (
-                <span className="text-xs text-muted-foreground">{selectedCount} selected</span>
+                <span className="text-xs text-muted-foreground">
+                  {selectedCount} selected
+                </span>
               )}
             </>
           )}
@@ -127,7 +137,11 @@ export const TweetEditor = () => {
 
         <div className="flex items-center gap-2">
           {selectedCount >= 2 && (
-            <Button size="sm" onClick={handleBulkScheduleClick} className="h-7 gap-1.5 text-xs">
+            <Button
+              size="sm"
+              onClick={handleBulkScheduleClick}
+              className="h-7 gap-1.5 text-xs"
+            >
               <Calendar className="h-3.5 w-3.5" />
               Bulk Schedule ({selectedCount})
             </Button>
@@ -138,9 +152,9 @@ export const TweetEditor = () => {
             onClick={() => {
               if (editorPosts.length >= MAX_CARDS) {
                 toast({
-                  title: 'Card limit reached',
+                  title: "Card limit reached",
                   description: `You can have up to ${MAX_CARDS} posts in the workspace.`,
-                  variant: 'destructive',
+                  variant: "destructive",
                 });
                 return;
               }
@@ -149,7 +163,7 @@ export const TweetEditor = () => {
             className="h-7 gap-1.5 text-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            New Post
+            Add Card
           </Button>
         </div>
       </div>
@@ -170,7 +184,7 @@ export const TweetEditor = () => {
               {editorPosts.map((post) => {
                 const isDragging = draggingId === post.id;
                 const isActive = activeCardId === post.id || isDragging;
-                
+
                 return (
                   <motion.div
                     key={post.id}
@@ -180,21 +194,21 @@ export const TweetEditor = () => {
                       else cardRefs.current.delete(post.id);
                     }}
                     initial={{ opacity: 0, y: 10 }}
-                    animate={{ 
-                      opacity: 1, 
+                    animate={{
+                      opacity: 1,
                       y: 0,
                       scale: isDragging ? 1.02 : 1,
                       zIndex: isDragging ? 50 : 1,
                     }}
                     exit={{ opacity: 0, x: -50 }}
-                    transition={{ 
-                      type: 'tween',
+                    transition={{
+                      type: "tween",
                       duration: 0.15,
-                      ease: 'easeOut',
+                      ease: "easeOut",
                     }}
                     layout="position"
                     style={{
-                      position: 'relative',
+                      position: "relative",
                     }}
                   >
                     <CompactEditorCard
@@ -219,25 +233,36 @@ export const TweetEditor = () => {
         <div className="flex items-center justify-center gap-2.5 py-3 border-t border-border bg-muted/20 h-10">
           <div className="relative flex items-center gap-2.5">
             {editorPosts.map((post) => {
-              const isActive = activeCardId === post.id || draggingId === post.id;
+              const isActive =
+                activeCardId === post.id || draggingId === post.id;
               const isDragging = draggingId === post.id;
-              
+
               return (
                 <motion.button
                   key={post.id}
-                  onClick={() => handleIndicatorClick(editorPosts.findIndex(p => p.id === post.id))}
+                  onClick={() =>
+                    handleIndicatorClick(
+                      editorPosts.findIndex((p) => p.id === post.id)
+                    )
+                  }
                   className={`rounded-full ${
                     isActive
-                      ? 'bg-primary'
-                      : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                      ? "bg-primary"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                   }`}
-                  style={{ position: 'relative' }}
+                  style={{ position: "relative" }}
                   animate={{
                     scale: isDragging ? 1.5 : isActive ? 1.3 : 1,
                     zIndex: isDragging ? 20 : isActive ? 10 : 1,
                   }}
-                  transition={{ type: 'tween', duration: 0.15, ease: 'easeOut' }}
-                  title={`Post ${editorPosts.findIndex(p => p.id === post.id) + 1}`}
+                  transition={{
+                    type: "tween",
+                    duration: 0.15,
+                    ease: "easeOut",
+                  }}
+                  title={`Post ${
+                    editorPosts.findIndex((p) => p.id === post.id) + 1
+                  }`}
                 >
                   <div className="w-[6px] h-[6px] rounded-full bg-inherit" />
                 </motion.button>

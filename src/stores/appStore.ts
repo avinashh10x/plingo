@@ -1,8 +1,8 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
-export type Platform = 'twitter' | 'linkedin' | 'instagram';
+export type Platform = "twitter" | "linkedin" | "instagram";
 
-export type ScheduleMode = 'daily' | 'weekdays' | 'weekends' | 'custom';
+export type ScheduleMode = "daily" | "weekdays" | "weekends" | "custom";
 
 export interface ScheduleFrequency {
   mode: ScheduleMode;
@@ -20,7 +20,7 @@ export interface EditorPost {
 
 interface AppState {
   // Theme
-  theme: 'dark' | 'light';
+  theme: "dark" | "light";
   toggleTheme: () => void;
 
   // AI Panel visibility
@@ -28,14 +28,18 @@ interface AppState {
   toggleAIPanel: () => void;
   setAIPanelOpen: (open: boolean) => void;
 
+  // Onboarding
+  showOnboarding: boolean;
+  setShowOnboarding: (show: boolean) => void;
+
   // Active panels
-  activeLeftPanel: 'queue' | 'calendar' | 'platforms' | null;
-  setActiveLeftPanel: (panel: 'queue' | 'calendar' | 'platforms') => void;
-  toggleLeftPanel: (panel: 'queue' | 'calendar' | 'platforms') => void;
+  activeLeftPanel: "queue" | "calendar" | "platforms" | null;
+  setActiveLeftPanel: (panel: "queue" | "calendar" | "platforms") => void;
+  toggleLeftPanel: (panel: "queue" | "calendar" | "platforms") => void;
 
   // Active tab
-  activeTab: 'twitter' | 'linkedin' | 'editor';
-  setActiveTab: (tab: 'twitter' | 'linkedin' | 'editor') => void;
+  activeTab: "twitter" | "linkedin" | "editor";
+  setActiveTab: (tab: "twitter" | "linkedin" | "editor") => void;
 
   // Editor posts (local UI state for posts being drafted)
   editorPosts: EditorPost[];
@@ -60,109 +64,148 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Theme
-  theme: 'dark',
-  toggleTheme: () => set((state) => {
-    const newTheme = state.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    return { theme: newTheme };
-  }),
+  theme: "dark",
+  toggleTheme: () =>
+    set((state) => {
+      const newTheme = state.theme === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("dark", newTheme === "dark");
+      return { theme: newTheme };
+    }),
 
   // AI Panel
   isAIPanelOpen: false,
-  toggleAIPanel: () => set((state) => ({ isAIPanelOpen: !state.isAIPanelOpen })),
+  toggleAIPanel: () =>
+    set((state) => ({ isAIPanelOpen: !state.isAIPanelOpen })),
   setAIPanelOpen: (open) => set({ isAIPanelOpen: open }),
+
+  // Onboarding
+  showOnboarding: false,
+  setShowOnboarding: (show) => set({ showOnboarding: show }),
 
   // Active panels
   activeLeftPanel: null,
   setActiveLeftPanel: (panel) => set({ activeLeftPanel: panel }),
-  toggleLeftPanel: (panel) => set((state) => ({
-    activeLeftPanel: state.activeLeftPanel === panel ? null : panel,
-  })),
+  toggleLeftPanel: (panel) =>
+    set((state) => ({
+      activeLeftPanel: state.activeLeftPanel === panel ? null : panel,
+    })),
 
   // Active tab
-  activeTab: 'editor',
+  activeTab: "editor",
   setActiveTab: (tab) => set({ activeTab: tab }),
 
   // Editor posts (local UI state)
   editorPosts: [
     {
       id: generateId(),
-      content: '',
-      platforms: ['twitter'],
+      content: "",
+      platforms: ["twitter"],
       selected: false,
     },
   ],
-  addEditorPost: () => set((state) => {
-    const MAX_CARDS = 30;
-    if (state.editorPosts.length >= MAX_CARDS) {
-      return state; // Return unchanged, toast will be shown in component
-    }
-    return {
-      editorPosts: [...state.editorPosts, {
-        id: generateId(),
-        content: '',
-        platforms: ['twitter'],
-        selected: false,
-      }],
-    };
-  }),
-  addEditorPostWithData: (content, platforms) => set((state) => {
-    const MAX_CARDS = 30;
-    const existingPosts = state.editorPosts.filter(p => p.content !== '');
-    if (existingPosts.length >= MAX_CARDS) {
-      return state; // Return unchanged, toast will be shown in component
-    }
-    return {
-      editorPosts: [{
-        id: generateId(),
-        content,
-        platforms,
-        selected: false,
-      }, ...existingPosts].slice(0, MAX_CARDS),
-    };
-  }),
-  updateEditorPost: (id, updates) => set((state) => ({
-    editorPosts: state.editorPosts.map((post) =>
-      post.id === id ? { ...post, ...updates } : post
-    ),
-  })),
-  removeEditorPost: (id) => set((state) => ({
-    editorPosts: state.editorPosts.length > 1
-      ? state.editorPosts.filter((post) => post.id !== id)
-      : state.editorPosts,
-  })),
-  removeEditorPosts: (ids) => set((state) => {
-    const remaining = state.editorPosts.filter((post) => !ids.includes(post.id));
-    return {
-      editorPosts: remaining.length > 0 ? remaining : [{
-        id: generateId(),
-        content: '',
-        platforms: ['twitter'],
-        selected: false,
-      }],
-    };
-  }),
-  clearEditorPosts: () => set({
-    editorPosts: [{
-      id: generateId(),
-      content: '',
-      platforms: ['twitter'],
-      selected: false,
-    }],
-  }),
+  addEditorPost: () =>
+    set((state) => {
+      const MAX_CARDS = 30;
+      if (state.editorPosts.length >= MAX_CARDS) {
+        return state; // Return unchanged, toast will be shown in component
+      }
+      return {
+        editorPosts: [
+          ...state.editorPosts,
+          {
+            id: generateId(),
+            content: "",
+            platforms: ["twitter"],
+            selected: false,
+          },
+        ],
+      };
+    }),
+  addEditorPostWithData: (content, platforms) =>
+    set((state) => {
+      const MAX_CARDS = 30;
+      const existingPosts = state.editorPosts.filter((p) => p.content !== "");
+      if (existingPosts.length >= MAX_CARDS) {
+        return state; // Return unchanged, toast will be shown in component
+      }
+      return {
+        editorPosts: [
+          {
+            id: generateId(),
+            content,
+            platforms,
+            selected: false,
+          },
+          ...existingPosts,
+        ].slice(0, MAX_CARDS),
+      };
+    }),
+  updateEditorPost: (id, updates) =>
+    set((state) => ({
+      editorPosts: state.editorPosts.map((post) =>
+        post.id === id ? { ...post, ...updates } : post
+      ),
+    })),
+  removeEditorPost: (id) =>
+    set((state) => ({
+      editorPosts:
+        state.editorPosts.length > 1
+          ? state.editorPosts.filter((post) => post.id !== id)
+          : state.editorPosts,
+    })),
+  removeEditorPosts: (ids) =>
+    set((state) => {
+      const remaining = state.editorPosts.filter(
+        (post) => !ids.includes(post.id)
+      );
+      return {
+        editorPosts:
+          remaining.length > 0
+            ? remaining
+            : [
+                {
+                  id: generateId(),
+                  content: "",
+                  platforms: ["twitter"],
+                  selected: false,
+                },
+              ],
+      };
+    }),
+  clearEditorPosts: () =>
+    set({
+      editorPosts: [
+        {
+          id: generateId(),
+          content: "",
+          platforms: ["twitter"],
+          selected: false,
+        },
+      ],
+    }),
   reorderEditorPosts: (posts) => set({ editorPosts: posts }),
-  toggleEditorPostSelection: (id) => set((state) => ({
-    editorPosts: state.editorPosts.map((post) =>
-      post.id === id ? { ...post, selected: !post.selected } : post
-    ),
-  })),
-  selectAllEditorPosts: () => set((state) => ({
-    editorPosts: state.editorPosts.map((post) => ({ ...post, selected: true })),
-  })),
-  deselectAllEditorPosts: () => set((state) => ({
-    editorPosts: state.editorPosts.map((post) => ({ ...post, selected: false })),
-  })),
-  getSelectedEditorPosts: () => get().editorPosts.filter((post) => post.selected),
+  toggleEditorPostSelection: (id) =>
+    set((state) => ({
+      editorPosts: state.editorPosts.map((post) =>
+        post.id === id ? { ...post, selected: !post.selected } : post
+      ),
+    })),
+  selectAllEditorPosts: () =>
+    set((state) => ({
+      editorPosts: state.editorPosts.map((post) => ({
+        ...post,
+        selected: true,
+      })),
+    })),
+  deselectAllEditorPosts: () =>
+    set((state) => ({
+      editorPosts: state.editorPosts.map((post) => ({
+        ...post,
+        selected: false,
+      })),
+    })),
+  getSelectedEditorPosts: () =>
+    get().editorPosts.filter((post) => post.selected),
 
   // Selected date
   selectedDate: new Date(),

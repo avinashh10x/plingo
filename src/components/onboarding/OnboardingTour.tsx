@@ -1,69 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { 
-  Sparkles, 
-  LayoutDashboard, 
-  Calendar, 
-  PenTool, 
-  Users, 
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Sparkles,
+  LayoutDashboard,
+  Calendar,
+  PenTool,
+  Users,
   Settings,
   ChevronRight,
   ChevronLeft,
-  X
-} from 'lucide-react';
-import { createPortal } from 'react-dom';
+  X,
+  FileText,
+} from "lucide-react";
+import { createPortal } from "react-dom";
+
+import { usePlatforms } from "@/hooks/usePlatforms";
 
 interface TourStep {
   title: string;
-  description: string;
+  description: React.ReactNode;
   icon: React.ReactNode;
   targetSelector?: string;
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: "top" | "bottom" | "left" | "right";
 }
-
-const tourSteps: TourStep[] = [
-  {
-    title: 'Welcome to Plingo!',
-    description: 'Your all-in-one social media scheduling platform. Let us show you around.',
-    icon: <Sparkles className="h-6 w-6" />,
-  },
-  {
-    title: 'Dashboard Overview',
-    description: 'Get a quick glance at your scheduled posts, drafts, and connected accounts.',
-    icon: <LayoutDashboard className="h-6 w-6" />,
-    targetSelector: '[data-tour="dashboard"]',
-    position: 'right',
-  },
-  {
-    title: 'Content Studio',
-    description: 'Create beautiful posts with our rich editor and AI assistant.',
-    icon: <PenTool className="h-6 w-6" />,
-    targetSelector: '[data-tour="studio"]',
-    position: 'right',
-  },
-  {
-    title: 'Calendar View',
-    description: 'Visualize your content schedule and plan ahead.',
-    icon: <Calendar className="h-6 w-6" />,
-    targetSelector: '[data-tour="calendar"]',
-    position: 'right',
-  },
-  {
-    title: 'Connect Platforms',
-    description: 'Link your social media accounts to start publishing.',
-    icon: <Users className="h-6 w-6" />,
-    targetSelector: '[data-tour="accounts"]',
-    position: 'right',
-  },
-  {
-    title: 'Customize Settings',
-    description: 'Personalize your experience with themes and preferences.',
-    icon: <Settings className="h-6 w-6" />,
-    targetSelector: '[data-tour="settings"]',
-    position: 'right',
-  },
-];
 
 interface OnboardingTourProps {
   onComplete: () => void;
@@ -74,6 +34,77 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const { isConnected } = usePlatforms();
+
+  const tourSteps: TourStep[] = [
+    {
+      title: "Welcome to Plingo!",
+      description:
+        "Your all-in-one social media scheduling platform. Let us show you around.",
+      icon: <Sparkles className="h-6 w-6" />,
+    },
+    {
+      title: "Dashboard Overview",
+      description:
+        "Get a quick glance at your scheduled posts, drafts, and connected accounts.",
+      icon: <LayoutDashboard className="h-6 w-6" />,
+      targetSelector: '[data-tour="dashboard"]',
+      position: "right",
+    },
+    {
+      title: "Content Studio",
+      description:
+        "Create beautiful posts with our rich editor and AI assistant.",
+      icon: <PenTool className="h-6 w-6" />,
+      targetSelector: '[data-tour="studio"]',
+      position: "right",
+    },
+    {
+      title: "Calendar View",
+      description: "Visualize your content schedule and plan ahead.",
+      icon: <Calendar className="h-6 w-6" />,
+      targetSelector: '[data-tour="calendar"]',
+      position: "right",
+    },
+    {
+      title: "Drafts & Library",
+      description: "Manage your saved drafts and media assets in one place.",
+      icon: <FileText className="h-6 w-6" />,
+      targetSelector: '[data-tour="drafts"]',
+      position: "right",
+    },
+    {
+      title: "Connect Platforms",
+      description: (() => {
+        const connectedCount = ["twitter", "linkedin"].filter((p) =>
+          isConnected(p)
+        ).length;
+        if (connectedCount > 0) {
+          return (
+            <span>
+              Link your social media accounts.
+              <br />
+              <span className="text-green-500 font-medium">
+                ✅ {connectedCount} account{connectedCount > 1 ? "s" : ""}{" "}
+                connected!
+              </span>
+            </span>
+          );
+        }
+        return "Link your social media accounts to start publishing.";
+      })(),
+      icon: <Users className="h-6 w-6" />,
+      targetSelector: '[data-tour="accounts"]',
+      position: "right",
+    },
+    {
+      title: "Customize Settings",
+      description: "Personalize your experience with themes and preferences.",
+      icon: <Settings className="h-6 w-6" />,
+      targetSelector: '[data-tour="settings"]',
+      position: "right",
+    },
+  ];
 
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
@@ -86,9 +117,9 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
       if (target) {
         const rect = target.getBoundingClientRect();
         setTargetRect(rect);
-        
+
         // Scroll into view if needed
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
         setTargetRect(null);
       }
@@ -115,77 +146,77 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
   const getTooltipStyle = (): React.CSSProperties => {
     if (!targetRect || !hasTarget) {
       return {
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
       };
     }
 
     const padding = 16;
-    const position = step.position || 'right';
+    const position = step.position || "right";
 
     switch (position) {
-      case 'right':
+      case "right":
         return {
           top: targetRect.top + targetRect.height / 2,
           left: targetRect.right + padding,
-          transform: 'translateY(-50%)',
+          transform: "translateY(-50%)",
         };
-      case 'left':
+      case "left":
         return {
           top: targetRect.top + targetRect.height / 2,
           right: window.innerWidth - targetRect.left + padding,
-          transform: 'translateY(-50%)',
+          transform: "translateY(-50%)",
         };
-      case 'bottom':
+      case "bottom":
         return {
           top: targetRect.bottom + padding,
           left: targetRect.left + targetRect.width / 2,
-          transform: 'translateX(-50%)',
+          transform: "translateX(-50%)",
         };
-      case 'top':
+      case "top":
         return {
           bottom: window.innerHeight - targetRect.top + padding,
           left: targetRect.left + targetRect.width / 2,
-          transform: 'translateX(-50%)',
+          transform: "translateX(-50%)",
         };
       default:
         return {
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
         };
     }
   };
 
   // Arrow position based on tooltip position
   const getArrowStyle = (): React.CSSProperties => {
-    const position = step.position || 'right';
-    
+    const position = step.position || "right";
+
     switch (position) {
-      case 'right':
+      case "right":
         return {
           left: -8,
-          top: '50%',
-          transform: 'translateY(-50%) rotate(45deg)',
+          top: "50%",
+          transform: "translateY(-50%) rotate(45deg)",
         };
-      case 'left':
+      case "left":
         return {
           right: -8,
-          top: '50%',
-          transform: 'translateY(-50%) rotate(45deg)',
+          top: "50%",
+          transform: "translateY(-50%) rotate(45deg)",
         };
-      case 'bottom':
+      case "bottom":
         return {
           top: -8,
-          left: '50%',
-          transform: 'translateX(-50%) rotate(45deg)',
+          left: "50%",
+          transform: "translateX(-50%) rotate(45deg)",
         };
-      case 'top':
+      case "top":
         return {
           bottom: -8,
-          left: '50%',
-          transform: 'translateX(-50%) rotate(45deg)',
+          left: "50%",
+          transform: "translateX(-50%) rotate(45deg)",
         };
       default:
         return {};
@@ -203,44 +234,44 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
       {targetRect && hasTarget ? (
         <>
           {/* Top overlay */}
-          <div 
-            className="absolute bg-black/70" 
-            style={{ 
-              top: 0, 
-              left: 0, 
-              right: 0, 
-              height: Math.max(0, targetRect.top - 8) 
-            }} 
+          <div
+            className="absolute bg-black/70"
+            style={{
+              top: 0,
+              left: 0,
+              right: 0,
+              height: Math.max(0, targetRect.top - 8),
+            }}
           />
           {/* Left overlay */}
-          <div 
-            className="absolute bg-black/70" 
-            style={{ 
-              top: targetRect.top - 8, 
-              left: 0, 
+          <div
+            className="absolute bg-black/70"
+            style={{
+              top: targetRect.top - 8,
+              left: 0,
               width: Math.max(0, targetRect.left - 8),
-              height: targetRect.height + 16 
-            }} 
+              height: targetRect.height + 16,
+            }}
           />
           {/* Right overlay */}
-          <div 
-            className="absolute bg-black/70" 
-            style={{ 
-              top: targetRect.top - 8, 
-              left: targetRect.right + 8, 
+          <div
+            className="absolute bg-black/70"
+            style={{
+              top: targetRect.top - 8,
+              left: targetRect.right + 8,
               right: 0,
-              height: targetRect.height + 16 
-            }} 
+              height: targetRect.height + 16,
+            }}
           />
           {/* Bottom overlay */}
-          <div 
-            className="absolute bg-black/70" 
-            style={{ 
-              top: targetRect.bottom + 8, 
-              left: 0, 
-              right: 0, 
-              bottom: 0 
-            }} 
+          <div
+            className="absolute bg-black/70"
+            style={{
+              top: targetRect.bottom + 8,
+              left: 0,
+              right: 0,
+              bottom: 0,
+            }}
           />
           {/* Spotlight highlight ring */}
           <motion.div
@@ -253,8 +284,8 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
               width: targetRect.width + 16,
               height: targetRect.height + 16,
               borderRadius: 12,
-              border: '2px solid hsl(var(--primary))',
-              boxShadow: '0 0 20px hsl(var(--primary) / 0.5)',
+              border: "2px solid hsl(var(--primary))",
+              boxShadow: "0 0 20px hsl(var(--primary) / 0.5)",
             }}
           />
         </>
@@ -276,7 +307,7 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
         >
           {/* Arrow */}
           {hasTarget && targetRect && (
-            <div 
+            <div
               className="absolute w-4 h-4 bg-card border-l border-t border-border"
               style={getArrowStyle()}
             />
@@ -290,10 +321,10 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
                   key={index}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     index === currentStep
-                      ? 'w-5 bg-primary'
+                      ? "w-5 bg-primary"
                       : index < currentStep
-                      ? 'w-1.5 bg-primary/50'
-                      : 'w-1.5 bg-muted'
+                      ? "w-1.5 bg-primary/50"
+                      : "w-1.5 bg-muted"
                   }`}
                 />
               ))}
@@ -310,7 +341,9 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
                 {step.icon}
               </div>
               <div>
-                <h3 className="font-semibold text-foreground mb-1">{step.title}</h3>
+                <h3 className="font-semibold text-foreground mb-1">
+                  {step.title}
+                </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {step.description}
                 </p>
@@ -334,20 +367,16 @@ export const OnboardingTour = ({ onComplete, onSkip }: OnboardingTourProps) => {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 onClick={onSkip}
                 className="h-8 text-muted-foreground"
               >
                 Skip
               </Button>
-              <Button 
-                size="sm" 
-                onClick={handleNext} 
-                className="gap-1 h-8"
-              >
-                {isLastStep ? 'Get Started' : 'Next'}
+              <Button size="sm" onClick={handleNext} className="gap-1 h-8">
+                {isLastStep ? "Get Started" : "Next"}
                 {!isLastStep && <ChevronRight className="h-3 w-3" />}
               </Button>
             </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { Button } from "@/components/ui/button";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -8,6 +9,8 @@ import { AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useThemeColor } from "@/hooks/useThemeColor";
+import { useAppStore } from "@/stores/appStore";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -62,29 +65,47 @@ const PageLoader = () => (
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, profile } = useAuth();
-  const [showOnboarding, setShowOnboarding] = useState(false);
+  const { showOnboarding, setShowOnboarding } = useAppStore();
   const [showConnectModal, setShowConnectModal] = useState(false);
 
   useEffect(() => {
-    // Only show onboarding once per user - localStorage persists across sessions
-    const hasSeenOnboarding = localStorage.getItem(
-      "plingo_onboarding_complete"
-    );
-    if (profile && profile.status === "approved" && !hasSeenOnboarding) {
-      // Show onboarding for new users who haven't seen it yet
+    // Show onboarding only if user hasn't seen it (DB flag) and is approved
+    if (
+      profile &&
+      profile.status === "approved" &&
+      profile.has_seen_onboarding === false
+    ) {
       setShowOnboarding(true);
     }
-  }, [profile]);
+  }, [profile, setShowOnboarding]);
 
-  const handleOnboardingComplete = () => {
-    localStorage.setItem("plingo_onboarding_complete", "true");
+  const handleOnboardingComplete = async () => {
     setShowOnboarding(false);
     setShowConnectModal(true);
+
+    // Update DB to persist that user has seen onboarding
+    if (profile) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ has_seen_onboarding: true })
+        .eq("user_id", profile.user_id);
+
+      if (error) {
+        console.error("Failed to update onboarding status", error);
+      }
+    }
   };
 
-  const handleOnboardingSkip = () => {
-    localStorage.setItem("plingo_onboarding_complete", "true");
+  const handleOnboardingSkip = async () => {
     setShowOnboarding(false);
+
+    // Update DB on skip too
+    if (profile) {
+      await supabase
+        .from("profiles")
+        .update({ has_seen_onboarding: true })
+        .eq("user_id", profile.user_id);
+    }
   };
 
   if (isLoading) {
@@ -153,6 +174,13 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isLoading: authLoading } = useAuth();
   const { isAdmin, isLoading: roleLoading, role } = useUserRole();
 
+  console.log("AdminRoute Check:", {
+    user: user?.email,
+    isAdmin,
+    authLoading,
+    roleLoading,
+  });
+
   if (authLoading || roleLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-background">
@@ -162,43 +190,20 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user || !isAdmin) {
-    // DEBUG: Show why access is denied
     return (
-      <div className="h-full w-full flex flex-col items-center justify-center p-8 bg-background">
-        <div className="max-w-md w-full border border-red-200 bg-red-50 dark:bg-red-900/10 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-red-600 mb-4 flex items-center gap-2">
-            ⚠️ Admin Access Denied
-          </h2>
-          <div className="space-y-2 font-mono text-xs">
-            <p>
-              <strong>Path:</strong> {window.location.pathname}
-            </p>
-            <p>
-              <strong>User ID:</strong> {user?.id || "null"}
-            </p>
-            <p>
-              <strong>Email:</strong> {user?.email || "null"}
-            </p>
-            <p>
-              <strong>Role:</strong> {JSON.stringify(role)}
-            </p>
-            <p>
-              <strong>IsAdmin:</strong> {String(isAdmin)}
-            </p>
-            <p>
-              <strong>Auth Loading:</strong> {String(authLoading)}
-            </p>
-            <p>
-              <strong>Role Loading:</strong> {String(roleLoading)}
-            </p>
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-6 w-full py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
-          >
-            Retry / Reload
-          </button>
-        </div>
+      <div className="h-screen flex flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-bold">Access Denied</h1>
+        <p>User: {user?.email}</p>
+        <p>ID: {user?.id}</p>
+        <p>IsAdmin: {String(isAdmin)}</p>
+        <p>Role Loading: {String(roleLoading)}</p>
+        <Button onClick={() => window.location.reload()}>Reload</Button>
+        <Button
+          variant="outline"
+          onClick={() => (window.location.href = "/dashboard")}
+        >
+          Go to Dashboard
+        </Button>
       </div>
     );
     // return <Navigate to="/dashboard" replace />;
