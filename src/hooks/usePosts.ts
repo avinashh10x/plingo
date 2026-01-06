@@ -246,11 +246,23 @@ export function usePosts() {
     const nextIso = scheduledAt.toISOString();
 
     try {
+      // Get current session for explicit auth header
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
+
       const { data, error } = await supabase.functions.invoke("schedule-post", {
         body: {
           post_id: id,
           scheduled_at: nextIso,
           platforms,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
@@ -273,6 +285,10 @@ export function usePosts() {
         ) {
           throw new Error(
             "Platform not connected. Please connect your account in Settings."
+          );
+        } else if (msg.includes("maxDelay") || msg.includes("quota")) {
+          throw new Error(
+            "Scheduling limit: On the free plan, you can only schedule up to 7 days in advance."
           );
         } else {
           throw new Error(msg || "Failed to schedule post");
@@ -336,11 +352,23 @@ export function usePosts() {
     platforms?: PlatformType[]
   ): Promise<boolean> => {
     try {
+      // Get current session for explicit auth header
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
+
       const { data, error } = await supabase.functions.invoke("bulk-schedule", {
         body: {
           post_ids: postIds,
           rule,
           platforms,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
@@ -382,10 +410,22 @@ export function usePosts() {
     );
 
     try {
+      // Get current session for explicit auth header
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error("No active session");
+      }
+
       const { data, error } = await supabase.functions.invoke("publish-post", {
         body: {
           post_id: id,
           platform,
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 

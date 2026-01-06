@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { FileText, Edit, Trash2, Clock } from "lucide-react";
+import {
+  FileText,
+  Edit,
+  Trash2,
+  Clock,
+  Send,
+  CalendarClock,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +14,19 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePosts } from "@/hooks/usePosts";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import {
   AnimatedTwitterIcon,
   AnimatedLinkedInIcon,
 } from "@/components/ui/animated-icon";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { htmlToPlainText } from "@/lib/utils";
 import { useAppStore, Platform } from "@/stores/appStore";
 import {
@@ -30,12 +46,21 @@ const PlatformIcon = ({ platform }: { platform: string }) => {
 
 export const DraftsPage = () => {
   const navigate = useNavigate();
-  const { posts, isLoading, deletePost } = usePosts();
+  const { posts, isLoading, deletePost, publishNow, updatePost, schedulePost } =
+    usePosts();
   const { addEditorPostWithData, clearEditorPosts } = useAppStore();
   const [platformFilter, setPlatformFilter] = useState<
     "all" | "twitter" | "linkedin"
   >("all");
   const [activeTab, setActiveTab] = useState<"drafts" | "all">("drafts");
+
+  // State for Edit/Reschedule dialogs
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editContent, setEditContent] = useState("");
+  const [reschedulingPost, setReschedulingPost] = useState<any>(null);
+  const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>(
+    undefined
+  );
 
   const handleEditDraft = (post: (typeof posts)[0]) => {
     // Clear existing editor posts and add this draft's content
@@ -221,6 +246,23 @@ export const DraftsPage = () => {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
+                    {(post.status === "draft" ||
+                      post.status === "scheduled") && (
+                      <Button
+                        variant="secondary"
+                        size="icon"
+                        title="Post Now"
+                        onClick={() => {
+                          if (confirm("Post this now?")) {
+                            post.platforms?.forEach((p) =>
+                              publishNow(post.id, p)
+                            );
+                          }
+                        }}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    )}
                     {post.status === "draft" && (
                       <Button
                         variant="ghost"
@@ -229,6 +271,34 @@ export const DraftsPage = () => {
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
+                    )}
+                    {post.status === "scheduled" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Edit Content"
+                          onClick={() => {
+                            setEditingPost(post);
+                            setEditContent(htmlToPlainText(post.content));
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Reschedule"
+                          onClick={() => {
+                            setReschedulingPost(post);
+                            if (post.scheduled_at) {
+                              setNewScheduleDate(new Date(post.scheduled_at));
+                            }
+                          }}
+                        >
+                          <CalendarClock className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                     <Button
                       variant="ghost"
@@ -245,6 +315,85 @@ export const DraftsPage = () => {
           ))}
         </div>
       )}
+
+      {/* Edit Content Dialog */}
+      <Dialog open={!!editingPost} onOpenChange={() => setEditingPost(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Post Content</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="min-h-[150px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPost(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (editingPost) {
+                  await updatePost(editingPost.id, { content: editContent });
+                  setEditingPost(null);
+                }
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reschedule Dialog */}
+      <Dialog
+        open={!!reschedulingPost}
+        onOpenChange={() => setReschedulingPost(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reschedule Post</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center py-4">
+            <Calendar
+              mode="single"
+              selected={newScheduleDate}
+              onSelect={setNewScheduleDate}
+              initialFocus
+              className="p-3 pointer-events-auto"
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const maxDate = addDays(today, 7);
+                return date < today || date > maxDate;
+              }}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReschedulingPost(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (reschedulingPost && newScheduleDate) {
+                  const oldDate = new Date(reschedulingPost.scheduled_at);
+                  const newDate = new Date(newScheduleDate);
+                  newDate.setHours(oldDate.getHours(), oldDate.getMinutes());
+
+                  await schedulePost(
+                    reschedulingPost.id,
+                    newDate,
+                    reschedulingPost.platforms
+                  );
+                  setReschedulingPost(null);
+                }
+              }}
+            >
+              Confirm Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

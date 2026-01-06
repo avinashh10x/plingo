@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { addDays } from "date-fns";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
-import { GripVertical, X, Send, Calendar, Loader2 } from "lucide-react";
+import { GripVertical, X, Send, Calendar, Loader2, Save } from "lucide-react";
 import { useAppStore, Platform, EditorPost } from "@/stores/appStore";
 import { usePosts } from "@/hooks/usePosts";
 import { usePlatforms } from "@/hooks/usePlatforms";
@@ -363,11 +364,44 @@ export const CompactEditorCard = ({
                     time={selectedTime}
                     onDateChange={setSelectedDate}
                     onTimeChange={setSelectedTime}
+                    maxDate={addDays(new Date(), 7)}
                     onConfirm={handleSchedule}
-                    triggerLabel={isScheduling ? "..." : undefined}
-                    compact
+                    open={isScheduling}
+                    onOpenChange={setIsScheduling}
+                    triggerLabel="Schedule"
                   />
                 )}
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    if (!plainText) return;
+                    setIsPosting(true);
+                    try {
+                      await createPost(
+                        post.content,
+                        post.platforms || ["twitter"]
+                      );
+                      // Only remove if successful
+                      if (editorPosts.length === 1) {
+                        clearEditorPosts();
+                      } else {
+                        removeEditorPost(post.id);
+                      }
+                      toast({ title: "Draft saved!" });
+                    } catch (e) {
+                      console.error(e);
+                    } finally {
+                      setIsPosting(false);
+                    }
+                  }}
+                  disabled={isPosting || !hasContent}
+                  className="h-7 text-xs px-2.5 gap-1 mr-1"
+                >
+                  <Save className="h-3 w-3" />
+                  Save Draft
+                </Button>
 
                 <Button
                   size="sm"
@@ -380,7 +414,7 @@ export const CompactEditorCard = ({
                   ) : (
                     <Send className="h-3 w-3" />
                   )}
-                  Post
+                  Post Now
                 </Button>
               </div>
             </div>

@@ -34,7 +34,6 @@ const SUPPORTED_PLATFORMS: {
     name: "LinkedIn",
     description: "Share professional content",
   },
-  { id: "instagram", name: "Instagram", description: "Share photos and reels" },
 ];
 
 const PlatformIcon = ({

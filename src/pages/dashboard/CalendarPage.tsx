@@ -1,5 +1,14 @@
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Clock, Trash2, Filter } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Trash2,
+  Filter,
+  Send,
+  Edit,
+  CalendarClock,
+} from "lucide-react";
 import {
   format,
   startOfMonth,
@@ -12,6 +21,7 @@ import {
   isPast,
   isFuture,
   isToday as isDateToday,
+  addDays,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +40,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Textarea } from "@/components/ui/textarea";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -40,7 +64,8 @@ const PlatformIcon = ({ platform }: { platform: string }) => {
 };
 
 export const CalendarPage = () => {
-  const { posts, isLoading, deletePost } = usePosts();
+  const { posts, isLoading, deletePost, publishNow, updatePost, schedulePost } =
+    usePosts();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("month");
@@ -50,6 +75,14 @@ export const CalendarPage = () => {
   const [platformFilter, setPlatformFilter] = useState<
     "all" | "twitter" | "linkedin"
   >("all");
+
+  // Edit/Reschedule State
+  const [editingPost, setEditingPost] = useState<any>(null);
+  const [reschedulingPost, setReschedulingPost] = useState<any>(null);
+  const [editContent, setEditContent] = useState("");
+  const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>(
+    undefined
+  );
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -390,14 +423,55 @@ export const CalendarPage = () => {
                       </div>
                     </div>
                     {post.status === "scheduled" && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => deletePost(post.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Reschedule"
+                          onClick={() => {
+                            setReschedulingPost(post);
+                            setNewScheduleDate(new Date(post.scheduled_at!));
+                          }}
+                        >
+                          <CalendarClock className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Edit Content"
+                          onClick={() => {
+                            setEditingPost(post);
+                            setEditContent(htmlToPlainText(post.content));
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Post Now"
+                          onClick={() => {
+                            if (confirm("Post this now?")) {
+                              post.platforms?.forEach((p) =>
+                                publishNow(post.id, p)
+                              );
+                            }
+                          }}
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => deletePost(post.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -406,6 +480,92 @@ export const CalendarPage = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Content Dialog */}
+      <Dialog
+        open={!!editingPost}
+        onOpenChange={(open) => !open && setEditingPost(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Post Content</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            className="min-h-[150px]"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingPost(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (editingPost) {
+                  await updatePost(editingPost.id, { content: editContent });
+                  setEditingPost(null);
+                }
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reschedule Dialog */}
+      <Dialog
+        open={!!reschedulingPost}
+        onOpenChange={(open) => !open && setReschedulingPost(null)}
+      >
+        <DialogContent className="w-auto p-0">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Reschedule Post</h2>
+          </div>
+          <Calendar
+            mode="single"
+            selected={newScheduleDate}
+            onSelect={setNewScheduleDate}
+            initialFocus
+            className="p-3 pointer-events-auto"
+            disabled={(date) => {
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const maxDate = addDays(today, 7);
+              return date < today || date > maxDate;
+            }}
+          />
+          <div className="p-4 border-t flex justify-end gap-2">
+            <Button variant="ghost" onClick={() => setReschedulingPost(null)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                if (reschedulingPost && newScheduleDate) {
+                  // Keep original time, change date? Or just set date at current time?
+                  // Ideally user picks time too. For now reset time to 12PM or keep original time components?
+                  // Let's keep original hours/minutes if possible, or just use selected date at current time.
+                  // Simplest: Schedule for noon on that day if not specified?
+                  // Better: Combine new date with old time.
+                  const oldDate = new Date(reschedulingPost.scheduled_at);
+                  const newDate = new Date(newScheduleDate);
+                  newDate.setHours(oldDate.getHours(), oldDate.getMinutes());
+
+                  // If new date-time is in past, maybe warn? But schedulePost handles it.
+                  await schedulePost(
+                    reschedulingPost.id,
+                    newDate,
+                    reschedulingPost.platforms
+                  );
+                  setReschedulingPost(null);
+                }
+              }}
+            >
+              Confirm schedule
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

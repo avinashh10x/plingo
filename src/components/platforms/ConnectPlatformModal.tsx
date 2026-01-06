@@ -1,6 +1,4 @@
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -8,17 +6,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import {
-  Twitter,
-  Linkedin,
-  Instagram,
-  Facebook,
-  Loader2,
-  ExternalLink,
-  Check,
-} from "lucide-react";
+import { Twitter, Linkedin, Loader2, ExternalLink, Check } from "lucide-react";
+import { usePlatforms, PlatformType } from "@/hooks/usePlatforms";
 
 const platforms = [
   {
@@ -35,20 +24,6 @@ const platforms = [
     color: "bg-blue-600",
     available: true,
   },
-  {
-    id: "instagram",
-    name: "Instagram",
-    icon: Instagram,
-    color: "bg-gradient-to-br from-purple-500 to-pink-500",
-    available: true,
-  },
-  {
-    id: "facebook",
-    name: "Facebook",
-    icon: Facebook,
-    color: "bg-blue-500",
-    available: true,
-  },
 ];
 
 interface ConnectPlatformModalProps {
@@ -57,38 +32,17 @@ interface ConnectPlatformModalProps {
   onSuccess?: () => void;
 }
 
-import { usePlatforms, PlatformType } from "@/hooks/usePlatforms";
-
-// ... (keep imports)
-
 export const ConnectPlatformModal = ({
   open,
   onOpenChange,
   onSuccess,
 }: ConnectPlatformModalProps) => {
-  const [connecting, setConnecting] = useState<string | null>(null);
-  const { getPlatformStatus } = usePlatforms();
+  const { connectPlatform, isConnecting, getPlatformStatus } = usePlatforms();
 
   const handleConnect = async (platformId: string) => {
-    // ... (keep existing handleConnect logic)
-    setConnecting(platformId);
-    try {
-      const { data, error } = await supabase.functions.invoke("oauth-init", {
-        body: { platform: platformId },
-      });
-
-      if (error) throw error;
-
-      if (data?.authUrl) {
-        window.location.href = data.authUrl;
-      } else {
-        throw new Error("No authorization URL returned");
-      }
-    } catch (error) {
-      console.error("Error initiating OAuth:", error);
-      toast.error("Failed to connect platform");
-      setConnecting(null);
-    }
+    await connectPlatform(platformId as PlatformType);
+    // onSuccess handled by hook/toast or redirect
+    onSuccess?.();
   };
 
   return (
@@ -117,7 +71,9 @@ export const ConnectPlatformModal = ({
                   handleConnect(platform.id)
                 }
                 disabled={
-                  !platform.available || connecting !== null || isConnected
+                  !platform.available ||
+                  isConnecting === platform.id ||
+                  isConnected
                 }
                 className={`
                   flex items-center gap-4 p-4 rounded-lg border transition-all text-left w-full
@@ -150,7 +106,7 @@ export const ConnectPlatformModal = ({
                       : "Coming soon"}
                   </p>
                 </div>
-                {connecting === platform.id ? (
+                {isConnecting === platform.id ? (
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 ) : isConnected ? (
                   <Check className="h-5 w-5 text-green-500" />
