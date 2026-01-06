@@ -1,4 +1,4 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Wand2,
@@ -151,15 +151,22 @@ export const AppSidebar = ({ isCollapsed = false }: AppSidebarProps) => {
     <aside className="h-full bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-200">
       {/* Logo */}
       <div className="h-14 flex items-center px-3 border-b border-sidebar-border">
-        {!isCollapsed ? (
-          <h1 className="text-xl font-bold text-sidebar-primary px-2">
-            Plingo
-          </h1>
-        ) : (
-          <div className="w-full flex justify-center">
-            <span className="text-xl font-bold text-sidebar-primary">P</span>
-          </div>
-        )}
+        <Link to={'/'}>
+          {!isCollapsed ? (
+            <div className="flex items-center">
+              <span className="size-10">
+                <img src="/logo2.png" alt="" />
+              </span>
+              <h1 className="text-xl font-bold text-sidebar-primary">Plingo</h1>
+            </div>
+          ) : (
+            <div className="w-full flex justify-center">
+              <span className="size-10">
+                <img src="/logo2.png" alt="" />
+              </span>
+            </div>
+          )}
+        </Link>
       </div>
 
       {/* Navigation */}

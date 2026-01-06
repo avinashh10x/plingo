@@ -421,11 +421,35 @@ export const AdminDashboard = () => {
   return (
     <div className="space-y-6">
       {/* Normalized Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage users, approvals, and platform limits.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Manage users, approvals, and platform limits.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => {
+            // Try to find admin in the loaded users list first
+            const adminInList = users.find((u) => u.user_id === user?.id);
+
+            if (adminInList) {
+              openLimitsDialog(adminInList);
+            } else if (profile && user) {
+              // Fallback: Use current auth profile if not in list
+              openLimitsDialog({
+                ...profile,
+                created_at: new Date().toISOString(),
+              } as any);
+            } else {
+              toast.error("Admin profile not loaded yet. Please try again.");
+            }
+          }}
+        >
+          <Shield className="h-4 w-4 mr-2" />
+          Manage My Limits
+        </Button>
       </div>
 
       <div className="space-y-6">

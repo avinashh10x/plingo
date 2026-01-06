@@ -1,20 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import { AppSidebar } from './AppSidebar';
-import { DashboardHeader } from './DashboardHeader';
-import { useAppStore } from '@/stores/appStore';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { AppSidebar } from "./AppSidebar";
+import { DashboardHeader } from "./DashboardHeader";
+import { useAppStore } from "@/stores/appStore";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 
-const MIN_SIDEBAR_SIZE = 10; // percentage
+const MIN_SIDEBAR_SIZE = 3; // percentage
 const MAX_SIDEBAR_SIZE = 25; // percentage
-const DEFAULT_SIDEBAR_SIZE = 15; // percentage
+const DEFAULT_SIDEBAR_SIZE = 20; // percentage
 
 export const DashboardLayout = () => {
   const { theme } = useAppStore();
   const [sidebarSize, setSidebarSize] = useState(DEFAULT_SIDEBAR_SIZE);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
 
   return (
@@ -32,13 +36,16 @@ export const DashboardLayout = () => {
         </ResizablePanel>
 
         {/* Resize Handle */}
-        <ResizableHandle withHandle className="w-1 bg-transparent hover:bg-primary/20 transition-colors" />
+        <ResizableHandle
+          withHandle
+          className="w-1 bg-transparent hover:bg-primary/20 transition-colors"
+        />
 
         {/* Main area */}
         <ResizablePanel defaultSize={85} minSize={75}>
           <div className="flex-1 flex flex-col overflow-hidden h-full">
             <DashboardHeader />
-            
+
             {/* Page content with proper padding */}
             <main className="flex-1 overflow-auto p-6">
               <div className="max-w-7xl mx-auto">
