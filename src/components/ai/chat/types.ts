@@ -5,7 +5,7 @@ export interface GeneratedPost {
 }
 
 export interface ChatMessage {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   timestamp: string;
 }
@@ -15,11 +15,31 @@ export interface AIModel {
   name: string;
   shortName: string;
   description: string;
-  badge: 'Recommended' | 'Pro' | null;
+  badge: "Fast" | "Recommended" | "Lite" | null;
 }
 
+// Free Google Gemini Models
+// API Key: https://aistudio.google.com/app/apikey
 export const AI_MODELS: AIModel[] = [
-  { id: 'gemini-2.0-flash', name: 'Gemini 2.5 Flash', shortName: 'Gemini 2.5', description: 'Fast & efficient', badge: 'Recommended' },
-  { id: 'gemini-1.5-flash', name: 'Gemini 2.5 Flash Lite', shortName: 'Gemini Lite', description: 'Fastest, lightweight', badge: null },
-  { id: 'gemini-1.5-pro', name: 'Gemini 2.5 Pro', shortName: 'Gemini Pro', description: 'Most powerful', badge: 'Pro' },
+  {
+    id: "gemini-2.0-flash",
+    name: "Gemini 2.0 Flash",
+    shortName: "Gemini 2.0",
+    description: "Latest & fastest",
+    badge: "Recommended",
+  },
+  {
+    id: "gemini-1.5-flash",
+    name: "Gemini 1.5 Flash",
+    shortName: "Gemini 1.5",
+    description: "Balanced performance",
+    badge: "Fast",
+  },
+  {
+    id: "gemini-1.5-flash-8b",
+    name: "Gemini 1.5 Flash 8B",
+    shortName: "Gemini Lite",
+    description: "Lightweight & quick",
+    badge: "Lite",
+  },
 ];

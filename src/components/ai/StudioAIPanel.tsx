@@ -1,12 +1,17 @@
-import { useState, useEffect } from 'react';
-import { useAppStore } from '@/stores/appStore';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { useAIChats } from '@/hooks/useAIChats';
-import { useAgentSettings } from '@/hooks/useAgentSettings';
-import { useAuth } from '@/hooks/useAuth';
-import { ChatContent, GeneratedPost, ChatMessage, AI_MODELS } from '@/components/ai/chat';
-import { CompactChatInput } from '@/components/ai/chat/CompactChatInput';
+import { useState, useEffect } from "react";
+import { useAppStore } from "@/stores/appStore";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useAIChats } from "@/hooks/useAIChats";
+import { useAgentSettings } from "@/hooks/useAgentSettings";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  ChatContent,
+  GeneratedPost,
+  ChatMessage,
+  AI_MODELS,
+} from "@/components/ai/chat";
+import { CompactChatInput } from "@/components/ai/chat/CompactChatInput";
 
 export const StudioAIPanel = () => {
   const { addEditorPost, updateEditorPost, editorPosts } = useAppStore();
@@ -22,20 +27,23 @@ export const StudioAIPanel = () => {
   } = useAIChats();
   const { settings: agentSettings } = useAgentSettings();
 
-  const [aiInput, setAiInput] = useState('');
+  const [aiInput, setAiInput] = useState("");
   const [generatedItems, setGeneratedItems] = useState<GeneratedPost[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<string>('gemini-2.0-flash');
-  const [postCount, setPostCount] = useState<string>('');
-  const [tone, setTone] = useState<string>('professional');
+  const [selectedModel, setSelectedModel] =
+    useState<string>("gemini-2.0-flash");
+  const [postCount, setPostCount] = useState<string>("");
+  const [tone, setTone] = useState<string>("professional");
 
   useEffect(() => {
     if (currentChat?.messages) {
-      const allMessages = currentChat.messages.map((m: ChatMessage, i: number) => ({
-        id: `chat-${currentChatId}-${i}`,
-        content: m.content,
-        isUserMessage: m.role === 'user',
-      }));
+      const allMessages = currentChat.messages.map(
+        (m: ChatMessage, i: number) => ({
+          id: `chat-${currentChatId}-${i}`,
+          content: m.content,
+          isUserMessage: m.role === "user",
+        })
+      );
       setGeneratedItems(allMessages);
     } else {
       setGeneratedItems([]);
@@ -49,18 +57,21 @@ export const StudioAIPanel = () => {
 
     try {
       const count = postCount ? parseInt(postCount) : 0;
-      
-      const { data, error } = await supabase.functions.invoke('generate-content', {
-        body: {
-          prompt: aiInput,
-          model: selectedModel,
-          type: count > 0 ? 'tweet' : 'chat',
-          userIdentity: agentSettings?.user_identity,
-          guidelines: agentSettings?.guidelines,
-          count: count > 0 ? count : 1,
-          tone,
-        },
-      });
+
+      const { data, error } = await supabase.functions.invoke(
+        "generate-content",
+        {
+          body: {
+            prompt: aiInput,
+            model: selectedModel,
+            type: count > 0 ? "tweet" : "chat",
+            userIdentity: agentSettings?.user_identity,
+            guidelines: agentSettings?.guidelines,
+            count: count > 0 ? count : 1,
+            tone,
+          },
+        }
+      );
 
       if (error) throw error;
       if (data.error) throw new Error(data.error);
@@ -88,43 +99,69 @@ export const StudioAIPanel = () => {
         ];
       }
 
-      setGeneratedItems(prev => [...prev, userMessage, ...assistantItems]);
+      setGeneratedItems((prev) => [...prev, userMessage, ...assistantItems]);
 
       if (user && currentChatId) {
         const newMessages: ChatMessage[] = [
           ...(currentChat?.messages || []),
-          { role: 'user', content: aiInput, timestamp: new Date().toISOString() },
+          {
+            role: "user",
+            content: aiInput,
+            timestamp: new Date().toISOString(),
+          },
           ...assistantItems.map((item) => ({
-            role: 'assistant' as const,
+            role: "assistant" as const,
             content: item.content,
             timestamp: new Date().toISOString(),
           })),
         ];
 
         const title =
-          currentChat?.title === 'New Chat'
-            ? aiInput.slice(0, 30) + (aiInput.length > 30 ? '...' : '')
+          currentChat?.title === "New Chat"
+            ? aiInput.slice(0, 30) + (aiInput.length > 30 ? "..." : "")
             : undefined;
 
         await updateChat(currentChatId, newMessages, title);
       }
 
-      setAiInput('');
-      
+      setAiInput("");
+
       const modelName = AI_MODELS.find((m) => m.id === selectedModel)?.name;
       if (count > 0) {
         toast({
-          title: 'Content generated!',
+          title: "Content generated!",
           description: `Generated ${assistantItems.length} post(s) using ${modelName}`,
         });
       }
-    } catch (error) {
-      console.error('Error generating content:', error);
+    } catch (error: any) {
+      console.error("Error generating content:", error);
+
+      // Extract the actual error message
+      let errorMessage = "Failed to generate content. Please try again.";
+
+      if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      // Check for Supabase function error context
+      if (error?.context?.body) {
+        try {
+          const body =
+            typeof error.context.body === "string"
+              ? JSON.parse(error.context.body)
+              : error.context.body;
+          if (body?.error) {
+            errorMessage = body.error;
+          }
+        } catch (e) {
+          // Use original message
+        }
+      }
+
       toast({
-        variant: 'destructive',
-        title: 'Generation failed',
-        description:
-          error instanceof Error ? error.message : 'Failed to generate content. Please try again.',
+        variant: "destructive",
+        title: "Generation failed",
+        description: errorMessage,
       });
     } finally {
       setIsGenerating(false);
@@ -134,7 +171,7 @@ export const StudioAIPanel = () => {
   const handleNewChat = async () => {
     await createNewChat();
     setGeneratedItems([]);
-    setAiInput('');
+    setAiInput("");
   };
 
   const handleSelectChat = (chatId: string) => {
@@ -144,14 +181,14 @@ export const StudioAIPanel = () => {
   const handleCopy = (content: string) => {
     navigator.clipboard.writeText(content);
     toast({
-      title: 'Copied!',
-      description: 'Content copied to clipboard.',
+      title: "Copied!",
+      description: "Content copied to clipboard.",
     });
   };
 
   const handleAddToEditor = (content: string) => {
     // Find first empty post or add to it
-    const emptyPost = editorPosts.find(p => p.content === '');
+    const emptyPost = editorPosts.find((p) => p.content === "");
     if (emptyPost) {
       updateEditorPost(emptyPost.id, { content });
     } else {
@@ -163,45 +200,50 @@ export const StudioAIPanel = () => {
       }, 0);
     }
     toast({
-      title: 'Added to editor',
+      title: "Added to editor",
     });
   };
 
   const handleAddAllToEditor = () => {
     // Get only the last assistant response(s) - find the last user message index
-    const lastUserIndex = [...generatedItems].reverse().findIndex(item => item.isUserMessage);
-    const lastUserActualIndex = lastUserIndex === -1 ? -1 : generatedItems.length - 1 - lastUserIndex;
-    
+    const lastUserIndex = [...generatedItems]
+      .reverse()
+      .findIndex((item) => item.isUserMessage);
+    const lastUserActualIndex =
+      lastUserIndex === -1 ? -1 : generatedItems.length - 1 - lastUserIndex;
+
     const lastResponseItems = generatedItems
       .slice(lastUserActualIndex + 1)
       .filter((item) => !item.isUserMessage && item.content.trim().length > 0);
-    
+
     if (lastResponseItems.length === 0) {
       toast({
-        title: 'No content to add',
-        description: 'No valid posts in the last response.',
+        title: "No content to add",
+        description: "No valid posts in the last response.",
       });
       return;
     }
 
     // Get current state directly
     const currentPosts = useAppStore.getState().editorPosts;
-    const emptyPosts = currentPosts.filter(p => p.content.trim() === '');
-    
+    const emptyPosts = currentPosts.filter((p) => p.content.trim() === "");
+
     // Process items synchronously to avoid race conditions
     let itemsProcessed = 0;
-    
+
     // Fill empty posts first
     emptyPosts.forEach((emptyPost, idx) => {
       if (idx < lastResponseItems.length) {
-        updateEditorPost(emptyPost.id, { content: lastResponseItems[idx].content });
+        updateEditorPost(emptyPost.id, {
+          content: lastResponseItems[idx].content,
+        });
         itemsProcessed++;
       }
     });
 
     // Add remaining items as new posts
     const remainingItems = lastResponseItems.slice(itemsProcessed);
-    
+
     // Use a single batch approach
     if (remainingItems.length > 0) {
       remainingItems.forEach((item) => {
@@ -222,22 +264,27 @@ export const StudioAIPanel = () => {
 
   const handleCopyAll = () => {
     // Get only the last assistant response(s)
-    const lastUserIndex = [...generatedItems].reverse().findIndex(item => item.isUserMessage);
-    const lastUserActualIndex = lastUserIndex === -1 ? -1 : generatedItems.length - 1 - lastUserIndex;
-    
+    const lastUserIndex = [...generatedItems]
+      .reverse()
+      .findIndex((item) => item.isUserMessage);
+    const lastUserActualIndex =
+      lastUserIndex === -1 ? -1 : generatedItems.length - 1 - lastUserIndex;
+
     const lastResponseItems = generatedItems
       .slice(lastUserActualIndex + 1)
       .filter((item) => !item.isUserMessage && item.content.trim().length > 0);
-    
+
     if (lastResponseItems.length === 0) {
       toast({
-        title: 'No content to copy',
-        description: 'No valid posts in the last response.',
+        title: "No content to copy",
+        description: "No valid posts in the last response.",
       });
       return;
     }
-    
-    const allContent = lastResponseItems.map((item) => item.content).join('\n\n---\n\n');
+
+    const allContent = lastResponseItems
+      .map((item) => item.content)
+      .join("\n\n---\n\n");
     navigator.clipboard.writeText(allContent);
     toast({
       title: `${lastResponseItems.length} posts copied`,
