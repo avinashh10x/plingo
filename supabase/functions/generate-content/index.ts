@@ -9,9 +9,9 @@ const corsHeaders = {
 // Free Google Gemini Models - Verified current model IDs
 // Get your API key at: https://aistudio.google.com/app/apikey
 const GEMINI_MODELS: Record<string, string> = {
-  "gemini-1.5-flash": "gemini-1.5-flash-latest", // The ONE requested model
-  "gemini-1.5-pro": "gemini-1.5-flash-latest", // Fallback to Flash
-  "gemini-2.0-flash": "gemini-1.5-flash-latest", // Fallback to Flash
+  "gemini-2.5-flash": "gemini-2.5-flash", // The ONE requested model
+  "gemini-2.5-pro": "gemini-2.5-flash", // Fallback to Flash
+  "gemini-2.0-flash": "gemini-2.5-flash", // Fallback to Flash
 };
 
 // Buggy AI Agent Character - Content Writer Specialist
@@ -97,7 +97,7 @@ async function callGeminiAPI(
   userPrompt: string
 ) {
   const modelId = GEMINI_MODELS[model] || "gemini-2.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelId}:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${apiKey}`;
 
   console.log("Calling Gemini API:", {
     model,
@@ -112,7 +112,6 @@ async function callGeminiAPI(
       contents: [
         { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] },
       ],
-      tools: [{ google_search: {} }],
       generationConfig: {
         temperature: 0.9,
         maxOutputTokens: 2048,

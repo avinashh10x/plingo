@@ -31,7 +31,7 @@ export const StudioAIPanel = () => {
   const [generatedItems, setGeneratedItems] = useState<GeneratedPost[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedModel, setSelectedModel] =
-    useState<string>("gemini-1.5-flash");
+    useState<string>("gemini-2.5-flash");
   const [postCount, setPostCount] = useState<string>("");
   const [tone, setTone] = useState<string>("professional");
 
@@ -170,41 +170,27 @@ export const StudioAIPanel = () => {
       // 3. Map specific technical errors to friendly messages
       if (
         rawMessage.includes("503") ||
-        rawMessage.toLowerCase().includes("overloaded")
+        rawMessage.toLowerCase().includes("overloaded") ||
+        rawMessage.toLowerCase().includes("timeout")
       ) {
-        title = "AI Services Busy";
+        title = "Server Busy";
         description =
-          "The AI models are currently experiencing high traffic. Please try again in a moment.";
+          "The AI is currently experiencing high traffic. Please try again in a few minutes.";
       } else if (
         rawMessage.includes("429") ||
         rawMessage.toLowerCase().includes("rate limit")
       ) {
-        title = " Limit Reached";
+        title = "Limit Reached";
+        description = "Usage limit reached. Please take a short break.";
+      } else if (rawMessage.includes("403")) {
+        title = "Connection Issue";
         description =
-          "You've reached the usage limit. Please take a short break.";
-      } else if (
-        rawMessage.includes("403") ||
-        rawMessage.toLowerCase().includes("permission") ||
-        rawMessage.toLowerCase().includes("key")
-      ) {
-        title = "Connection Error";
+          "Could not connect to AI services. Please try again later.";
+      } else {
+        // Fallback for all other errors - KEEP IT FRIENDLY
+        title = "Visualization Issue";
         description =
-          "There is an issue with the AI service configuration. Please contact support.";
-      } else if (rawMessage) {
-        // If it looks like a JSON string, try to parse it one last time to get a clean message
-        if (rawMessage.trim().startsWith("{")) {
-          try {
-            const parsed = JSON.parse(rawMessage);
-            description =
-              parsed.message ||
-              parsed.error?.message ||
-              "An unexpected error occurred.";
-          } catch {
-            description = rawMessage;
-          }
-        } else {
-          description = rawMessage;
-        }
+          "Something went wrong while generating content. Please try again.";
       }
 
       toast({
