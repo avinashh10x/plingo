@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { DashboardHeader } from "./DashboardHeader";
 import { useAppStore } from "@/stores/appStore";
+import { cn } from "@/lib/utils";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -16,6 +17,8 @@ const DEFAULT_SIDEBAR_SIZE = 20; // percentage
 export const DashboardLayout = () => {
   const { theme } = useAppStore();
   const [sidebarSize, setSidebarSize] = useState(DEFAULT_SIDEBAR_SIZE);
+  const location = useLocation();
+  const isStudio = location.pathname.includes("/studio");
 
   useEffect(() => {
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -47,8 +50,15 @@ export const DashboardLayout = () => {
             <DashboardHeader />
 
             {/* Page content with proper padding */}
-            <main className="flex-1 overflow-auto p-6">
-              <div className="max-w-7xl mx-auto">
+            <main
+              className={cn(
+                "flex-1 overflow-auto",
+                isStudio ? "p-0 overflow-hidden" : "p-6"
+              )}
+            >
+              <div
+                className={cn(isStudio ? "h-full w-full" : "max-w-7xl mx-auto")}
+              >
                 <Outlet />
               </div>
             </main>
