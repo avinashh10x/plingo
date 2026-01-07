@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { addDays } from "date-fns";
 import {
   Popover,
   PopoverContent,
@@ -124,7 +125,13 @@ export const DateTimePicker = ({
   const [internalOpen, setInternalOpen] = useState(false);
 
   const isOpen = open !== undefined ? open : internalOpen;
-  const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
+
+  const setIsOpen = (newOpen: boolean) => {
+    setInternalOpen(newOpen);
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    }
+  };
 
   const handleConfirm = () => {
     onConfirm?.();

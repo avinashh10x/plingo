@@ -136,32 +136,81 @@ export const StudioAIPanel = () => {
     } catch (error: any) {
       console.error("Error generating content:", error);
 
-      // Extract the actual error message
-      let errorMessage = "Failed to generate content. Please try again.";
+      let title = "Generation failed";
+      let description = "Failed to generate content. Please try again.";
 
-      if (error?.message) {
-        errorMessage = error.message;
-      }
+      // 1. Try to get the most specific error message
+      let rawMessage = error?.message || "";
 
-      // Check for Supabase function error context
+      // Check inner Supabase error context which often contains the actual JSON response
       if (error?.context?.body) {
         try {
           const body =
             typeof error.context.body === "string"
               ? JSON.parse(error.context.body)
               : error.context.body;
+
           if (body?.error) {
-            errorMessage = body.error;
+            // If it's an object, try to get message, otherwise stringify
+            rawMessage =
+              typeof body.error === "object"
+                ? body.error.message || JSON.stringify(body.error)
+                : body.error;
           }
         } catch (e) {
-          // Use original message
+          // Failed to parse context body, stick with original message
+        }
+      }
+
+      // 2. Clean up "Gemini API error: 503 ..." prefixes if present
+      if (rawMessage.includes("Gemini API error:")) {
+        rawMessage = rawMessage.split("Gemini API error:")[1].trim();
+      }
+
+      // 3. Map specific technical errors to friendly messages
+      if (
+        rawMessage.includes("503") ||
+        rawMessage.toLowerCase().includes("overloaded")
+      ) {
+        title = "AI Services Busy";
+        description =
+          "The AI models are currently experiencing high traffic. Please try again in a moment.";
+      } else if (
+        rawMessage.includes("429") ||
+        rawMessage.toLowerCase().includes("rate limit")
+      ) {
+        title = " Limit Reached";
+        description =
+          "You've reached the usage limit. Please take a short break.";
+      } else if (
+        rawMessage.includes("403") ||
+        rawMessage.toLowerCase().includes("permission") ||
+        rawMessage.toLowerCase().includes("key")
+      ) {
+        title = "Connection Error";
+        description =
+          "There is an issue with the AI service configuration. Please contact support.";
+      } else if (rawMessage) {
+        // If it looks like a JSON string, try to parse it one last time to get a clean message
+        if (rawMessage.trim().startsWith("{")) {
+          try {
+            const parsed = JSON.parse(rawMessage);
+            description =
+              parsed.message ||
+              parsed.error?.message ||
+              "An unexpected error occurred.";
+          } catch {
+            description = rawMessage;
+          }
+        } else {
+          description = rawMessage;
         }
       }
 
       toast({
         variant: "destructive",
-        title: "Generation failed",
-        description: errorMessage,
+        title,
+        description,
       });
     } finally {
       setIsGenerating(false);

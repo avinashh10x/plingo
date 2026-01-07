@@ -9,9 +9,10 @@ const corsHeaders = {
 // Free Google Gemini Models - Verified current model IDs
 // Get your API key at: https://aistudio.google.com/app/apikey
 const GEMINI_MODELS: Record<string, string> = {
-  "gemini-2.0-flash": "gemini-2.5-flash", // Latest 2.5 flash
-  "gemini-1.5-flash": "gemini-2.5-flash", // Map to 2.5 flash
-  "gemini-1.5-flash-8b": "gemini-2.5-flash", // Use 2.5 flash
+  "gemini-2.0-flash": "gemini-2.0-flash-exp", // Latest 2.0 experimental
+  "gemini-1.5-pro": "gemini-1.5-pro", // Best for reasoning
+  "gemini-1.5-flash": "gemini-1.5-flash", // Standard efficient model
+  "gemini-1.5-flash-8b": "gemini-1.5-flash-8b", // Fastest, lower cost
 };
 
 // Buggy AI Agent Character - Content Writer Specialist
@@ -112,6 +113,7 @@ async function callGeminiAPI(
       contents: [
         { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] },
       ],
+      tools: [{ google_search: {} }],
       generationConfig: {
         temperature: 0.9,
         maxOutputTokens: 2048,
@@ -139,6 +141,12 @@ async function callGeminiAPI(
       throw {
         status: 400,
         message: `Bad request: ${errorMessage}`,
+      };
+    }
+    if (response.status === 503) {
+      throw {
+        status: 503,
+        message: "Model overloaded",
       };
     }
     if (response.status === 403) {
@@ -227,7 +235,14 @@ serve(async (req) => {
     }
 
     // Build the system prompt with Buggy character (tone-aware)
+    const currentDateTime = new Date().toLocaleString("en-US", {
+      dateStyle: "full",
+      timeStyle: "short",
+      timeZone: "UTC", // Defaulting to UTC for consistency
+    });
+
     let systemPrompt = getBuggyAgentCharacter(tone) + "\n\n";
+    systemPrompt += `CURRENT REAL-WORLD CONTEXT:\nToday's Date: ${currentDateTime} (UTC)\n\n`;
 
     // Add user identity context if provided
     if (userIdentity) {
@@ -295,19 +310,39 @@ Keep responses concise and suitable for social media.`;
         prompt
       );
     } catch (error: any) {
-      if (error.status === 429) {
+      if (
+        (error.status === 503 || error.status === 429) &&
+        model === "gemini-2.0-flash"
+      ) {
+        console.log(
+          "Primary model overloaded, falling back to gemini-1.5-flash..."
+        );
+        try {
+          generatedText = await callGeminiAPI(
+            GOOGLE_AI_API_KEY,
+            "gemini-1.5-flash",
+            systemPrompt,
+            prompt
+          );
+          // Update model tracker to reflect fallback
+          model = "gemini-1.5-flash (fallback)";
+        } catch (fallbackError) {
+          // If fallback fails, throw original error
+          throw error;
+        }
+      } else if (error.status === 429) {
         return new Response(JSON.stringify({ error: error.message }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-      }
-      if (error.status === 400) {
+      } else if (error.status === 400) {
         return new Response(JSON.stringify({ error: error.message }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      } else {
+        throw error;
       }
-      throw error;
     }
 
     if (!generatedText) {

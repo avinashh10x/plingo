@@ -97,7 +97,7 @@ export const Header = () => {
                     transition={{ type: 'spring', stiffness: 300, damping: 15 }}
                   >
                     {theme === 'dark' ? (
-                      <Sun className="h-4 w-4" />
+                      <Sun className="h-4 w-4 " />
                     ) : (
                       <Moon className="h-4 w-4" />
                     )}
