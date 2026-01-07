@@ -9,10 +9,9 @@ const corsHeaders = {
 // Free Google Gemini Models - Verified current model IDs
 // Get your API key at: https://aistudio.google.com/app/apikey
 const GEMINI_MODELS: Record<string, string> = {
-  "gemini-2.0-flash": "gemini-2.0-flash-exp", // Latest 2.0 experimental
-  "gemini-1.5-pro": "gemini-1.5-pro", // Best for reasoning
-  "gemini-1.5-flash": "gemini-1.5-flash", // Standard efficient model
-  "gemini-1.5-flash-8b": "gemini-1.5-flash-8b", // Fastest, lower cost
+  "gemini-1.5-flash": "gemini-1.5-flash-latest", // The ONE requested model
+  "gemini-1.5-pro": "gemini-1.5-flash-latest", // Fallback to Flash
+  "gemini-2.0-flash": "gemini-1.5-flash-latest", // Fallback to Flash
 };
 
 // Buggy AI Agent Character - Content Writer Specialist
@@ -310,27 +309,7 @@ Keep responses concise and suitable for social media.`;
         prompt
       );
     } catch (error: any) {
-      if (
-        (error.status === 503 || error.status === 429) &&
-        model === "gemini-2.0-flash"
-      ) {
-        console.log(
-          "Primary model overloaded, falling back to gemini-1.5-flash..."
-        );
-        try {
-          generatedText = await callGeminiAPI(
-            GOOGLE_AI_API_KEY,
-            "gemini-1.5-flash",
-            systemPrompt,
-            prompt
-          );
-          // Update model tracker to reflect fallback
-          model = "gemini-1.5-flash (fallback)";
-        } catch (fallbackError) {
-          // If fallback fails, throw original error
-          throw error;
-        }
-      } else if (error.status === 429) {
+      if (error.status === 429) {
         return new Response(JSON.stringify({ error: error.message }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

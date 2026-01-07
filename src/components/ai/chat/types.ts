@@ -22,24 +22,10 @@ export interface AIModel {
 // API Key: https://aistudio.google.com/app/apikey
 export const AI_MODELS: AIModel[] = [
   {
-    id: "gemini-2.0-flash",
-    name: "Gemini 2.5 Flash",
-    shortName: "Gemini 2.5",
-    description: "Latest & smartest",
-    badge: "Recommended",
-  },
-  {
     id: "gemini-1.5-flash",
-    name: "Gemini 2.5 Flash",
+    name: "Gemini 1.5 Flash (Latest)",
     shortName: "Flash",
-    description: "Fast & balanced",
-    badge: "Fast",
-  },
-  {
-    id: "gemini-1.5-flash-8b",
-    name: "Gemini 2.5 Flash",
-    shortName: "Lite",
-    description: "Quick responses",
-    badge: "Lite",
+    description: "Fast & Recommended",
+    badge: "Recommended",
   },
 ];

@@ -31,7 +31,7 @@ export const StudioAIPanel = () => {
   const [generatedItems, setGeneratedItems] = useState<GeneratedPost[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedModel, setSelectedModel] =
-    useState<string>("gemini-2.0-flash");
+    useState<string>("gemini-1.5-flash");
   const [postCount, setPostCount] = useState<string>("");
   const [tone, setTone] = useState<string>("professional");
 
