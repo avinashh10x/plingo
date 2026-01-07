@@ -31,7 +31,79 @@ interface DateTimePickerProps {
 
 type Period = "AM" | "PM";
 
-// ... (keep existing helper functions)
+interface TimeInputProps {
+  time: string;
+  onTimeChange: (time: string) => void;
+}
+
+const TimeInput = ({ time, onTimeChange }: TimeInputProps) => {
+  const [hours, minutes] = time.split(":");
+  const hour12 = parseInt(hours) % 12 || 12;
+  const period: Period = parseInt(hours) >= 12 ? "PM" : "AM";
+
+  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newHour = parseInt(e.target.value) || 0;
+    const clampedHour = Math.min(Math.max(newHour, 1), 12);
+    const hour24 = period === "PM" ? (clampedHour % 12) + 12 : clampedHour % 12;
+    onTimeChange(`${hour24.toString().padStart(2, "0")}:${minutes}`);
+  };
+
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMinute = parseInt(e.target.value) || 0;
+    const clampedMinute = Math.min(Math.max(newMinute, 0), 59);
+    onTimeChange(`${hours}:${clampedMinute.toString().padStart(2, "0")}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    if (newPeriod && (newPeriod === "AM" || newPeriod === "PM")) {
+      const currentHour = parseInt(hours);
+      let newHour: number;
+      if (newPeriod === "PM" && currentHour < 12) {
+        newHour = currentHour + 12;
+      } else if (newPeriod === "AM" && currentHour >= 12) {
+        newHour = currentHour - 12;
+      } else {
+        newHour = currentHour;
+      }
+      onTimeChange(`${newHour.toString().padStart(2, "0")}:${minutes}`);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        type="number"
+        min={1}
+        max={12}
+        value={hour12}
+        onChange={handleHourChange}
+        className="w-12 h-8 text-center text-sm p-1"
+      />
+      <span>:</span>
+      <Input
+        type="number"
+        min={0}
+        max={59}
+        value={minutes}
+        onChange={handleMinuteChange}
+        className="w-12 h-8 text-center text-sm p-1"
+      />
+      <ToggleGroup
+        type="single"
+        value={period}
+        onValueChange={handlePeriodChange}
+        className="ml-1"
+      >
+        <ToggleGroupItem value="AM" className="h-8 px-2 text-xs">
+          AM
+        </ToggleGroupItem>
+        <ToggleGroupItem value="PM" className="h-8 px-2 text-xs">
+          PM
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </div>
+  );
+};
 
 export const DateTimePicker = ({
   date,
@@ -49,7 +121,15 @@ export const DateTimePicker = ({
   compact = false,
   maxDate,
 }: DateTimePickerProps) => {
-  // ... (keep existing state)
+  const [internalOpen, setInternalOpen] = useState(false);
+
+  const isOpen = open !== undefined ? open : internalOpen;
+  const setIsOpen = onOpenChange !== undefined ? onOpenChange : setInternalOpen;
+
+  const handleConfirm = () => {
+    onConfirm?.();
+    setIsOpen(false);
+  };
 
   const content = (
     <div className="w-auto">
