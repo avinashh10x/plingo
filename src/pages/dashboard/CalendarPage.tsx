@@ -48,6 +48,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -83,6 +93,8 @@ export const CalendarPage = () => {
   const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>(
     undefined
   );
+  // State for Post Now confirmation
+  const [postNowConfirm, setPostNowConfirm] = useState<any>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -453,13 +465,7 @@ export const CalendarPage = () => {
                           size="sm"
                           className="h-8 w-8 p-0"
                           title="Post Now"
-                          onClick={() => {
-                            if (confirm("Post this now?")) {
-                              post.platforms?.forEach((p) =>
-                                publishNow(post.id, p)
-                              );
-                            }
-                          }}
+                          onClick={() => setPostNowConfirm(post)}
                         >
                           <Send className="h-4 w-4" />
                         </Button>
@@ -531,7 +537,7 @@ export const CalendarPage = () => {
             disabled={(date) => {
               const today = new Date();
               today.setHours(0, 0, 0, 0);
-              const maxDate = addDays(today, 7);
+              const maxDate = addDays(today, 365);
               return date < today || date > maxDate;
             }}
           />
@@ -566,6 +572,36 @@ export const CalendarPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Post Now Confirmation Dialog */}
+      <AlertDialog
+        open={!!postNowConfirm}
+        onOpenChange={() => setPostNowConfirm(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ready to publish?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will post your content immediately to the selected platforms.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (postNowConfirm) {
+                  postNowConfirm.platforms?.forEach((p: string) =>
+                    publishNow(postNowConfirm.id, p)
+                  );
+                  setPostNowConfirm(null);
+                }
+              }}
+            >
+              Publish Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

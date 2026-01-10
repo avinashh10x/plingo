@@ -30,8 +30,7 @@ export const StudioAIPanel = () => {
   const [aiInput, setAiInput] = useState("");
   const [generatedItems, setGeneratedItems] = useState<GeneratedPost[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedModel, setSelectedModel] =
-    useState<string>("gemini-2.5-flash");
+  const [selectedModel, setSelectedModel] = useState<string>("mistral-7b");
   const [postCount, setPostCount] = useState<string>("");
   const [tone, setTone] = useState<string>("professional");
 
@@ -53,10 +52,32 @@ export const StudioAIPanel = () => {
   const handleGenerate = async () => {
     if (!aiInput.trim()) return;
 
+    // Check 10 message limit per chat
+    const currentMessageCount = currentChat?.messages?.length || 0;
+    const MAX_MESSAGES_PER_CHAT = 10;
+
+    if (currentMessageCount >= MAX_MESSAGES_PER_CHAT) {
+      toast({
+        title: "Time for a fresh start!",
+        description:
+          "This chat has reached its limit. Start a new chat to continue.",
+      });
+      return;
+    }
+
     setIsGenerating(true);
 
     try {
       const count = postCount ? parseInt(postCount) : 0;
+
+      // Build chat history for context (only for chat mode)
+      const chatHistory =
+        count === 0
+          ? (currentChat?.messages || []).map((m) => ({
+              role: m.role,
+              content: m.content,
+            }))
+          : [];
 
       const { data, error } = await supabase.functions.invoke(
         "generate-content",
@@ -69,6 +90,7 @@ export const StudioAIPanel = () => {
             guidelines: agentSettings?.guidelines,
             count: count > 0 ? count : 1,
             tone,
+            chatHistory,
           },
         }
       );
@@ -133,6 +155,15 @@ export const StudioAIPanel = () => {
           description: `Generated ${assistantItems.length} post(s) using ${modelName}`,
         });
       }
+
+      // Warn if approaching limit
+      const newCount = (currentChat?.messages?.length || 0) + 2;
+      if (newCount >= 8 && newCount < MAX_MESSAGES_PER_CHAT) {
+        toast({
+          title: `${MAX_MESSAGES_PER_CHAT - newCount} messages left`,
+          description: "This chat is approaching its limit.",
+        });
+      }
     } catch (error: any) {
       console.error("Error generating content:", error);
 
@@ -194,7 +225,6 @@ export const StudioAIPanel = () => {
       }
 
       toast({
-        variant: "destructive",
         title,
         description,
       });

@@ -6,16 +6,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Free Google Gemini Models - Verified current model IDs
-// Get your API key at: https://aistudio.google.com/app/apikey
-const GEMINI_MODELS: Record<string, string> = {
-  "gemini-2.5-flash": "gemini-2.5-flash", // The ONE requested model
-  "gemini-2.5-pro": "gemini-2.5-flash", // Fallback to Flash
-  "gemini-2.0-flash": "gemini-2.5-flash", // Fallback to Flash
+// Model Configuration - Using OpenAI-compatible endpoint
+const HF_API_URL = "https://router.huggingface.co/v1/chat/completions";
+const MODELS: Record<string, string> = {
+  "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.3",
+  "llama-3": "meta-llama/Meta-Llama-3-8B-Instruct",
 };
 
-// Buggy AI Agent Character - Content Writer Specialist
-const getBuggyAgentCharacter = (tone: string) => {
+// Model display names for Plingo branding
+const MODEL_NAMES: Record<string, string> = {
+  "mistral-7b": "Nova",
+  "llama-3": "Sage",
+};
+
+// Plingo AI Agent Character - Content Writer Specialist
+const getPlingoAgentCharacter = (tone: string, modelName: string) => {
   const toneInstructions: Record<string, string> = {
     professional:
       "Write in a polished, business-appropriate tone. Be authoritative yet approachable. Use industry terms where relevant.",
@@ -33,12 +38,18 @@ const getBuggyAgentCharacter = (tone: string) => {
 
   const toneGuide = toneInstructions[tone] || toneInstructions.professional;
 
-  return `You are Buggy — a content writing specialist who knows how to craft engaging social media posts.
+  return `You are ${modelName}, a content writing AI created by Plingo.
+
+IDENTITY:
+- You were created by Plingo, a social media content creation platform
+- Your purpose is to help users craft engaging social media posts
+- You are ${modelName}, one of Plingo's AI content specialists
+- If asked who created you, always say "I was created by Plingo as a content writing specialist"
 
 CURRENT TONE: ${tone.toUpperCase()}
 ${toneGuide}
 
-Goal:
+GOAL:
 Write compelling, scroll-stopping content that gets engagement. You understand what makes people click, share, and comment.
 
 WRITING RULES:
@@ -52,10 +63,8 @@ WRITING RULES:
 CONTENT QUALITY:
 - Hook readers in the first line
 - Make it relevant and CURRENT — reference recent trends, events, or timely topics when applicable
-- Research-minded: provide info that feels fresh and up-to-date
 - Based on real trends, not made-up facts
 - No fake statistics or hallucinated data
-- If the topic is time-sensitive, acknowledge current context
 - Platform-aware:
   - Twitter/X → max 280 chars
   - LinkedIn → professional narrative
@@ -89,83 +98,132 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
-// Call Google Gemini API directly
-async function callGeminiAPI(
-  apiKey: string,
-  model: string,
+interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+// Build messages array with chat history
+function buildMessages(
   systemPrompt: string,
-  userPrompt: string
-) {
-  const modelId = GEMINI_MODELS[model] || "gemini-2.5-flash";
-  const url = `https://generativelanguage.googleapis.com/v1/models/${modelId}:generateContent?key=${apiKey}`;
+  chatHistory: ChatMessage[],
+  currentPrompt: string
+): Array<{ role: string; content: string }> {
+  const messages: Array<{ role: string; content: string }> = [
+    { role: "system", content: systemPrompt },
+  ];
 
-  console.log("Calling Gemini API:", {
-    model,
-    modelId,
-    promptLength: userPrompt.length,
-  });
+  // Add chat history (limit to last 8 messages to stay within context)
+  const recentHistory = chatHistory.slice(-8);
+  for (const msg of recentHistory) {
+    messages.push({ role: msg.role, content: msg.content });
+  }
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [
-        { role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] },
-      ],
-      generationConfig: {
-        temperature: 0.9,
-        maxOutputTokens: 2048,
+  // Add current prompt
+  messages.push({ role: "user", content: currentPrompt });
+
+  return messages;
+}
+
+// Call Hugging Face API using OpenAI-compatible format
+async function callHuggingFace(
+  token: string,
+  modelId: string,
+  messages: Array<{ role: string; content: string }>,
+  timeout: number = 60000
+): Promise<string> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    console.log(
+      `Calling HF model: ${modelId} with ${messages.length} messages`
+    );
+
+    const response = await fetch(HF_API_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
-    }),
-  });
+      body: JSON.stringify({
+        model: modelId,
+        messages,
+        max_tokens: 1024,
+        temperature: 0.8,
+        top_p: 0.9,
+      }),
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const errorMessage =
-      errorData?.error?.message || `API error: ${response.status}`;
-    console.error(
-      "Gemini API error:",
-      response.status,
-      JSON.stringify(errorData)
-    );
+    clearTimeout(timeoutId);
 
-    if (response.status === 429) {
-      throw {
-        status: 429,
-        message: "Rate limit exceeded. Please wait a moment and try again.",
-      };
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HF API error (${response.status}):`, errorText);
+
+      if (response.status === 429) {
+        throw {
+          status: 429,
+          message: "Rate limit exceeded. Please wait a moment.",
+        };
+      }
+      if (response.status === 503) {
+        throw { status: 503, message: "Model is loading, please retry." };
+      }
+
+      throw new Error(
+        `API error: ${response.status} - ${errorText.slice(0, 100)}`
+      );
     }
-    if (response.status === 400) {
-      throw {
-        status: 400,
-        message: `Bad request: ${errorMessage}`,
-      };
+
+    const data = await response.json();
+
+    // OpenAI-compatible response format
+    const content = data.choices?.[0]?.message?.content;
+    if (content) {
+      return content.trim();
     }
-    if (response.status === 503) {
-      throw {
-        status: 503,
-        message: "Model overloaded",
-      };
+
+    throw new Error("No content in response");
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      throw { status: 408, message: "Request timed out" };
     }
-    if (response.status === 403) {
-      throw {
-        status: 403,
-        message: "API key doesn't have access to this model or feature.",
-      };
-    }
-    throw new Error(errorMessage);
+    throw error;
+  }
+}
+
+// Call LLM with fallback
+async function callLLM(
+  token: string,
+  selectedModel: string,
+  messages: Array<{ role: string; content: string }>
+): Promise<{ text: string; model: string }> {
+  const primaryModelId = MODELS[selectedModel] || MODELS["mistral-7b"];
+  const fallbackModelId =
+    selectedModel === "llama-3" ? MODELS["mistral-7b"] : MODELS["llama-3"];
+
+  // Try primary model
+  try {
+    const text = await callHuggingFace(token, primaryModelId, messages);
+    return { text, model: selectedModel };
+  } catch (error: any) {
+    console.warn(`Primary model (${selectedModel}) failed:`, error.message);
   }
 
-  const data = await response.json();
+  // Try fallback model
+  const fallbackName = selectedModel === "llama-3" ? "mistral-7b" : "llama-3";
+  console.log(`Falling back to ${fallbackName}...`);
 
-  // Check for content filtering blocks
-  if (data.candidates?.[0]?.finishReason === "SAFETY") {
-    throw new Error(
-      "Content was blocked by safety filters. Please try rephrasing your request."
-    );
+  try {
+    const text = await callHuggingFace(token, fallbackModelId, messages);
+    return { text, model: fallbackName };
+  } catch (error: any) {
+    console.error(`Fallback model also failed:`, error.message);
+    throw new Error(`All models failed. Last error: ${error.message}`);
   }
-
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
 serve(async (req) => {
@@ -176,12 +234,13 @@ serve(async (req) => {
   try {
     const {
       prompt,
-      model = "gemini-2.0-flash",
+      model = "mistral-7b",
       type = "tweet",
       userIdentity,
       guidelines,
       count = 1,
       tone = "professional",
+      chatHistory = [],
     } = await req.json();
 
     if (!prompt) {
@@ -194,21 +253,15 @@ serve(async (req) => {
     const postCount = Math.min(Math.max(1, parseInt(count) || 1), 10);
     const isChat = type === "chat";
 
-    // Get Google AI API Key
-    const GOOGLE_AI_API_KEY = Deno.env.get("GOOGLE_AI_API_KEY");
+    // Get Hugging Face Token
+    const HF_TOKEN = Deno.env.get("HUGGINGFACE_TOKEN");
 
-    console.log("API Key check:", {
-      hasKey: !!GOOGLE_AI_API_KEY,
-      keyLength: GOOGLE_AI_API_KEY?.length || 0,
-      keyPrefix: GOOGLE_AI_API_KEY?.substring(0, 8) || "none",
-    });
-
-    if (!GOOGLE_AI_API_KEY) {
-      console.error("GOOGLE_AI_API_KEY is not configured in Supabase secrets");
+    if (!HF_TOKEN) {
+      console.error("HUGGINGFACE_TOKEN is not configured");
       return new Response(
         JSON.stringify({
           error:
-            "AI service not configured. Please add GOOGLE_AI_API_KEY to Supabase Edge Function Secrets.",
+            "AI service not configured. Please add HUGGINGFACE_TOKEN to Supabase secrets.",
         }),
         {
           status: 500,
@@ -217,69 +270,48 @@ serve(async (req) => {
       );
     }
 
-    // Validate API key format (Google AI keys start with "AIza")
-    if (!GOOGLE_AI_API_KEY.startsWith("AIza")) {
-      console.error("Invalid API key format - should start with AIza");
-      return new Response(
-        JSON.stringify({
-          error:
-            'Invalid API key format. Google AI API keys should start with "AIza..."',
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    // Get model display name for Plingo branding
+    const modelName = MODEL_NAMES[model] || "Nova";
 
-    // Build the system prompt with Buggy character (tone-aware)
+    // Build the system prompt with Plingo character
     const currentDateTime = new Date().toLocaleString("en-US", {
       dateStyle: "full",
       timeStyle: "short",
-      timeZone: "UTC", // Defaulting to UTC for consistency
+      timeZone: "UTC",
     });
 
-    let systemPrompt = getBuggyAgentCharacter(tone) + "\n\n";
+    let systemPrompt = getPlingoAgentCharacter(tone, modelName) + "\n\n";
     systemPrompt += `CURRENT REAL-WORLD CONTEXT:\nToday's Date: ${currentDateTime} (UTC)\n\n`;
 
-    // Add user identity context if provided
     if (userIdentity) {
       systemPrompt += `About the user you're helping:\n${userIdentity}\n\n`;
     }
 
-    // Add task-specific instructions
+    // Build task-specific instructions
+    let taskPrompt = prompt;
     if (isChat) {
-      systemPrompt += `Respond naturally and conversationally to the user's message while following all your rules above.`;
+      systemPrompt += `Respond naturally and conversationally to the user's message while following all your rules above. Remember the context of previous messages in this conversation.`;
     } else {
       switch (type) {
         case "tweet":
           if (postCount > 1) {
-            systemPrompt += `Generate ${postCount} different engaging tweet variations based on the user's prompt.
+            systemPrompt += `Generate ${postCount} different engaging tweet variations.
 Each tweet should be under 280 characters. Make them engaging, use appropriate hashtags sparingly (1-2 max).
 Return EXACTLY ${postCount} tweets, each on a new line, numbered (1., 2., etc). No extra explanations.`;
           } else {
-            systemPrompt += `Generate engaging tweet content based on the user's prompt. 
+            systemPrompt += `Generate engaging tweet content. 
 Keep it under 280 characters. Make it engaging, use appropriate hashtags sparingly (1-2 max).
 Return ONLY the tweet text, no explanations or quotes around it.`;
           }
           break;
         case "thread":
-          systemPrompt += `Generate a Twitter thread (3-5 tweets) based on the user's prompt.
+          systemPrompt += `Generate a Twitter thread (3-5 tweets).
 Each tweet should be under 280 characters. Make them engaging and connected.
 Return each tweet on a new line, numbered (1/, 2/, etc). No extra explanations.`;
           break;
-        case "rephrase":
-          systemPrompt += `Rephrase the given content to be more engaging for social media.
-Keep the core message but make it more compelling. Keep it under 280 characters.
-Return ONLY the rephrased text, no explanations.`;
-          break;
-        case "hashtags":
-          systemPrompt += `Suggest 5-7 relevant hashtags for the given content.
-Return only the hashtags, space-separated, starting with #.`;
-          break;
         default:
           if (postCount > 1) {
-            systemPrompt += `Generate ${postCount} different content variations based on the user's request.
+            systemPrompt += `Generate ${postCount} different content variations.
 Each should be concise and suitable for social media.
 Return EXACTLY ${postCount} items, each on a new line, numbered (1., 2., etc). No extra explanations.`;
           } else {
@@ -289,42 +321,28 @@ Keep responses concise and suitable for social media.`;
       }
     }
 
-    // Add user's additional guidelines
     if (guidelines) {
       systemPrompt += `\n\nAdditional user guidelines to follow:\n${guidelines}`;
     }
 
-    console.log(
-      `Generating content with Google Gemini, model: ${model}, type: ${type}, isChat: ${isChat}`
+    // Build messages with chat history
+    const messages = buildMessages(
+      systemPrompt,
+      chatHistory as ChatMessage[],
+      taskPrompt
     );
 
-    let generatedText: string;
+    console.log(
+      `Generating content with model: ${model}, type: ${type}, history: ${chatHistory.length} messages`
+    );
 
-    try {
-      generatedText = await callGeminiAPI(
-        GOOGLE_AI_API_KEY,
-        model,
-        systemPrompt,
-        prompt
-      );
-    } catch (error: any) {
-      if (error.status === 429) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } else if (error.status === 400) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } else {
-        throw error;
-      }
-    }
+    const { text: generatedText, model: usedModel } = await callLLM(
+      HF_TOKEN,
+      model,
+      messages
+    );
 
     if (!generatedText) {
-      console.error("No content generated");
       return new Response(
         JSON.stringify({
           error: "No content was generated. Please try again.",
@@ -336,7 +354,6 @@ Keep responses concise and suitable for social media.`;
       );
     }
 
-    // Strip markdown from all responses
     const cleanedText = stripMarkdown(generatedText);
 
     let result;
@@ -346,29 +363,30 @@ Keep responses concise and suitable for social media.`;
       result = cleanedText
         .split("\n")
         .filter((line: string) => line.trim())
-        .map((line: string) => line.replace(/^\d+[\/\.)\]]\s*/, "").trim())
+        .map((line: string) => line.replace(/^\d+[\/\.\)\]]\s*/, "").trim())
         .filter((line: string) => line.length > 0)
         .map((line: string) => stripMarkdown(line));
     } else {
       result = cleanedText;
     }
 
-    console.log(`Content generated successfully for type: ${type}`);
+    console.log(`Content generated successfully using ${usedModel}`);
 
-    return new Response(JSON.stringify({ content: result, model, type }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (error) {
-    console.error("Error in generate-content function:", error);
     return new Response(
-      JSON.stringify({
-        error:
-          error instanceof Error ? error.message : "Unknown error occurred",
-      }),
+      JSON.stringify({ content: result, model: usedModel, type }),
       {
-        status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
+  } catch (error: any) {
+    console.error("Error in generate-content function:", error);
+
+    const status = error.status || 500;
+    const message = error.message || "Unknown error occurred";
+
+    return new Response(JSON.stringify({ error: message }), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

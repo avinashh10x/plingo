@@ -140,7 +140,59 @@ export const CompactChatInput = ({
 
       {/* Controls bar - Model, Posts, Tone */}
       <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
-        {/* Model Selector removed as per single model enforcement */}
+        {/* Model Selector */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-5 px-1.5 gap-0.5 text-[10px] bg-muted/30"
+            >
+              <span>{currentModel?.icon || "⚡"}</span>
+              <span>{currentModel?.shortName || "Nova"}</span>
+              <ChevronDown className="h-2.5 w-2.5 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-40">
+            <DropdownMenuLabel className="text-[10px]">
+              AI Model
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {AI_MODELS.map((m) => (
+              <DropdownMenuItem
+                key={m.id}
+                onClick={() => onModelChange(m.id)}
+                className="flex flex-col items-start py-1.5"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xs font-medium flex items-center gap-1">
+                    <span>{m.icon}</span>
+                    {m.name}
+                    {m.badge && (
+                      <span
+                        className={cn(
+                          "text-[8px] px-1 py-0.5 rounded",
+                          m.badge === "Fast" &&
+                            "bg-green-500/20 text-green-500",
+                          m.badge === "Creative" &&
+                            "bg-purple-500/20 text-purple-500"
+                        )}
+                      >
+                        {m.badge}
+                      </span>
+                    )}
+                  </span>
+                  {selectedModel === m.id && (
+                    <Check className="h-3 w-3 text-primary" />
+                  )}
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {m.description}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Post Count */}
         <div className="flex items-center gap-0.5">

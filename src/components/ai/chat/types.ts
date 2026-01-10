@@ -15,17 +15,27 @@ export interface AIModel {
   name: string;
   shortName: string;
   description: string;
-  badge: "Fast" | "Recommended" | "Lite" | null;
+  badge: "Fast" | "Creative" | "Balanced" | null;
+  icon?: string;
 }
 
-// Free Google Gemini Models
-// API Key: https://aistudio.google.com/app/apikey
+// Open Source Models via Hugging Face
+// Primary: Mistral 7B, Fallback: Llama 3
 export const AI_MODELS: AIModel[] = [
   {
-    id: "gemini-2.5-flash",
-    name: "Gemini 2.5 Flash",
-    shortName: "Flash 2.5",
-    description: "Best choice (Recommended)",
-    badge: "Recommended",
+    id: "mistral-7b",
+    name: "Nova",
+    shortName: "Nova",
+    description: "Fast & precise",
+    badge: "Fast",
+    icon: "⚡",
+  },
+  {
+    id: "llama-3",
+    name: "Sage",
+    shortName: "Sage",
+    description: "Creative & thoughtful",
+    badge: "Creative",
+    icon: "🧠",
   },
 ];
