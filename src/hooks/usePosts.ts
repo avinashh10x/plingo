@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
+import { createNotification } from "@/lib/notifications";
 
 export type PostStatus =
   | "draft"
@@ -73,7 +74,7 @@ export function usePosts() {
         .from("posts")
         .select("*")
         .eq("user_id", user.id)
-        .order("order_index", { ascending: true });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
@@ -324,6 +325,17 @@ export function usePosts() {
         description: `Scheduled for ${scheduledAt.toLocaleString()}`,
       });
 
+      // Create notification
+      if (user) {
+        createNotification(
+          user.id,
+          "post_scheduled",
+          "Post scheduled",
+          `Your post is scheduled for ${scheduledAt.toLocaleString()}`,
+          id
+        );
+      }
+
       // Refresh in background to sync with server state
       fetchPosts();
 
@@ -479,6 +491,17 @@ export function usePosts() {
         title: "✨ Post published!",
         description: `Successfully posted to ${platform}`,
       });
+
+      // Create notification
+      if (user) {
+        createNotification(
+          user.id,
+          "post_published",
+          "Post published",
+          `Your post was successfully published to ${platform}`,
+          id
+        );
+      }
 
       // Background refresh
       fetchPosts();

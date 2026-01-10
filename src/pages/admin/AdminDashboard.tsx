@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
+import { createAdminAlert } from "@/lib/notifications";
 import {
   Card,
   CardContent,
@@ -24,7 +25,6 @@ import {
   Edit2,
   Save,
   X,
-  LogOut,
   Twitter,
   Linkedin,
   Instagram,
@@ -32,6 +32,10 @@ import {
   ArrowUpCircle,
   ArrowDownCircle,
   Crown,
+  Bell,
+  Send,
+  LayoutDashboard,
+  Settings,
 } from "lucide-react";
 import {
   Table,
@@ -58,6 +62,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 interface UserProfile {
   id: string;
@@ -68,11 +74,6 @@ interface UserProfile {
   status: string;
   created_at: string;
   approved_at: string | null;
-}
-
-interface UserRole {
-  user_id: string;
-  role: "admin" | "user";
 }
 
 interface UserLimit {
@@ -94,29 +95,12 @@ interface PlatformUsage {
 
 const platforms = ["twitter", "linkedin", "instagram", "facebook", "threads"];
 
-// Platform API limits (these are calculated by aggregating user usage)
-// We track our own usage since we can't fetch from Twitter API dashboard
 const PLATFORM_API_LIMITS = {
-  twitter: {
-    read: 100, // Free tier: ~100 read requests per 15 min window
-    write: 500, // Free tier: 500 posts per month (corrected)
-  },
-  linkedin: {
-    read: 10000, // LinkedIn is more generous
-    write: 10000,
-  },
-  instagram: {
-    read: 5000,
-    write: 5000,
-  },
-  facebook: {
-    read: 10000,
-    write: 10000,
-  },
-  threads: {
-    read: 5000,
-    write: 5000,
-  },
+  twitter: { read: 100, write: 500 },
+  linkedin: { read: 10000, write: 10000 },
+  instagram: { read: 5000, write: 5000 },
+  facebook: { read: 10000, write: 10000 },
+  threads: { read: 5000, write: 5000 },
 };
 
 const platformIcons: Record<string, React.ReactNode> = {
@@ -125,10 +109,19 @@ const platformIcons: Record<string, React.ReactNode> = {
   instagram: <Instagram className="h-4 w-4" />,
 };
 
+// Tab navigation items
+const tabs = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "users", label: "Users", icon: Users },
+  { id: "notifications", label: "Notifications", icon: Bell },
+  { id: "limits", label: "API Limits", icon: Settings },
+];
+
 export const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
+  const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [userRoles, setUserRoles] = useState<Record<string, "admin" | "user">>(
     {}
@@ -142,12 +135,13 @@ export const AdminDashboard = () => {
   );
   const [isLimitsDialogOpen, setIsLimitsDialogOpen] = useState(false);
   const [platformUsage, setPlatformUsage] = useState<PlatformUsage[]>([]);
-
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Admin check is now handled by AdminRoute in App.tsx
+  // Admin Alert state
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [isSendingAlert, setIsSendingAlert] = useState(false);
 
-  // Fetch all users and platform usage
   useEffect(() => {
     if (isAdmin) {
       fetchUsers();
@@ -194,7 +188,6 @@ export const AdminDashboard = () => {
 
   const updateUserRole = async (userId: string, newRole: "admin" | "user") => {
     try {
-      // Check if role record exists
       const { data: existing } = await supabase
         .from("user_roles")
         .select("id")
@@ -202,19 +195,15 @@ export const AdminDashboard = () => {
         .maybeSingle();
 
       if (existing) {
-        // Update existing role
         const { error } = await supabase
           .from("user_roles")
           .update({ role: newRole })
           .eq("user_id", userId);
-
         if (error) throw error;
       } else {
-        // Insert new role
         const { error } = await supabase
           .from("user_roles")
           .insert({ user_id: userId, role: newRole });
-
         if (error) throw error;
       }
 
@@ -228,13 +217,11 @@ export const AdminDashboard = () => {
 
   const fetchPlatformUsage = async () => {
     try {
-      // Get current month
       const now = new Date();
       const monthYear = `${now.getFullYear()}-${String(
         now.getMonth() + 1
       ).padStart(2, "0")}`;
 
-      // Fetch all usage for current month (write operations = posts)
       const { data: usageData, error: usageError } = await supabase
         .from("user_usage")
         .select("platform, posts_used")
@@ -242,7 +229,6 @@ export const AdminDashboard = () => {
 
       if (usageError) throw usageError;
 
-      // Aggregate write usage by platform
       const writeByPlatform: Record<string, number> = {};
       (usageData || []).forEach(
         (row: { platform: string; posts_used: number }) => {
@@ -251,20 +237,12 @@ export const AdminDashboard = () => {
         }
       );
 
-      // For read operations, we'd need to track API calls separately
-      // For now, we estimate based on connected accounts and feed fetches
-      // In production, you'd have a separate table for API call tracking
-
-      // Create platform usage array with read/write breakdown
       const usage: PlatformUsage[] = platforms.map((platform) => {
         const limits = PLATFORM_API_LIMITS[
           platform as keyof typeof PLATFORM_API_LIMITS
         ] || { read: 10000, write: 10000 };
         const writeUsed = writeByPlatform[platform] || 0;
-
-        // Estimate read usage (in production, track this in a separate table)
-        // For now, assume read is proportional to connected accounts
-        const readUsed = 0; // Would come from api_calls tracking table
+        const readUsed = 0;
 
         return {
           platform,
@@ -378,18 +356,35 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+  const handleSendAlert = async () => {
+    if (!alertTitle.trim() || !alertMessage.trim()) {
+      toast.error("Please fill in both title and message");
+      return;
+    }
+    if (!user) return;
+
+    setIsSendingAlert(true);
+    const success = await createAdminAlert(
+      user.id,
+      alertTitle.trim(),
+      alertMessage.trim()
+    );
+    setIsSendingAlert(false);
+
+    if (success) {
+      toast.success(`Alert sent to ${stats.total} users!`);
+      setAlertTitle("");
+      setAlertMessage("");
+    } else {
+      toast.error("Failed to send alert");
+    }
   };
 
   const filteredUsers = users.filter((u) => {
-    // Search Filter
     const matchesSearch =
       u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       u.name?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Status Filter
     if (statusFilter === "all") return matchesSearch;
     if (statusFilter === "waitlist")
       return matchesSearch && u.status === "pending";
@@ -403,7 +398,12 @@ export const AdminDashboard = () => {
     rejected: users.filter((u) => u.status === "rejected").length,
   };
 
-  // Show loading while role is being determined
+  const getUsageColor = (percentage: number) => {
+    if (percentage >= 90) return "bg-red-500";
+    if (percentage >= 70) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+
   if (roleLoading) {
     return (
       <div className="h-full w-full flex items-center justify-center min-h-[50vh]">
@@ -412,437 +412,475 @@ export const AdminDashboard = () => {
     );
   }
 
-  const getUsageColor = (percentage: number) => {
-    if (percentage >= 90) return "bg-red-500";
-    if (percentage >= 70) return "bg-yellow-500";
-    return "bg-green-500";
-  };
-
   return (
     <div className="space-y-6">
-      {/* Normalized Page Header */}
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Admin Dashboard</h1>
           <p className="text-muted-foreground">
-            Manage users, approvals, and platform limits.
+            Manage users, notifications, and platform settings.
           </p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => {
-            // Try to find admin in the loaded users list first
-            const adminInList = users.find((u) => u.user_id === user?.id);
-
-            if (adminInList) {
-              openLimitsDialog(adminInList);
-            } else if (profile && user) {
-              // Fallback: Use current auth profile if not in list
-              openLimitsDialog({
-                ...profile,
-                created_at: new Date().toISOString(),
-              } as any);
-            } else {
-              toast.error("Admin profile not loaded yet. Please try again.");
-            }
-          }}
-        >
-          <Shield className="h-4 w-4 mr-2" />
-          Manage My Limits
-        </Button>
       </div>
 
-      <div className="space-y-6">
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Users className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.total}</p>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10">
-                  <Clock className="h-5 w-5 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-green-500/10">
-                  <UserCheck className="h-5 w-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.approved}</p>
-                  <p className="text-sm text-muted-foreground">Approved</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-card">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-red-500/10">
-                  <UserX className="h-5 w-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.rejected}</p>
-                  <p className="text-sm text-muted-foreground">Rejected</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Tab Navigation */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          {tabs.map((tab) => (
+            <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
+              <tab.icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-        {/* Platform API Limits - Read/Write Breakdown */}
-        <Card className="bg-card">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-primary" />
-              <CardTitle>Platform API Usage (This Month)</CardTitle>
-            </div>
-            <CardDescription>
-              Monitor your app's usage against platform API limits. Usage is
-              calculated from our database records.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {platformUsage.map((usage) => (
-                <div
-                  key={usage.platform}
-                  className="p-4 rounded-lg border border-border bg-muted/20"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      {platformIcons[usage.platform] || (
-                        <BarChart3 className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-semibold capitalize text-foreground">
-                        {usage.platform}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        API Rate Limits
-                      </p>
-                    </div>
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className="bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Users className="h-5 w-5 text-primary" />
                   </div>
-
-                  {/* Read Operations */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <ArrowDownCircle className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">
-                          Read Operations
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {usage.readUsed.toLocaleString()} /{" "}
-                        {usage.readLimit.toLocaleString()}
-                      </span>
-                    </div>
-                    <Progress
-                      value={usage.readPercentage}
-                      className={`h-2 [&>div]:${getUsageColor(
-                        usage.readPercentage
-                      )}`}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {usage.readPercentage.toFixed(1)}% used
-                    </p>
-                  </div>
-
-                  {/* Write Operations */}
                   <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <ArrowUpCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">
-                          Write Operations
-                        </span>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {usage.writeUsed.toLocaleString()} /{" "}
-                        {usage.writeLimit.toLocaleString()}
-                      </span>
-                    </div>
-                    <Progress
-                      value={usage.writePercentage}
-                      className={`h-2 [&>div]:${getUsageColor(
-                        usage.writePercentage
-                      )}`}
-                    />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {usage.writePercentage.toFixed(1)}% used
-                    </p>
+                    <p className="text-2xl font-bold">{stats.total}</p>
+                    <p className="text-sm text-muted-foreground">Total Users</p>
                   </div>
-
-                  {usage.platform === "twitter" && (
-                    <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
-                      <p className="text-xs text-yellow-600 dark:text-yellow-400">
-                        ⚠️ Free tier limits: {PLATFORM_API_LIMITS.twitter.read}{" "}
-                        reads, {PLATFORM_API_LIMITS.twitter.write} writes/month
-                      </p>
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-yellow-500/10">
+                    <Clock className="h-5 w-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.pending}</p>
+                    <p className="text-sm text-muted-foreground">Pending</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-green-500/10">
+                    <UserCheck className="h-5 w-5 text-green-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.approved}</p>
+                    <p className="text-sm text-muted-foreground">Approved</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-card">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-red-500/10">
+                    <UserX className="h-5 w-5 text-red-500" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{stats.rejected}</p>
+                    <p className="text-sm text-muted-foreground">Rejected</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-            <div className="mt-6 p-4 rounded-lg bg-muted/30 border border-border">
-              <h4 className="font-medium mb-2 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                How Usage is Tracked
-              </h4>
-              <ul className="text-sm text-muted-foreground space-y-1">
-                <li>
-                  • <strong>Write operations:</strong> Counted from posts in our
-                  database with status = 'posted'
-                </li>
-                <li>
-                  • <strong>Read operations:</strong> Would require separate API
-                  call tracking (not yet implemented)
-                </li>
-                <li>
-                  • <strong>Limits:</strong> Based on platform's free tier API
-                  quotas
-                </li>
-                <li>
-                  • We calculate usage by counting records, not by fetching from
-                  platform dashboards
-                </li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Users Table */}
-        <Card className="bg-card">
-          <CardHeader>
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage user accounts and their posting limits
-                </CardDescription>
-              </div>
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                <Tabs
-                  value={statusFilter}
-                  onValueChange={setStatusFilter}
-                  className="w-full sm:w-auto"
+          {/* Quick Actions */}
+          <Card className="bg-card">
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                <Button variant="outline" onClick={() => setActiveTab("users")}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Users
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setActiveTab("notifications")}
                 >
-                  <TabsList>
-                    <TabsTrigger value="all">All</TabsTrigger>
-                    <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
-                    <TabsTrigger value="approved">Approved</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+                  <Bell className="h-4 w-4 mr-2" />
+                  Send Alert
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const adminInList = users.find(
+                      (u) => u.user_id === user?.id
+                    );
+                    if (adminInList) openLimitsDialog(adminInList);
+                  }}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Manage My Limits
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card className="bg-card">
+            <CardHeader>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>
+                    Manage user accounts and permissions
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <Tabs
+                    value={statusFilter}
+                    onValueChange={setStatusFilter}
+                    className="w-full sm:w-auto"
+                  >
+                    <TabsList>
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="waitlist">Waitlist</TabsTrigger>
+                      <TabsTrigger value="approved">Approved</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <div className="relative w-full sm:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8">
-                      Loading users...
-                    </TableCell>
+                    <TableHead>User</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ) : filteredUsers.length === 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No users found
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredUsers.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{u.name || "No name"}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {u.email}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            u.status === "approved"
-                              ? "default"
-                              : u.status === "pending"
-                              ? "secondary"
-                              : "destructive"
-                          }
-                        >
-                          {u.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={userRoles[u.user_id] || "user"}
-                          onValueChange={(value: "admin" | "user") =>
-                            updateUserRole(u.user_id, value)
-                          }
-                        >
-                          <SelectTrigger className="w-24">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="user">
-                              <div className="flex items-center gap-2">
-                                <Users className="h-3 w-3" />
-                                User
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="admin">
-                              <div className="flex items-center gap-2">
-                                <Crown className="h-3 w-3 text-yellow-500" />
-                                Admin
-                              </div>
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {u.status === "pending" && (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => approveUser(u.user_id)}
-                                className="gap-1"
-                              >
-                                <UserCheck className="h-3 w-3" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => rejectUser(u.user_id)}
-                                className="gap-1"
-                              >
-                                <UserX className="h-3 w-3" />
-                                Reject
-                              </Button>
-                            </>
-                          )}
-                          {u.status === "approved" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openLimitsDialog(u)}
-                              className="gap-1"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                              Edit Limits
-                            </Button>
-                          )}
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        Loading users...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                  ) : filteredUsers.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        No users found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredUsers.map((u) => (
+                      <TableRow key={u.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{u.name || "No name"}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {u.email}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              u.status === "approved"
+                                ? "default"
+                                : u.status === "pending"
+                                ? "secondary"
+                                : "outline"
+                            }
+                          >
+                            {u.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={userRoles[u.user_id] || "user"}
+                            onValueChange={(value: "admin" | "user") =>
+                              updateUserRole(u.user_id, value)
+                            }
+                          >
+                            <SelectTrigger className="w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">
+                                <div className="flex items-center gap-2">
+                                  <Users className="h-3 w-3" />
+                                  User
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="admin">
+                                <div className="flex items-center gap-2">
+                                  <Crown className="h-3 w-3 text-yellow-500" />
+                                  Admin
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {new Date(u.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {u.status === "pending" && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => approveUser(u.user_id)}
+                                  className="gap-1"
+                                >
+                                  <UserCheck className="h-3 w-3" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => rejectUser(u.user_id)}
+                                  className="gap-1"
+                                >
+                                  <UserX className="h-3 w-3" />
+                                  Reject
+                                </Button>
+                              </>
+                            )}
+                            {u.status === "approved" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openLimitsDialog(u)}
+                                className="gap-1"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                                Edit Limits
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-        {/* Edit Limits Dialog */}
-        <Dialog open={isLimitsDialogOpen} onOpenChange={setIsLimitsDialogOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit User Limits</DialogTitle>
-              <DialogDescription>
-                Set monthly posting limits for {selectedUser?.email}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              {platforms.map((platform) => (
-                <div
-                  key={platform}
-                  className="flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2">
-                    {platformIcons[platform] || (
-                      <BarChart3 className="h-4 w-4" />
-                    )}
-                    <Label className="capitalize">{platform}</Label>
-                  </div>
+        {/* Notifications Tab */}
+        <TabsContent value="notifications" className="space-y-6">
+          <Card className="bg-card">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-purple-500" />
+                <CardTitle>Send Alert to All Users</CardTitle>
+              </div>
+              <CardDescription>
+                Broadcast an announcement or important update to all users.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4 max-w-xl">
+                <div>
+                  <Label htmlFor="alert-title">Title</Label>
                   <Input
-                    type="number"
-                    min={0}
-                    value={editingLimits[platform] || 30}
-                    onChange={(e) =>
-                      setEditingLimits({
-                        ...editingLimits,
-                        [platform]: parseInt(e.target.value) || 0,
-                      })
-                    }
-                    className="w-24 text-right"
+                    id="alert-title"
+                    placeholder="e.g., New Feature Released!"
+                    value={alertTitle}
+                    onChange={(e) => setAlertTitle(e.target.value)}
+                    className="mt-1"
                   />
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsLimitsDialogOpen(false)}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button onClick={saveLimits}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Limits
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+                <div>
+                  <Label htmlFor="alert-message">Message</Label>
+                  <Textarea
+                    id="alert-message"
+                    placeholder="Enter your announcement message..."
+                    value={alertMessage}
+                    onChange={(e) => setAlertMessage(e.target.value)}
+                    className="mt-1 min-h-[120px]"
+                  />
+                </div>
+                <Button
+                  onClick={handleSendAlert}
+                  disabled={
+                    isSendingAlert || !alertTitle.trim() || !alertMessage.trim()
+                  }
+                  className="gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  {isSendingAlert
+                    ? "Sending..."
+                    : `Send to ${stats.total} Users`}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* API Limits Tab */}
+        <TabsContent value="limits" className="space-y-6">
+          <Card className="bg-card">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <CardTitle>Platform API Usage (This Month)</CardTitle>
+              </div>
+              <CardDescription>
+                Monitor your app's usage against platform API limits.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {platformUsage.map((usage) => (
+                  <div
+                    key={usage.platform}
+                    className="p-4 rounded-lg border border-border bg-muted/20"
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        {platformIcons[usage.platform] || (
+                          <BarChart3 className="h-4 w-4" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-semibold capitalize text-foreground">
+                          {usage.platform}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          API Rate Limits
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Read Operations */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <ArrowDownCircle className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium">
+                            Read Operations
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {usage.readUsed.toLocaleString()} /{" "}
+                          {usage.readLimit.toLocaleString()}
+                        </span>
+                      </div>
+                      <Progress value={usage.readPercentage} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {usage.readPercentage.toFixed(1)}% used
+                      </p>
+                    </div>
+
+                    {/* Write Operations */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <ArrowUpCircle className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">
+                            Write Operations
+                          </span>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {usage.writeUsed.toLocaleString()} /{" "}
+                          {usage.writeLimit.toLocaleString()}
+                        </span>
+                      </div>
+                      <Progress value={usage.writePercentage} className="h-2" />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {usage.writePercentage.toFixed(1)}% used
+                      </p>
+                    </div>
+
+                    {usage.platform === "twitter" && (
+                      <div className="mt-3 p-2 rounded bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                          ⚠️ Free tier limits:{" "}
+                          {PLATFORM_API_LIMITS.twitter.read} reads,{" "}
+                          {PLATFORM_API_LIMITS.twitter.write} writes/month
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Edit Limits Dialog */}
+      <Dialog open={isLimitsDialogOpen} onOpenChange={setIsLimitsDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User Limits</DialogTitle>
+            <DialogDescription>
+              Set monthly posting limits for {selectedUser?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {platforms.map((platform) => (
+              <div key={platform} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {platformIcons[platform] || <BarChart3 className="h-4 w-4" />}
+                  <Label className="capitalize">{platform}</Label>
+                </div>
+                <Input
+                  type="number"
+                  min={0}
+                  value={editingLimits[platform] || 30}
+                  onChange={(e) =>
+                    setEditingLimits({
+                      ...editingLimits,
+                      [platform]: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="w-24 text-right"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsLimitsDialogOpen(false)}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button onClick={saveLimits}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Limits
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

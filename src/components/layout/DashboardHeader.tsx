@@ -1,8 +1,13 @@
-import { Bell, Plus, Moon, Sun } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { useAppStore } from '@/stores/appStore';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Plus, Moon, Sun } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useAppStore } from "@/stores/appStore";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 
 interface DashboardHeaderProps {
   title?: string;
@@ -20,25 +25,29 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
         {/* Theme toggle */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9">
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-9 w-9"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</TooltipContent>
+          <TooltipContent>
+            {theme === "dark" ? "Light Mode" : "Dark Mode"}
+          </TooltipContent>
         </Tooltip>
 
         {/* Notifications */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-9 w-9 relative">
-              <Bell className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Notifications</TooltipContent>
-        </Tooltip>
+        <NotificationPanel />
 
         {/* New Post CTA */}
-        <Button onClick={() => navigate('/dashboard/studio')} className="gap-2">
+        <Button onClick={() => navigate("/dashboard/studio")} className="gap-2">
           <Plus className="h-4 w-4" />
           New Post
         </Button>
