@@ -19,16 +19,36 @@ import {
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
     case "post_published":
-      return <Send className="h-4 w-4 text-green-500" />;
+      return (
+        <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+          <Send className="h-4 w-4 text-green-600" />
+        </div>
+      );
     case "post_scheduled":
-      return <Calendar className="h-4 w-4 text-blue-500" />;
+      return (
+        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+          <Calendar className="h-4 w-4 text-blue-600" />
+        </div>
+      );
     case "post_failed":
-      return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      return (
+        <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
+          <AlertCircle className="h-4 w-4 text-red-600" />
+        </div>
+      );
     case "admin_alert":
-      return <AlertCircle className="h-4 w-4 text-purple-500" />;
+      return (
+        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center">
+          <Bell className="h-4 w-4 text-purple-600" />
+        </div>
+      );
     case "system":
     default:
-      return <Info className="h-4 w-4 text-muted-foreground" />;
+      return (
+        <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center">
+          <Info className="h-4 w-4 text-gray-600" />
+        </div>
+      );
   }
 };
 
@@ -100,7 +120,7 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
   return (
     <div
       className={cn(
-        "flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50",
+        "flex gap-3 px-4 py-3 transition-colors hover:bg-muted/50 items-start",
         !notification.is_read && "bg-primary/5"
       )}
     >
@@ -108,20 +128,22 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
         {getNotificationIcon(notification.type)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground">
-          {notification.title}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+        <div className="flex justify-between items-start gap-2">
+          <p className="text-sm font-medium text-foreground leading-none">
+            {notification.title}
+          </p>
+          <span className="text-[10px] text-muted-foreground whitespace-nowrap flex-shrink-0">
+            {formatDistanceToNow(new Date(notification.created_at), {
+              addSuffix: true,
+            })}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5 leading-snug line-clamp-2">
           {notification.message}
-        </p>
-        <p className="text-[10px] text-muted-foreground/70 mt-1">
-          {formatDistanceToNow(new Date(notification.created_at), {
-            addSuffix: true,
-          })}
         </p>
       </div>
       {!notification.is_read && (
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 self-center">
           <div className="h-2 w-2 rounded-full bg-primary" />
         </div>
       )}

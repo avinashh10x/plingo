@@ -399,8 +399,8 @@ export const CompactEditorCard = ({
                   disabled={isPosting || !hasContent}
                   className="h-7 text-xs px-2.5 gap-1 mr-1"
                 >
-                  <Save className="h-3 w-3" />
-                  <span className="hidden xs:inline">Save Draft</span>
+                  <Save className="h-3 w-3 mr-1" />
+                  <span className="xs:inline">Save Draft</span>
                 </Button>
 
                 <Button

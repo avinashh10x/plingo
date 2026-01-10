@@ -182,9 +182,10 @@ export const DateTimePicker = ({
         <Button
           variant="outline"
           size="sm"
-          className={cn("gap-1.5", compact && "h-7 text-xs px-2")}
-        >
-          <CalendarIcon className={cn("h-4 w-4", compact && "h-3 w-3")} />
+          className={cn("gap-1.5", compact && "!h-5 text-xs px-2 ")}
+          
+        > 
+          <CalendarIcon className={cn("h-3 w-3", compact && "h-2 w-2 ")} />
           {triggerLabel || "Schedule"}
         </Button>
       </PopoverTrigger>

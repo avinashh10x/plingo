@@ -56,35 +56,91 @@ function emitPostsSync(payload: PostsSyncPayload) {
   );
 }
 
-export function usePosts() {
+export interface UsePostsOptions {
+  page?: number;
+  pageSize?: number;
+  status?: string;
+  infinite?: boolean;
+}
+
+export function usePosts({
+  page = 1,
+  pageSize = 50,
+  status,
+  infinite = false,
+}: UsePostsOptions = {}) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchPosts = useCallback(async () => {
     if (!user) {
       setPosts([]);
+      setTotalCount(0);
       setIsLoading(false);
       return;
     }
 
+    setIsFetching(true);
+    // Only set blocking loading for initial fetch or page 1
+    if (!infinite || page === 1) {
+      setIsLoading(true);
+    }
+
     try {
-      const { data, error } = await supabase
+      // Get count first
+      let countQuery = supabase
+        .from("posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+
+      if (status) {
+        countQuery = countQuery.eq("status", status);
+      }
+
+      const { count, error: countError } = await countQuery;
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      // Get paginated data
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      let query = supabase
         .from("posts")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
+      if (status) {
+        query = query.eq("status", status);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
 
-      setPosts((data || []) as Post[]);
+      if (infinite && page > 1) {
+        setPosts((prev) => {
+          const newPosts = (data || []) as Post[];
+          const existingIds = new Set(prev.map((p) => p.id));
+          const uniqueNewPosts = newPosts.filter((p) => !existingIds.has(p.id));
+          return [...prev, ...uniqueNewPosts];
+        });
+      } else {
+        setPosts((data || []) as Post[]);
+      }
     } catch (error) {
       console.error("Error fetching posts:", error);
     } finally {
       setIsLoading(false);
+      setIsFetching(false);
     }
-  }, [user]);
+  }, [user, page, pageSize, status, infinite]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -547,5 +603,7 @@ export function usePosts() {
     bulkSchedule,
     publishNow,
     refresh: fetchPosts,
+    totalCount,
+    isFetching,
   };
 }

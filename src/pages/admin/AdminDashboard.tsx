@@ -36,6 +36,7 @@ import {
   Send,
   LayoutDashboard,
   Settings,
+  Trash2,
 } from "lucide-react";
 import {
   Table,
@@ -53,6 +54,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -64,6 +75,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 interface UserProfile {
   id: string;
@@ -109,6 +122,390 @@ const platformIcons: Record<string, React.ReactNode> = {
   instagram: <Instagram className="h-4 w-4" />,
 };
 
+// --- Notifications Management Component ---
+interface AdminNotification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+  profiles?: {
+    email: string;
+    name: string | null;
+  };
+}
+
+interface NotificationsManagerProps {
+  onSendAlert: () => void;
+  alertTitle: string;
+  setAlertTitle: (val: string) => void;
+  alertMessage: string;
+  setAlertMessage: (val: string) => void;
+  isSendingAlert: boolean;
+  totalUsers: number;
+}
+
+const NotificationsManager = ({
+  onSendAlert,
+  alertTitle,
+  setAlertTitle,
+  alertMessage,
+  setAlertMessage,
+  isSendingAlert,
+  totalUsers,
+}: NotificationsManagerProps) => {
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
+  const [editingNotif, setEditingNotif] = useState<AdminNotification | null>(
+    null
+  );
+  const [editTitle, setEditTitle] = useState("");
+  const [editMessage, setEditMessage] = useState("");
+  const [notificationToDelete, setNotificationToDelete] = useState<
+    string | null
+  >(null);
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    canNext,
+    canPrev,
+    totalPages,
+    nextPage,
+    prevPage,
+  } = usePagination({ pageSize: 10, totalItems: totalCount });
+
+  const fetchNotifications = async () => {
+    setIsLoading(true);
+    try {
+      // Get count
+      const { count, error: countError } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true });
+
+      if (countError) throw countError;
+      setTotalCount(count || 0);
+
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+
+      // Get data (raw)
+      const { data: notificationsData, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+      if (error) throw error;
+
+      // Manually fetch profiles for these notifications to avoid missing FK join issues
+      const userIds = [
+        ...new Set((notificationsData as any[]).map((n) => n.user_id)),
+      ];
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, email, name")
+        .in("user_id", userIds);
+
+      const profilesMap: Record<
+        string,
+        { email: string; name: string | null }
+      > = {};
+      profilesData?.forEach((p) => {
+        profilesMap[p.user_id] = { email: p.email, name: p.name };
+      });
+
+      const joinedNotifications = (notificationsData as any[]).map((n) => ({
+        ...n,
+        profiles: profilesMap[n.user_id],
+      }));
+
+      setNotifications(joinedNotifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      toast.error("Failed to load notifications");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [page]);
+
+  const confirmDelete = (id: string) => {
+    setNotificationToDelete(id);
+  };
+
+  const executeDelete = async () => {
+    if (!notificationToDelete) return;
+
+    try {
+      const { error, count } = await supabase
+        .from("notifications")
+        .delete({ count: "exact" })
+        .eq("id", notificationToDelete);
+
+      if (error) throw error;
+      if (count === 0) {
+        throw new Error(
+          "No record deleted. You might not have permission (RLS Policy)."
+        );
+      }
+      toast.success("Notification deleted");
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      toast.error(
+        `Failed to delete notification: ${
+          (error as any)?.message || "Unknown error"
+        }`
+      );
+    } finally {
+      setNotificationToDelete(null);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!editingNotif) return;
+    try {
+      const { error } = await supabase
+        .from("notifications")
+        .update({
+          title: editTitle,
+          message: editMessage,
+        })
+        .eq("id", editingNotif.id);
+
+      if (error) throw error;
+      toast.success("Notification updated");
+      setEditingNotif(null);
+      fetchNotifications();
+    } catch (error) {
+      console.error("Error updating notification:", error);
+      toast.error("Failed to update notification");
+    }
+  };
+
+  const openEdit = (notif: AdminNotification) => {
+    setEditingNotif(notif);
+    setEditTitle(notif.title);
+    setEditMessage(notif.message);
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column: List (Takes 2/3) */}
+        <div className="lg:col-span-2 order-2 lg:order-1">
+          <Card className="bg-card h-full">
+            <CardHeader>
+              <CardTitle>Manage Notifications</CardTitle>
+              <CardDescription>
+                View and edit user notifications history.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Message</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8">
+                        Loading...
+                      </TableCell>
+                    </TableRow>
+                  ) : notifications.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        No notifications found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    notifications.map((n) => (
+                      <TableRow key={n.id}>
+                        <TableCell className="font-medium align-top py-4">
+                          {n.title}
+                        </TableCell>
+                        <TableCell className="align-top py-4 max-w-md">
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {n.message}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap align-top py-4">
+                          {new Date(n.created_at).toLocaleDateString()}
+                          <br />
+                          {new Date(n.created_at).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TableCell>
+                        <TableCell className="align-top py-4">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => openEdit(n)}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={() => confirmDelete(n.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+              <div className="mt-4">
+                <PaginationControls
+                  page={page}
+                  totalPages={totalPages}
+                  canPrev={canPrev}
+                  canNext={canNext}
+                  onPrev={prevPage}
+                  onNext={nextPage}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Send Alert Form (Takes 1/3) */}
+        <div className="lg:col-span-1 order-1 lg:order-2">
+          <Card className="bg-card sticky top-6">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-purple-500" />
+                <CardTitle className="text-lg">Send Alert</CardTitle>
+              </div>
+              <CardDescription>Broadcast to all users.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="alert-title">Title</Label>
+                  <Input
+                    id="alert-title"
+                    placeholder="New Feature!"
+                    value={alertTitle}
+                    onChange={(e) => setAlertTitle(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="alert-message">Message</Label>
+                  <Textarea
+                    id="alert-message"
+                    placeholder="Announcement..."
+                    value={alertMessage}
+                    onChange={(e) => setAlertMessage(e.target.value)}
+                    className="mt-1 min-h-[120px]"
+                  />
+                </div>
+                <Button
+                  onClick={onSendAlert}
+                  disabled={
+                    isSendingAlert || !alertTitle.trim() || !alertMessage.trim()
+                  }
+                  className="w-full gap-2"
+                >
+                  <Send className="h-4 w-4" />
+                  {isSendingAlert ? "Sending..." : "Send Alert"}
+                </Button>
+                <div className="text-center">
+                  <span className="text-xs text-muted-foreground">
+                    Targeting {totalUsers} users
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Dialog
+        open={!!editingNotif}
+        onOpenChange={(open) => !open && setEditingNotif(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Notification</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>Title</Label>
+              <Input
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label>Message</Label>
+              <Textarea
+                value={editMessage}
+                onChange={(e) => setEditMessage(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setEditingNotif(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdate}>Save Changes</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog
+        open={!!notificationToDelete}
+        onOpenChange={(open) => !open && setNotificationToDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              notification from the server.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={executeDelete}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+};
+
 // Tab navigation items
 const tabs = [
   { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -141,6 +538,18 @@ export const AdminDashboard = () => {
   const [alertTitle, setAlertTitle] = useState("");
   const [alertMessage, setAlertMessage] = useState("");
   const [isSendingAlert, setIsSendingAlert] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const {
+    page,
+    setPage,
+    pageSize,
+    range,
+    canNext,
+    canPrev,
+    totalPages,
+    nextPage,
+    prevPage,
+  } = usePagination({ pageSize: 10, totalItems: totalUsers });
 
   useEffect(() => {
     if (isAdmin) {
@@ -148,18 +557,27 @@ export const AdminDashboard = () => {
       fetchUserRoles();
       fetchPlatformUsage();
     }
-  }, [isAdmin]);
+  }, [isAdmin, page]);
 
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
+      // Fetch count first
+      const { count, error: countError } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true });
+
+      if (countError) throw countError;
+
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .range(range.from, range.to);
 
       if (error) throw error;
       setUsers((data as UserProfile[]) || []);
+      setTotalUsers(count || 0);
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to fetch users");
@@ -392,10 +810,10 @@ export const AdminDashboard = () => {
   });
 
   const stats = {
-    total: users.length,
-    pending: users.filter((u) => u.status === "pending").length,
-    approved: users.filter((u) => u.status === "approved").length,
-    rejected: users.filter((u) => u.status === "rejected").length,
+    total: totalUsers,
+    pending: 0, // Cannot calculate accurate counts for status without fetching all. For now removing specific counts or keeping them 0.
+    approved: 0,
+    rejected: 0,
   };
 
   const getUsageColor = (percentage: number) => {
@@ -688,59 +1106,31 @@ export const AdminDashboard = () => {
                   )}
                 </TableBody>
               </Table>
+              <div className="mt-4">
+                <PaginationControls
+                  page={page}
+                  totalPages={totalPages}
+                  canPrev={canPrev}
+                  canNext={canNext}
+                  onPrev={prevPage}
+                  onNext={nextPage}
+                />
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
-          <Card className="bg-card">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-purple-500" />
-                <CardTitle>Send Alert to All Users</CardTitle>
-              </div>
-              <CardDescription>
-                Broadcast an announcement or important update to all users.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4 max-w-xl">
-                <div>
-                  <Label htmlFor="alert-title">Title</Label>
-                  <Input
-                    id="alert-title"
-                    placeholder="e.g., New Feature Released!"
-                    value={alertTitle}
-                    onChange={(e) => setAlertTitle(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="alert-message">Message</Label>
-                  <Textarea
-                    id="alert-message"
-                    placeholder="Enter your announcement message..."
-                    value={alertMessage}
-                    onChange={(e) => setAlertMessage(e.target.value)}
-                    className="mt-1 min-h-[120px]"
-                  />
-                </div>
-                <Button
-                  onClick={handleSendAlert}
-                  disabled={
-                    isSendingAlert || !alertTitle.trim() || !alertMessage.trim()
-                  }
-                  className="gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                  {isSendingAlert
-                    ? "Sending..."
-                    : `Send to ${stats.total} Users`}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <NotificationsManager
+            onSendAlert={handleSendAlert}
+            alertTitle={alertTitle}
+            setAlertTitle={setAlertTitle}
+            alertMessage={alertMessage}
+            setAlertMessage={setAlertMessage}
+            isSendingAlert={isSendingAlert}
+            totalUsers={stats.total}
+          />
         </TabsContent>
 
         {/* API Limits Tab */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FileText,
   Edit,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePosts } from "@/hooks/usePosts";
+import { useInfiniteScroll } from "@/hooks/usePagination";
 import {
   Dialog,
   DialogContent,
@@ -56,13 +57,69 @@ const PlatformIcon = ({ platform }: { platform: string }) => {
 
 export const DraftsPage = () => {
   const navigate = useNavigate();
-  const { posts, isLoading, deletePost, publishNow, updatePost, schedulePost } =
-    usePosts();
-  const { addEditorPostWithData, clearEditorPosts } = useAppStore();
   const [platformFilter, setPlatformFilter] = useState<
     "all" | "twitter" | "linkedin"
   >("all");
   const [activeTab, setActiveTab] = useState<"drafts" | "all">("drafts");
+
+  // Pagination & Infinite Scroll logic
+  // Pagination & Infinite Scroll logic
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const nextPage = () => setPage((p) => p + 1);
+
+  // Note: For infinite scroll, totalItems in usePagination needs to be accurate to allow 'nextPage' to work.
+  // We need to pass totalCount from usePosts to usePagination somehow, or just handle 'hasMore' manually.
+  // Actually, usePagination calculates 'canNext' based on totalItems.
+
+  const statusFilter = activeTab === "drafts" ? "draft" : undefined;
+
+  const {
+    posts,
+    isLoading,
+    isFetching,
+    deletePost,
+    publishNow,
+    updatePost,
+    schedulePost,
+    totalCount,
+  } = usePosts({
+    page,
+    pageSize: 10,
+    status: statusFilter,
+    infinite: true,
+  });
+
+  // NOTE: filtering is now done server-side via usePosts based on activeTab (status).
+  // platformFilter is still client-side for now as it's a sub-filter of the fetched set.
+  const filteredPosts = posts.filter((post) => {
+    if (platformFilter === "all") return true;
+    return post.platforms?.includes(platformFilter);
+  });
+
+  // Since usePagination state is internal, we need a way to update its 'totalItems'.
+  // But wait, the hook accepts totalItems as prop. It doesn't update it.
+  // We should create a new wrapper or just use 'page' state directly if usePagination is too rigid.
+  // Let's use the 'page' and 'setPage' from usePagination, but we need to override the 'canNext' logic or update the hook to accept dynamic total.
+  // The simple way: Re-instantiate usePagination with the new totalCount? No, that resets page.
+  // Alternative: Just use useState for page and useInfiniteScroll separately?
+  // User wanted "add new feature in pagination hook". I did that: useInfiniteScroll.
+
+  // Let's use useInfiniteScroll to drive nextPage.
+  const hasMore = posts.length < totalCount;
+
+  const lastElementRef = useInfiniteScroll({
+    onLoadMore: nextPage,
+    hasMore: hasMore,
+    isLoading: isFetching, // Use isFetching to allow append updates without blocking UI, but preventing spam
+    rootMargin: "200px", // Load earlier
+  });
+
+  // Reset page when tab changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
 
   // State for Edit/Reschedule dialogs
   const [editingPost, setEditingPost] = useState<any>(null);
@@ -82,15 +139,11 @@ export const DraftsPage = () => {
     navigate("/dashboard/studio");
   };
 
-  const drafts = posts.filter((p) => p.status === "draft");
-  const allPosts = posts;
+  // Removed old client-side filtering logic
+  // const drafts = posts.filter((p) => p.status === "draft");
+  // const allPosts = posts;
 
-  const filteredPosts = (activeTab === "drafts" ? drafts : allPosts).filter(
-    (post) => {
-      if (platformFilter === "all") return true;
-      return post.platforms?.includes(platformFilter);
-    }
-  );
+  // const filteredPosts = ...
 
   if (isLoading) {
     return (
@@ -173,8 +226,8 @@ export const DraftsPage = () => {
         className="mb-6"
       >
         <TabsList>
-          <TabsTrigger value="drafts">Drafts ({drafts.length})</TabsTrigger>
-          <TabsTrigger value="all">All Posts ({allPosts.length})</TabsTrigger>
+          <TabsTrigger value="drafts">Drafts</TabsTrigger>
+          <TabsTrigger value="all">All Posts</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -200,125 +253,147 @@ export const DraftsPage = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          {filteredPosts.map((post) => (
-            <Card
-              key={post.id}
-              className="bg-card border-border hover:border-primary/30 transition-colors"
-            >
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  {/* Platform Icons */}
-                  <div className="flex flex-col gap-1">
-                    {post.platforms?.map((platform) => (
-                      <div key={platform} className="p-2 rounded-lg bg-muted">
-                        <PlatformIcon platform={platform} />
+          {filteredPosts.map((post, index) => {
+            const isLast = index === filteredPosts.length - 1;
+            return (
+              <div key={post.id} ref={isLast ? lastElementRef : null}>
+                <Card className="bg-card border-border hover:border-primary/30 transition-colors">
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-4">
+                      {/* Platform Icons */}
+                      <div className="flex flex-col gap-1">
+                        {post.platforms?.map((platform) => (
+                          <div
+                            key={platform}
+                            className="p-2 rounded-lg bg-muted"
+                          >
+                            <PlatformIcon platform={platform} />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-foreground whitespace-pre-wrap">
-                      {htmlToPlainText(post.content)}
-                    </p>
-                    <div className="flex items-center gap-3 mt-3">
-                      <Badge
-                        variant={
-                          post.status === "posted"
-                            ? "default"
-                            : post.status === "scheduled"
-                            ? "secondary"
-                            : post.status === "failed"
-                            ? "destructive"
-                            : "outline"
-                        }
-                        className="text-xs"
-                      >
-                        {post.status}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {post.status === "posted" && post.posted_at
-                          ? `Posted ${format(
-                              new Date(post.posted_at),
-                              "MMM d, h:mm a"
-                            )}`
-                          : post.status === "scheduled" && post.scheduled_at
-                          ? `Scheduled ${format(
-                              new Date(post.scheduled_at),
-                              "MMM d, h:mm a"
-                            )}`
-                          : `Created ${format(
-                              new Date(post.created_at),
-                              "MMM d, h:mm a"
-                            )}`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    {(post.status === "draft" ||
-                      post.status === "scheduled") && (
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        title="Post Now"
-                        onClick={() => setPostNowConfirm(post)}
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {post.status === "draft" && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditDraft(post)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    )}
-                    {post.status === "scheduled" && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Edit Content"
-                          onClick={() => {
-                            setEditingPost(post);
-                            setEditContent(htmlToPlainText(post.content));
-                          }}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          title="Reschedule"
-                          onClick={() => {
-                            setReschedulingPost(post);
-                            if (post.scheduled_at) {
-                              setNewScheduleDate(new Date(post.scheduled_at));
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-foreground whitespace-pre-wrap">
+                          {htmlToPlainText(post.content)}
+                        </p>
+                        <div className="flex items-center gap-3 mt-3">
+                          <Badge
+                            variant={
+                              post.status === "posted"
+                                ? "default"
+                                : post.status === "scheduled"
+                                ? "secondary"
+                                : post.status === "failed"
+                                ? "destructive"
+                                : "outline"
                             }
-                          }}
+                            className="text-xs"
+                          >
+                            {post.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {post.status === "posted" && post.posted_at
+                              ? `Posted ${format(
+                                  new Date(post.posted_at),
+                                  "MMM d, h:mm a"
+                                )}`
+                              : post.status === "scheduled" && post.scheduled_at
+                              ? `Scheduled ${format(
+                                  new Date(post.scheduled_at),
+                                  "MMM d, h:mm a"
+                                )}`
+                              : `Created ${format(
+                                  new Date(post.created_at),
+                                  "MMM d, h:mm a"
+                                )}`}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2">
+                        {(post.status === "draft" ||
+                          post.status === "scheduled") && (
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            title="Post Now"
+                            onClick={() => setPostNowConfirm(post)}
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {post.status === "draft" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditDraft(post)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {post.status === "scheduled" && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Edit Content"
+                              onClick={() => {
+                                setEditingPost(post);
+                                setEditContent(htmlToPlainText(post.content));
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              title="Reschedule"
+                              onClick={() => {
+                                setReschedulingPost(post);
+                                if (post.scheduled_at) {
+                                  setNewScheduleDate(
+                                    new Date(post.scheduled_at)
+                                  );
+                                }
+                              }}
+                            >
+                              <CalendarClock className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => deletePost(post.id)}
                         >
-                          <CalendarClock className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => deletePost(post.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            );
+          })}
+          {hasMore ? (
+            <div className="py-8 text-center flex flex-col items-center gap-4">
+              {isFetching ? (
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              ) : (
+                <Button variant="secondary" onClick={nextPage}>
+                  Load More
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground text-sm">
+              You've reached the end of the list.
+            </div>
+          )}
         </div>
       )}
 
