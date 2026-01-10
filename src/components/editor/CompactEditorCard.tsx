@@ -308,9 +308,9 @@ export const CompactEditorCard = ({
             />
 
             {/* Bottom row: platforms + char count + actions */}
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/50">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mt-2 pt-2 border-t border-border/50 gap-2 sm:gap-0">
               {/* Left: platforms + char count */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between sm:justify-start gap-2">
                 <div className="flex gap-0.5">
                   {availablePlatforms.map((platform) => (
                     <PlatformIcon
@@ -336,7 +336,7 @@ export const CompactEditorCard = ({
               </div>
 
               {/* Right: actions */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-end gap-1.5">
                 {editorPosts.length > 1 && (
                   <Button
                     variant="ghost"
@@ -400,7 +400,7 @@ export const CompactEditorCard = ({
                   className="h-7 text-xs px-2.5 gap-1 mr-1"
                 >
                   <Save className="h-3 w-3" />
-                  Save Draft
+                  <span className="hidden xs:inline">Save Draft</span>
                 </Button>
 
                 <Button

@@ -148,10 +148,10 @@ export const AppSidebar = ({ isCollapsed = false }: AppSidebarProps) => {
   };
 
   return (
-    <aside className="h-full bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-200">
+    <aside className="h-full bg-sidebar flex flex-col border-r border-sidebar-border transition-all duration-200 w-full">
       {/* Logo */}
       <div className="h-14 flex items-center px-3 border-b border-sidebar-border">
-        <Link to={'/'}>
+        <Link to={"/"}>
           {!isCollapsed ? (
             <div className="flex items-center">
               <span className="size-10">

@@ -1,20 +1,24 @@
-import { useEffect, useRef } from 'react';
-import { Sparkles, Copy, ListPlus, Bug, Plus, History } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useEffect, useRef } from "react";
+import { Sparkles, Copy, ListPlus, Bug, Plus, History } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { GeneratedPostCard } from './GeneratedPostCard';
-import { GeneratedPost } from './types';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { Loader2, MessageSquare } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { GeneratedPostCard } from "./GeneratedPostCard";
+import { GeneratedPost } from "./types";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Loader2, MessageSquare } from "lucide-react";
 
 interface ChatContentProps {
   generatedItems: GeneratedPost[];
@@ -42,7 +46,7 @@ export const ChatContent = ({
   isLoading,
   onSelectChat,
 }: ChatContentProps) => {
-  const assistantItems = generatedItems.filter(item => !item.isUserMessage);
+  const assistantItems = generatedItems.filter((item) => !item.isUserMessage);
   const hasAssistantItems = assistantItems.length > 0;
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -50,7 +54,7 @@ export const ChatContent = ({
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
         top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   }, [generatedItems]);
@@ -116,18 +120,20 @@ export const ChatContent = ({
                       className={cn(
                         "w-full p-2 rounded-md text-left transition-colors text-xs",
                         chat.id === currentChatId
-                          ? 'bg-primary/10 border border-primary/20'
-                          : 'bg-muted/30 hover:bg-muted/50 border border-transparent'
+                          ? "bg-primary/10 border border-primary/20"
+                          : "bg-muted/30 hover:bg-muted/50 border border-transparent"
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium truncate">{chat.title}</span>
+                        <span className="font-medium truncate">
+                          {chat.title}
+                        </span>
                         {chat.id === currentChatId && (
                           <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
                         )}
                       </div>
                       <span className="text-[10px] text-muted-foreground">
-                        {format(new Date(chat.updated_at), 'MMM d, h:mm a')}
+                        {format(new Date(chat.updated_at), "MMM d, h:mm a")}
                       </span>
                     </button>
                   ))
@@ -150,7 +156,7 @@ export const ChatContent = ({
               className="p-3 space-y-2"
             >
               {/* Messages */}
-              {generatedItems.map((item, index) => (
+              {generatedItems.map((item, index) =>
                 item.isUserMessage ? (
                   <motion.div
                     key={item.id}
@@ -171,7 +177,7 @@ export const ChatContent = ({
                     onAddToEditor={onAddToEditor}
                   />
                 )
-              ))}
+              )}
             </motion.div>
           ) : (
             <motion.div
@@ -185,7 +191,9 @@ export const ChatContent = ({
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium text-foreground">Buggy - Content Specialist</p>
+                <p className="text-sm font-medium text-foreground">
+                  Buggy - Content Specialist
+                </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Generate engaging posts for any topic
                 </p>

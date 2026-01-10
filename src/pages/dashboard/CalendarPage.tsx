@@ -207,20 +207,20 @@ export const CalendarPage = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
           <p className="text-muted-foreground mt-1">
             View all your posts - past, present, and future.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {/* Filters */}
           <Select
             value={statusFilter}
             onValueChange={(v: any) => setStatusFilter(v)}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-full md:w-[130px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -235,7 +235,7 @@ export const CalendarPage = () => {
             value={platformFilter}
             onValueChange={(v: any) => setPlatformFilter(v)}
           >
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className="w-full md:w-[130px]">
               <SelectValue placeholder="Platform" />
             </SelectTrigger>
             <SelectContent>
@@ -245,20 +245,22 @@ export const CalendarPage = () => {
             </SelectContent>
           </Select>
 
-          <Button
-            variant={viewMode === "week" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("week")}
-          >
-            Week
-          </Button>
-          <Button
-            variant={viewMode === "month" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("month")}
-          >
-            Month
-          </Button>
+          <div className="flex items-center gap-2 ml-auto md:ml-0">
+            <Button
+              variant={viewMode === "week" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("week")}
+            >
+              Week
+            </Button>
+            <Button
+              variant={viewMode === "month" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("month")}
+            >
+              Month
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -400,13 +402,13 @@ export const CalendarPage = () => {
             {selectedDayPosts.map((post) => (
               <Card key={post.id} className="bg-card border-border">
                 <CardContent className="p-4">
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-lg bg-muted">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className="p-2 rounded-lg bg-muted shrink-0">
                       <PlatformIcon
                         platform={post.platforms?.[0] || "twitter"}
                       />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge
                           variant={
@@ -421,7 +423,7 @@ export const CalendarPage = () => {
                           {post.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-foreground">
+                      <p className="text-sm text-foreground break-words">
                         {htmlToPlainText(post.content)}
                       </p>
                       <div className="flex items-center gap-2 mt-2">
@@ -435,7 +437,7 @@ export const CalendarPage = () => {
                       </div>
                     </div>
                     {post.status === "scheduled" && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-2 sm:pt-0 mt-2 sm:mt-0">
                         <Button
                           variant="secondary"
                           size="sm"

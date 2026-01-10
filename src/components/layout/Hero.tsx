@@ -24,7 +24,7 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-2 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_20px_5px_#3C83F6,inset_0px_2px_40px_20px_#3C83F6]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[65%] right-1/2 bg-background" />
+        <div className="z-2 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_20px_5px_hsl(var(--primary)),inset_0px_2px_40px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[65%] right-1/2 bg-background" />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
@@ -38,20 +38,20 @@ export const Hero = () => {
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-8 backdrop-blur-sm shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-            <Sparkles className="h-3.5 w-3.5 fill-blue-400/20" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8 backdrop-blur-sm shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
+            <Sparkles className="h-3.5 w-3.5 fill-primary/20" />
             <span>Introducing · Plingo AI 2.0</span>
           </div>
 
           {/* Headline */}
-          <h1 className="text-5xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
+          <h1 className="text-5xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-[1.1]">
             Build Smarter Content
             <br />
             Schedules With AI
           </h1>
 
           {/* Subheadline */}
-          <p className="text-lg md:text-lg text-blue-200/60 max-w-2xl mx-auto mb-10 leading-relaxed font-light">
+          <p className="text-lg md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-light">
             An AI-powered scheduler that helps you <br />
             plan, write, and publish content faster without clutter.
           </p>
@@ -65,7 +65,7 @@ export const Hero = () => {
               >
                 <Button
                   size="lg"
-                  className="bg-white text-black hover:bg-gray-200 hover:text-black rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-300"
                 >
                   Get Started
                 </Button>
@@ -80,7 +80,7 @@ export const Hero = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="rounded-full px-8 h-12 text-base border-blue-500/30 text-blue-100 hover:bg-blue-500/10 hover:text-white backdrop-blur-sm"
+                  className="rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground backdrop-blur-sm"
                 >
                   <Play className="h-4 w-4 mr-2 fill-current" />
                   Watch Demo

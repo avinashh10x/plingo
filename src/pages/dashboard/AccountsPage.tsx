@@ -144,11 +144,11 @@ export const AccountsPage = () => {
               )}
             >
               <CardContent className="p-6">
-                <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
                   {/* Platform Icon */}
                   <div
                     className={cn(
-                      "w-14 h-14 rounded-xl flex items-center justify-center",
+                      "w-14 h-14 rounded-xl flex items-center justify-center shrink-0",
                       connected ? "bg-primary/10" : "bg-muted"
                     )}
                   >
@@ -156,7 +156,7 @@ export const AccountsPage = () => {
                   </div>
 
                   {/* Platform Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 w-full">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-semibold text-foreground">
                         {platform.name}
@@ -196,13 +196,13 @@ export const AccountsPage = () => {
                   </div>
 
                   {/* Action Button */}
-                  <div>
+                  <div className="w-full sm:w-auto flex justify-end mt-2 sm:mt-0">
                     {connected ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => status && disconnectPlatform(status.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-destructive w-full sm:w-auto"
                       >
                         Disconnect
                       </Button>
@@ -211,6 +211,7 @@ export const AccountsPage = () => {
                         onClick={() => connectPlatform(platform.id)}
                         disabled={connecting}
                         size="sm"
+                        className="w-full sm:w-auto"
                       >
                         {connecting ? (
                           <>

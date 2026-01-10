@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TweetEditor } from "@/components/editor/TweetEditor";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
@@ -8,12 +8,18 @@ import {
   ResizableHandle,
 } from "@/components/ui/resizable";
 import { StudioAIPanel } from "@/components/ai/StudioAIPanel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const ContentStudio = () => {
+  const isMobile = useIsMobile();
   // Open AI panel by default on larger screens (laptop/desktop)
-  const [isAIPanelOpen, setIsAIPanelOpen] = useState(() => {
-    return typeof window !== "undefined" && window.innerWidth >= 1024;
-  });
+  const [isAIPanelOpen, setIsAIPanelOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setIsAIPanelOpen(true);
+    }
+  }, [isMobile]);
 
   return (
     <div className="flex flex-col h-full">
@@ -33,16 +39,35 @@ export const ContentStudio = () => {
 
       {/* Content Area */}
       <div className="flex-1 min-h-0">
-        {isAIPanelOpen ? (
-          <ResizablePanelGroup direction="horizontal" className="h-full">
+        {isMobile ? (
+          // Mobile Layout
+          <div className="h-full relative">
+            <div className={`h-full ${isAIPanelOpen ? "hidden" : "block"}`}>
+              <TweetEditor />
+            </div>
+            {isAIPanelOpen && (
+              <div className="absolute inset-0 z-10 bg-background">
+                <StudioAIPanel />
+              </div>
+            )}
+          </div>
+        ) : // Desktop Layout
+        isAIPanelOpen ? (
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="h-full bg-background"
+          >
             <ResizablePanel defaultSize={60} minSize={35}>
-              <div className="h-full overflow-hidden">
+              <div className="h-full overflow-hidden bg-background">
                 <TweetEditor />
               </div>
             </ResizablePanel>
-            <ResizableHandle withHandle />
+            <ResizableHandle
+              withHandle
+              className="bg-border/50 hover:bg-primary/20 transition-colors w-1"
+            />
             <ResizablePanel defaultSize={40} minSize={25}>
-              <div className="h-full bg-card border-l border-border flex flex-col">
+              <div className="h-full bg-background border-l border-border flex flex-col">
                 <div className="flex-1 overflow-hidden">
                   <StudioAIPanel />
                 </div>
@@ -50,7 +75,7 @@ export const ContentStudio = () => {
             </ResizablePanel>
           </ResizablePanelGroup>
         ) : (
-          <div className="h-full overflow-hidden">
+          <div className="h-full overflow-hidden bg-background">
             <TweetEditor />
           </div>
         )}

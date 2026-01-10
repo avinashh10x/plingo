@@ -1,66 +1,74 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { DashboardHeader } from "./DashboardHeader";
-import { useAppStore } from "@/stores/appStore";
-import { cn } from "@/lib/utils";
+import { MobileBottomNav } from "./MobileBottomNav";
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
 } from "@/components/ui/resizable";
-
-const MIN_SIDEBAR_SIZE = 3; // percentage
-const MAX_SIDEBAR_SIZE = 25; // percentage
-const DEFAULT_SIDEBAR_SIZE = 20; // percentage
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 export const DashboardLayout = () => {
-  const { theme } = useAppStore();
-  const [sidebarSize, setSidebarSize] = useState(DEFAULT_SIDEBAR_SIZE);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const isMobile = useIsMobile();
   const location = useLocation();
-  const isStudio = location.pathname.includes("/studio");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-  }, [theme]);
+    setReady(true);
+  }, []);
+
+  if (!ready) return null; // Avoid hydration mismatch
+
+  // Studio needs full height/width without standard padding
+  const isStudio = location.pathname.includes("/dashboard/studio");
+
+  if (isMobile) {
+    return (
+      <div className="flex h-screen bg-background flex-col">
+        <DashboardHeader />
+        <main
+          className={cn(
+            "flex-1 overflow-y-auto pb-16",
+            isStudio ? "p-0" : "p-4"
+          )}
+        >
+          <Outlet />
+        </main>
+        <MobileBottomNav />
+      </div>
+    );
+  }
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-background">
-      <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-        {/* Resizable Sidebar */}
+    <div className="flex h-screen bg-background overflow-hidden">
+      <ResizablePanelGroup direction="horizontal">
         <ResizablePanel
-          defaultSize={DEFAULT_SIDEBAR_SIZE}
-          minSize={MIN_SIDEBAR_SIZE}
-          maxSize={MAX_SIDEBAR_SIZE}
-          onResize={setSidebarSize}
-          className="min-w-[60px]"
+          defaultSize={20}
+          minSize={15}
+          maxSize={30}
+          className="hidden md:block"
         >
-          <AppSidebar isCollapsed={sidebarSize <= 12} />
+          <div className="h-full">
+            <AppSidebar isCollapsed={isSidebarCollapsed} />
+          </div>
         </ResizablePanel>
 
-        {/* Resize Handle */}
         <ResizableHandle
           withHandle
-          className="w-1 bg-transparent hover:bg-primary/20 transition-colors"
+          className="hidden md:flex bg-border/50 hover:bg-primary/20 transition-colors w-1"
         />
 
-        {/* Main area */}
-        <ResizablePanel defaultSize={85} minSize={75}>
-          <div className="flex-1 flex flex-col overflow-hidden h-full">
+        <ResizablePanel defaultSize={80}>
+          <div className="flex-1 flex flex-col h-full min-w-0">
             <DashboardHeader />
-
-            {/* Page content with proper padding */}
             <main
-              className={cn(
-                "flex-1 overflow-auto",
-                isStudio ? "p-0 overflow-hidden" : "p-6"
-              )}
+              className={cn("flex-1 overflow-y-auto", isStudio ? "p-0" : "p-6")}
             >
-              <div
-                className={cn(isStudio ? "h-full w-full" : "max-w-7xl mx-auto")}
-              >
-                <Outlet />
-              </div>
+              <Outlet />
             </main>
           </div>
         </ResizablePanel>
