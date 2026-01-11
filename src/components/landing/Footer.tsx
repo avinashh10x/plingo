@@ -22,7 +22,7 @@ export const Footer = () => {
             Terms of Service
           </a>
           <a
-            href="mailto:support@plingo.com"
+            href="mailto:thisisavinash@gmail.com"
             className="hover:text-foreground transition-colors"
           >
             Contact Support

@@ -9,7 +9,7 @@ import {
   startOfDay,
 } from "date-fns";
 import {
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   CalendarDays,
   Repeat,
@@ -35,6 +35,12 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useAppStore, EditorPost, ScheduleMode } from "@/stores/appStore";
 import { usePosts, ScheduleRule } from "@/hooks/usePosts";
 import {
@@ -90,6 +96,7 @@ export const BulkSchedulerModal = ({
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [mode, setMode] = useState<ScheduleMode>("daily");
   const [time, setTime] = useState("09:00");
+  const [startDate, setStartDate] = useState<Date>(new Date());
   const [customDays, setCustomDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon-Fri default
   const [showPreview, setShowPreview] = useState(false);
   const [isScheduling, setIsScheduling] = useState(false);
@@ -133,7 +140,7 @@ export const BulkSchedulerModal = ({
     const [hours, minutes] = effectiveTime.split(":").map(Number);
     const assignments: { post: EditorPost; scheduledAt: Date }[] = [];
 
-    let currentDate = startOfDay(new Date());
+    let currentRefDate = startOfDay(startDate);
     let postsToSchedule = [...selectedPosts];
 
     // Get allowed days based on mode
@@ -164,7 +171,8 @@ export const BulkSchedulerModal = ({
         const dayOfWeek = date.getDay();
         if (allowedDays.includes(dayOfWeek)) {
           const scheduled = setMinutes(setHours(date, hours), minutes);
-          if (isBefore(now, scheduled) || !isBefore(scheduled, now)) {
+          // If the slot is in the past, move to next day
+          if (!isBefore(scheduled, now)) {
             return scheduled;
           }
         }
@@ -174,12 +182,8 @@ export const BulkSchedulerModal = ({
       return date;
     };
 
-    // Start from today or tomorrow if today's time has passed
-    let nextSlot = findNextSlot(currentDate);
-    const todayScheduled = setMinutes(setHours(currentDate, hours), minutes);
-    if (isBefore(todayScheduled, now)) {
-      nextSlot = findNextSlot(addDays(currentDate, 1));
-    }
+    // Calculate assignments
+    let nextSlot = findNextSlot(currentRefDate);
 
     for (const post of postsToSchedule) {
       assignments.push({ post, scheduledAt: nextSlot });
@@ -187,20 +191,20 @@ export const BulkSchedulerModal = ({
     }
 
     return assignments;
-  }, [selectedPosts, effectiveSchedule]);
+  }, [selectedPosts, effectiveSchedule, startDate]);
 
   const handleConfirmSchedule = async () => {
-    // Check for 7-day limit (Free Plan)
-    const sevenDaysFromNow = addDays(new Date(), 7);
+    // Check for 365-day limit
+    const oneYearFromNow = addDays(new Date(), 365);
     const hasLatePosts = scheduleAssignments.some((a) =>
-      isBefore(sevenDaysFromNow, a.scheduledAt)
+      isBefore(oneYearFromNow, a.scheduledAt)
     );
 
     if (hasLatePosts) {
       toast({
         title: "Scheduling Limit Exceeded",
         description:
-          "Free plan only allows scheduling up to 7 days in advance.",
+          "Currently, scheduling is only supported up to 1 year in advance.",
         variant: "destructive",
       });
       return;
@@ -237,6 +241,7 @@ export const BulkSchedulerModal = ({
           effectiveMode === "custom"
             ? effectiveDays.map((d) => DAYS[d])
             : undefined,
+        startDate: startDate, // Pass selected start date if needed by backend
       };
 
       await bulkSchedule(postIds, rule);
@@ -308,7 +313,7 @@ export const BulkSchedulerModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Repeat className="h-5 w-5 text-primary" />
@@ -325,207 +330,253 @@ export const BulkSchedulerModal = ({
               exit={{ opacity: 0, x: -20 }}
               className="flex-1 overflow-hidden"
             >
-              <div className="space-y-6 py-4">
-                {/* Selected posts count */}
-                <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                  <CalendarDays className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">
-                    {selectedPosts.length} post
-                    {selectedPosts.length !== 1 ? "s" : ""} selected
-                  </span>
-                </div>
-
-                {/* Saved Rules vs Custom Toggle */}
-                <Tabs
-                  value={scheduleTab}
-                  onValueChange={(v) => setScheduleTab(v as "saved" | "custom")}
-                >
-                  <TabsList className="grid grid-cols-2 w-full">
-                    <TabsTrigger value="saved" className="gap-2">
-                      <Zap className="h-3 w-3" />
-                      Saved Schedules
-                    </TabsTrigger>
-                    <TabsTrigger value="custom" className="gap-2">
-                      <Clock className="h-3 w-3" />
-                      Custom
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* Saved Schedules Tab */}
-                  <TabsContent value="saved" className="mt-4 space-y-3">
-                    {rulesLoading ? (
-                      <div className="text-center py-4 text-muted-foreground">
-                        Loading...
-                      </div>
-                    ) : activeRules.length === 0 ? (
-                      <div className="text-center py-4 space-y-2">
-                        <p className="text-sm text-muted-foreground">
-                          No saved schedules yet
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Create schedules in Profile → Posting Schedule
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setScheduleTab("custom")}
-                        >
-                          Use Custom Schedule
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        {activeRules.map((rule) => (
-                          <motion.button
-                            key={rule.id}
-                            onClick={() => setSelectedRuleId(rule.id)}
-                            className={cn(
-                              "w-full p-3 rounded-lg border text-left transition-colors",
-                              selectedRuleId === rule.id
-                                ? "bg-primary/10 border-primary"
-                                : "bg-muted/50 border-border hover:border-primary/50"
-                            )}
-                            whileHover={{ scale: 1.01 }}
-                            whileTap={{ scale: 0.99 }}
-                          >
-                            <p className="font-medium text-sm">
-                              {formatRuleName(rule)}
-                            </p>
-                            <p className="text-xs text-muted-foreground capitalize">
-                              {rule.type}
-                            </p>
-                          </motion.button>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* Custom Schedule Tab */}
-                  <TabsContent value="custom" className="mt-4 space-y-4">
-                    {/* Schedule Mode */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">Frequency</Label>
-                      <Tabs
-                        value={mode}
-                        onValueChange={(v) => setMode(v as ScheduleMode)}
-                      >
-                        <TabsList className="grid grid-cols-4 w-full">
-                          <TabsTrigger value="daily" className="text-xs">
-                            Daily
-                          </TabsTrigger>
-                          <TabsTrigger value="weekdays" className="text-xs">
-                            Weekdays
-                          </TabsTrigger>
-                          <TabsTrigger value="weekends" className="text-xs">
-                            Weekends
-                          </TabsTrigger>
-                          <TabsTrigger value="custom" className="text-xs">
-                            Custom
-                          </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="custom" className="mt-4">
-                          <div className="flex flex-wrap gap-2">
-                            {DAYS.map((day, index) => (
-                              <motion.button
-                                key={day}
-                                onClick={() => toggleCustomDay(index)}
-                                className={cn(
-                                  "px-3 py-2 rounded-md text-sm font-medium border transition-colors",
-                                  customDays.includes(index)
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : "bg-muted border-border hover:border-primary/50"
-                                )}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                {day}
-                              </motion.button>
-                            ))}
-                          </div>
-                        </TabsContent>
-                      </Tabs>
-                    </div>
-
-                    {/* Time Picker */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        Posting Time
-                      </Label>
-                      <Select value={time} onValueChange={setTime}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select time" />
-                        </SelectTrigger>
-                        <SelectContent className="max-h-[200px]">
-                          {TIME_SLOTS.map((slot) => (
-                            <SelectItem key={slot} value={slot}>
-                              {format(
-                                setMinutes(
-                                  setHours(
-                                    new Date(),
-                                    parseInt(slot.split(":")[0])
-                                  ),
-                                  parseInt(slot.split(":")[1])
-                                ),
-                                "h:mm a"
-                              )}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </TabsContent>
-                </Tabs>
-
-                {/* Summary */}
-                <div className="p-3 bg-muted/50 rounded-lg space-y-1">
-                  <p className="text-sm font-medium">Schedule Summary</p>
-                  <p className="text-xs text-muted-foreground">
-                    {getModeDescription()} at{" "}
-                    {format(
-                      setMinutes(
-                        setHours(
-                          new Date(),
-                          parseInt(effectiveSchedule.time.split(":")[0])
-                        ),
-                        parseInt(effectiveSchedule.time.split(":")[1])
-                      ),
-                      "h:mm a"
-                    )}
-                  </p>
-                </div>
-
-                {/* Warning if no valid content */}
-                {!hasValidContent && (
-                  <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">Some posts have no content</span>
+              <ScrollArea className="h-full pr-4">
+                <div className="space-y-6 py-4">
+                  {/* Selected posts count */}
+                  <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      {selectedPosts.length} post
+                      {selectedPosts.length !== 1 ? "s" : ""} selected
+                    </span>
                   </div>
-                )}
 
-                {/* Saved schedule not selected warning */}
-                {scheduleTab === "saved" &&
-                  !selectedRuleId &&
-                  activeRules.length > 0 && (
-                    <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="text-sm">Please select a schedule</span>
-                    </div>
-                  )}
+                  {/* Saved Rules vs Custom Toggle */}
+                  <Tabs
+                    value={scheduleTab}
+                    onValueChange={(v) =>
+                      setScheduleTab(v as "saved" | "custom")
+                    }
+                  >
+                    <TabsList className="grid grid-cols-2 w-full">
+                      <TabsTrigger value="saved" className="gap-2">
+                        <Zap className="h-3 w-3" />
+                        Saved Schedules
+                      </TabsTrigger>
+                      <TabsTrigger value="custom" className="gap-2">
+                        <Clock className="h-3 w-3" />
+                        Custom
+                      </TabsTrigger>
+                    </TabsList>
 
-                {/* Custom days warning */}
-                {scheduleTab === "custom" &&
-                  mode === "custom" &&
-                  customDays.length === 0 && (
+                    {/* Saved Schedules Tab */}
+                    <TabsContent value="saved" className="mt-4 space-y-3">
+                      {rulesLoading ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          Loading...
+                        </div>
+                      ) : activeRules.length === 0 ? (
+                        <div className="text-center py-4 space-y-2">
+                          <p className="text-sm text-muted-foreground">
+                            No saved schedules yet
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Create schedules in Profile → Posting Schedule
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setScheduleTab("custom")}
+                          >
+                            Use Custom Schedule
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {activeRules.map((rule) => (
+                            <motion.button
+                              key={rule.id}
+                              onClick={() => setSelectedRuleId(rule.id)}
+                              className={cn(
+                                "w-full p-3 rounded-lg border text-left transition-colors",
+                                selectedRuleId === rule.id
+                                  ? "bg-primary/10 border-primary"
+                                  : "bg-muted/50 border-border hover:border-primary/50"
+                              )}
+                              whileHover={{ scale: 1.01 }}
+                              whileTap={{ scale: 0.99 }}
+                            >
+                              <p className="font-medium text-sm">
+                                {formatRuleName(rule)}
+                              </p>
+                              <p className="text-xs text-muted-foreground capitalize">
+                                {rule.type}
+                              </p>
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    {/* Custom Schedule Tab */}
+                    <TabsContent value="custom" className="mt-4 space-y-6">
+                      {/* Start Date Picker (Optimization) */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <CalendarIcon className="h-4 w-4 text-primary" />
+                          Start Sequence From
+                        </Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !startDate && "text-muted-foreground"
+                              )}
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {startDate ? (
+                                format(startDate, "PPP")
+                              ) : (
+                                <span>Pick a start date</span>
+                              )}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={startDate}
+                              onSelect={(date) => date && setStartDate(date)}
+                              disabled={(date) =>
+                                isBefore(date, startOfDay(new Date()))
+                              }
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+
+                      {/* Schedule Frequency */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Frequency</Label>
+                        <Tabs
+                          value={mode}
+                          onValueChange={(v) => setMode(v as ScheduleMode)}
+                        >
+                          <TabsList className="grid grid-cols-4 w-full">
+                            <TabsTrigger value="daily" className="text-xs">
+                              Daily
+                            </TabsTrigger>
+                            <TabsTrigger value="weekdays" className="text-xs">
+                              Weekdays
+                            </TabsTrigger>
+                            <TabsTrigger value="weekends" className="text-xs">
+                              Weekends
+                            </TabsTrigger>
+                            <TabsTrigger value="custom" className="text-xs">
+                              Custom
+                            </TabsTrigger>
+                          </TabsList>
+
+                          <TabsContent value="custom" className="mt-4">
+                            <div className="flex flex-wrap gap-2">
+                              {DAYS.map((day, index) => (
+                                <motion.button
+                                  key={day}
+                                  onClick={() => toggleCustomDay(index)}
+                                  className={cn(
+                                    "px-3 py-2 rounded-md text-sm font-medium border transition-colors",
+                                    customDays.includes(index)
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "bg-muted border-border hover:border-primary/50"
+                                  )}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  {day}
+                                </motion.button>
+                              ))}
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </div>
+
+                      {/* Time Picker */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" />
+                          Posting Time
+                        </Label>
+                        <Select value={time} onValueChange={setTime}>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select time" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[200px]">
+                            {TIME_SLOTS.map((slot) => (
+                              <SelectItem key={slot} value={slot}>
+                                {format(
+                                  setMinutes(
+                                    setHours(
+                                      new Date(),
+                                      parseInt(slot.split(":")[0])
+                                    ),
+                                    parseInt(slot.split(":")[1])
+                                  ),
+                                  "h:mm a"
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* Summary */}
+                  <div className="p-3 bg-muted/50 border border-border/50 rounded-lg space-y-1">
+                    <p className="text-sm font-medium">Schedule Summary</p>
+                    <p className="text-xs text-muted-foreground">
+                      Starting {format(startDate, "MMM d, yyyy")}, posting{" "}
+                      {getModeDescription()} at{" "}
+                      {format(
+                        setMinutes(
+                          setHours(
+                            new Date(),
+                            parseInt(effectiveSchedule.time.split(":")[0])
+                          ),
+                          parseInt(effectiveSchedule.time.split(":")[1])
+                        ),
+                        "h:mm a"
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Warning if no valid content */}
+                  {!hasValidContent && (
                     <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive">
                       <AlertCircle className="h-4 w-4" />
                       <span className="text-sm">
-                        Please select at least one day
+                        Some posts have no content
                       </span>
                     </div>
                   )}
-              </div>
+
+                  {/* Saved schedule not selected warning */}
+                  {scheduleTab === "saved" &&
+                    !selectedRuleId &&
+                    activeRules.length > 0 && (
+                      <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm">
+                          Please select a schedule
+                        </span>
+                      </div>
+                    )}
+
+                  {/* Custom days warning */}
+                  {scheduleTab === "custom" &&
+                    mode === "custom" &&
+                    customDays.length === 0 && (
+                      <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20 text-destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm">
+                          Please select at least one day
+                        </span>
+                      </div>
+                    )}
+                </div>
+              </ScrollArea>
             </motion.div>
           ) : (
             <motion.div
@@ -537,7 +588,7 @@ export const BulkSchedulerModal = ({
             >
               <div className="space-y-4 py-4">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-primary" />
+                  <CalendarIcon className="h-4 w-4 text-primary" />
                   <span className="text-sm font-medium">Schedule Preview</span>
                 </div>
 
