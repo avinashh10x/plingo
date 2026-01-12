@@ -15,6 +15,7 @@ import {
   AnimatedTwitterIcon,
   AnimatedLinkedInIcon,
   AnimatedInstagramIcon,
+  AnimatedThreadsIcon,
 } from "@/components/ui/animated-icon";
 import { UsageBar } from "@/components/usage/UsageBar";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,11 @@ const SUPPORTED_PLATFORMS: {
     name: "LinkedIn",
     description: "Share professional content",
   },
+  {
+    id: "threads",
+    name: "Threads",
+    description: "Share updates on Meta Threads",
+  },
 ];
 
 const PlatformIcon = ({
@@ -49,6 +55,8 @@ const PlatformIcon = ({
     return <AnimatedLinkedInIcon className={className} />;
   if (platform === "instagram")
     return <AnimatedInstagramIcon className={className} />;
+  if (platform === "threads")
+    return <AnimatedThreadsIcon className={className} />;
   return null;
 };
 
