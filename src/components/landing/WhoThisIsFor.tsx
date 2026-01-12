@@ -6,7 +6,7 @@ const PERSONAS = [
     title: "Creators growing on X & LinkedIn",
     desc: "Build your personal brand with consistent cross-posting.",
     align: "left" as const,
-    pos: "top-0 left-0",
+    pos: "top-16 left-0",
     arrowStart: { x: 260, y: 60 },
     arrowFinish: { x: 420, y: 220 },
   },
@@ -14,7 +14,7 @@ const PERSONAS = [
     title: "Founders building in public",
     desc: "Share your journey without spending hours on content.",
     align: "right" as const,
-    pos: "top-0 right-0",
+    pos: "top-16 right-0",
     arrowStart: { x: -40, y: 60 },
     arrowFinish: { x: -200, y: 220 },
   },
@@ -22,7 +22,7 @@ const PERSONAS = [
     title: "Indie hackers & solopreneurs",
     desc: "Market your product while you build it.",
     align: "left" as const,
-    pos: "bottom-0 left-0",
+    pos: "bottom-16 left-0",
     arrowStart: { x: 260, y: -20 },
     arrowFinish: { x: 420, y: -240 },
   },
@@ -30,7 +30,7 @@ const PERSONAS = [
     title: "Small teams",
     desc: "Manage multiple accounts from a single dashboard.",
     align: "right" as const,
-    pos: "bottom-0 right-0",
+    pos: "bottom-16 right-0",
     arrowStart: { x: -40, y: -20 },
     arrowFinish: { x: -200, y: -240 },
   },
@@ -94,16 +94,16 @@ export const WhoThisIsFor = () => {
                 desc={persona.desc}
                 align={persona.align}
               />
-              <Arrow
+              {/* <Arrow
                 start={persona.arrowStart}
                 finish={persona.arrowFinish}
                 className="text-foreground/20"
-              />
+              /> */}
             </div>
           ))}
 
           {/* Additional "Sketched" Labels like in the image */}
-          <div className="absolute top-1/3 left-1/4 -translate-x-full font-handwriting text-sm text-foreground/30 uppercase tracking-widest rotate-[-5deg]">
+          {/* <div className="absolute top-1/3 left-1/4 -translate-x-full font-handwriting text-sm text-foreground/30 uppercase tracking-widest rotate-[-5deg]">
             Writes good reviews
           </div>
           <div className="absolute top-1/4 right-1/4 translate-x-full font-handwriting text-sm text-foreground/30 uppercase tracking-widest rotate-[5deg]">
@@ -111,7 +111,7 @@ export const WhoThisIsFor = () => {
           </div>
           <div className="absolute bottom-1/3 right-1/4 translate-x-full font-handwriting text-sm text-foreground/30 uppercase tracking-widest rotate-[-2deg]">
             Loyal to the brand
-          </div>
+          </div> */}
         </div>
 
         {/* Mobile View */}

@@ -36,8 +36,8 @@ export const LandingHeader = () => {
   };
 
   return (
-    <header className="fixed top-5 left-0 right-0 z-50 bg-background/0  ">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <header className="fixed top-5 left-0 right-0 z-50  ">
+      <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
         <Link to="/">
           <motion.div
             className="flex items-center gap-2"
@@ -62,7 +62,7 @@ export const LandingHeader = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="pl-2 pr-4 h-10 gap-2 hover:bg-muted/50"
+                  className="pl-2 pr-4 h-10 gap-2 hover:bg-muted/50 "
                 >
                   <Avatar className="h-7 w-7 border border-border">
                     <AvatarImage
@@ -73,11 +73,12 @@ export const LandingHeader = () => {
                       {getInitials(profile.name, profile.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="text-left hidden sm:block">
+                  <div className="hidden sm:block text-right w-full">
                     <p className="text-sm font-medium leading-none">
                       {profile.name || "User"}
                     </p>
                   </div>
+
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
