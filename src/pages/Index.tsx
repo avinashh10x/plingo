@@ -24,7 +24,7 @@ const Index = () => {
       {/* Main Content */}
       <main>
         <Hero />
-        <WhoThisIsFor />
+        <WhoThisIsFor /> 
         <ProblemSolution />
         <AfterSignup />
         <CoreCapabilities />
