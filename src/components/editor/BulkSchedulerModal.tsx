@@ -228,23 +228,19 @@ export const BulkSchedulerModal = ({
         throw new Error("Failed to create posts");
       }
 
-      // Then bulk schedule them using effective schedule
-      const {
-        mode: effectiveMode,
-        time: effectiveTime,
-        days: effectiveDays,
-      } = effectiveSchedule;
-      const rule: ScheduleRule = {
-        type: effectiveMode,
-        time: effectiveTime,
-        days:
-          effectiveMode === "custom"
-            ? effectiveDays.map((d) => DAYS[d])
-            : undefined,
-        startDate: startDate, // Pass selected start date if needed by backend
-      };
+      // Build explicit schedule array with exact timestamps from our calculations
+      const schedules = scheduleAssignments.map(
+        ({ post, scheduledAt }, index) => ({
+          post_id: postIds[index],
+          scheduled_at: scheduledAt.toISOString(), // Send exact ISO timestamp
+        })
+      );
 
-      await bulkSchedule(postIds, rule);
+      // Get platforms from first post (they should all be the same in bulk)
+      const platforms = scheduleAssignments[0]?.post.platforms || ["twitter"];
+
+      // Send explicit schedules to backend
+      await bulkSchedule(schedules, platforms as any);
 
       // Remove from editor
       removeEditorPosts(selectedPosts.map((p) => p.id));

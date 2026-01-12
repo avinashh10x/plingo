@@ -415,8 +415,7 @@ export function usePosts({
   };
 
   const bulkSchedule = async (
-    postIds: string[],
-    rule: ScheduleRule,
+    schedules: Array<{ post_id: string; scheduled_at: string }>,
     platforms?: PlatformType[]
   ): Promise<boolean> => {
     try {
@@ -431,8 +430,7 @@ export function usePosts({
 
       const { data, error } = await supabase.functions.invoke("bulk-schedule", {
         body: {
-          post_ids: postIds,
-          rule,
+          schedules,
           platforms,
         },
         headers: {
@@ -450,7 +448,7 @@ export function usePosts({
 
       toast({
         title: "Bulk scheduling complete",
-        description: `${successCount} of ${postIds.length} posts scheduled.`,
+        description: `${successCount} of ${schedules.length} posts scheduled.`,
       });
 
       return true;

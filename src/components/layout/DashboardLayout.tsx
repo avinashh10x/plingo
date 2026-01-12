@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { DashboardHeader } from "./DashboardHeader";
-import { MobileBottomNav } from "./MobileBottomNav";
 import {
   ResizablePanelGroup,
   ResizablePanel,
@@ -31,14 +30,10 @@ export const DashboardLayout = () => {
       <div className="flex h-screen bg-background flex-col">
         <DashboardHeader />
         <main
-          className={cn(
-            "flex-1 overflow-y-auto pb-16",
-            isStudio ? "p-0" : "p-4"
-          )}
+          className={cn("flex-1 overflow-y-auto", isStudio ? "p-0" : "p-4")}
         >
           <Outlet />
         </main>
-        <MobileBottomNav />
       </div>
     );
   }
