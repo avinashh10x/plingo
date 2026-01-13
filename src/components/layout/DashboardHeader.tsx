@@ -1,5 +1,15 @@
-import { Plus, Moon, Sun, Menu } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  Plus,
+  Moon,
+  Sun,
+  Menu,
+  LayoutDashboard,
+  Wand2,
+  Calendar as CalendarIcon,
+  FileText,
+  Link2,
+} from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/appStore";
 import {
@@ -11,20 +21,38 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface DashboardHeaderProps {
   title?: string;
   subtitle?: string;
 }
 
+const mobileNavItems = [
+  { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+  { title: "Studio", icon: Wand2, path: "/dashboard/studio" },
+  { title: "Calendar", icon: CalendarIcon, path: "/dashboard/calendar" },
+  { title: "Drafts", icon: FileText, path: "/dashboard/drafts" },
+  { title: "Accounts", icon: Link2, path: "/dashboard/accounts" },
+];
+
 export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, toggleTheme } = useAppStore();
   const isMobile = useIsMobile();
+
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return location.pathname === "/dashboard";
+    }
+    return location.pathname.startsWith(path);
+  };
 
   if (isMobile) {
     return (
@@ -40,7 +68,22 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
               <Menu className="h-5 w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-56">
+            {mobileNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <DropdownMenuItem
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={cn(active && "bg-primary/10 text-primary")}
+                >
+                  <Icon className="h-4 w-4 mr-2" />
+                  {item.title}
+                </DropdownMenuItem>
+              );
+            })}
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => navigate("/dashboard/admin")}>
               Admin Panel
             </DropdownMenuItem>

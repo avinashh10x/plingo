@@ -6,7 +6,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Twitter, Linkedin, Loader2, ExternalLink, Check } from "lucide-react";
+import {
+  Twitter,
+  Linkedin,
+  AtSign,
+  Loader2,
+  ExternalLink,
+  Check,
+} from "lucide-react";
 import { usePlatforms, PlatformType } from "@/hooks/usePlatforms";
 
 const platforms = [
@@ -22,6 +29,13 @@ const platforms = [
     name: "LinkedIn",
     icon: Linkedin,
     color: "bg-blue-600",
+    available: true,
+  },
+  {
+    id: "threads",
+    name: "Threads",
+    icon: AtSign,
+    color: "bg-gradient-to-r from-purple-500 to-pink-500",
     available: true,
   },
 ];

@@ -378,6 +378,89 @@ const platformAdapters: Record<
       return { success: true, postId: data.id };
     },
   },
+  threads: {
+    post: async (content: string, accessToken: string) => {
+      console.log("Posting to Threads...");
+
+      // Threads has a 500 character limit
+      if (content.length > 500) {
+        return {
+          success: false,
+          error: "Threads posts are limited to 500 characters",
+        };
+      }
+
+      // Get Threads user ID
+      const userResponse = await fetch(
+        `https://graph.threads.net/v1.0/me?fields=id&access_token=${accessToken}`
+      );
+
+      if (!userResponse.ok) {
+        return { success: false, error: "Failed to get Threads user info" };
+      }
+
+      const userData = await userResponse.json();
+      const threadsUserId = userData.id;
+
+      // Step 1: Create media container
+      console.log("Creating Threads media container...");
+      const createResponse = await fetch(
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            media_type: "TEXT",
+            text: content,
+            access_token: accessToken,
+          }),
+        }
+      );
+
+      const createData = await createResponse.json();
+
+      if (!createResponse.ok || createData.error) {
+        return {
+          success: false,
+          error:
+            createData.error?.message || "Failed to create Threads container",
+        };
+      }
+
+      const containerId = createData.id;
+      console.log(`Threads container created: ${containerId}`);
+
+      // Wait 30 seconds for processing (Meta's recommendation)
+      console.log("Waiting 30 seconds for Threads to process container...");
+      await new Promise((resolve) => setTimeout(resolve, 30000));
+
+      // Step 2: Publish media container
+      console.log("Publishing Threads container...");
+      const publishResponse = await fetch(
+        `https://graph.threads.net/v1.0/${threadsUserId}/threads_publish`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            creation_id: containerId,
+            access_token: accessToken,
+          }),
+        }
+      );
+
+      const publishData = await publishResponse.json();
+
+      if (!publishResponse.ok || publishData.error) {
+        return {
+          success: false,
+          error: publishData.error?.message || "Failed to publish to Threads",
+        };
+      }
+
+      console.log("Threads post published successfully:", publishData.id);
+      return { success: true, postId: publishData.id };
+    },
+  },
   instagram: {
     post: async (content: string, _accessToken: string) => {
       // Instagram requires media, text-only posts not supported via API
@@ -765,6 +848,94 @@ serve(async (req) => {
 
         accessToken = updatedAccessToken;
         console.log("Twitter token refreshed successfully");
+      } else if (platform === "threads") {
+        const threadsAppSecret = Deno.env.get("THREADS_APP_SECRET");
+
+        if (!threadsAppSecret) {
+          const msg = "Threads app secret not configured";
+          console.error(msg);
+
+          await supabase
+            .from("connected_platforms")
+            .update({ status: "error" })
+            .eq("id", platformData.id);
+
+          await supabase
+            .from("posts")
+            .update({ status: "failed", error_message: msg })
+            .eq("id", post_id);
+
+          if (schedule_id) {
+            await supabase
+              .from("post_schedules")
+              .update({ status: "failed", error_message: msg })
+              .eq("id", schedule_id);
+          }
+
+          return new Response(JSON.stringify({ error: msg }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        // Refresh long-lived token for Threads (60 days)
+        const refreshResponse = await fetch(
+          `https://graph.threads.net/access_token?` +
+            `grant_type=th_refresh_token&` +
+            `access_token=${accessToken}`
+        );
+
+        const refreshData = await refreshResponse.json();
+
+        if (!refreshResponse.ok || refreshData.error) {
+          const err =
+            refreshData.error?.message || "Threads token refresh failed";
+          console.error("Threads token refresh error:", err);
+
+          await supabase
+            .from("connected_platforms")
+            .update({ status: "expired" })
+            .eq("id", platformData.id);
+
+          await supabase
+            .from("posts")
+            .update({ status: "failed", error_message: err })
+            .eq("id", post_id);
+
+          if (schedule_id) {
+            await supabase
+              .from("post_schedules")
+              .update({ status: "failed", error_message: err })
+              .eq("id", schedule_id);
+          }
+
+          return new Response(JSON.stringify({ error: err }), {
+            status: 401,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+
+        const updatedAccessToken = refreshData.access_token;
+        const expiresAt = new Date(
+          Date.now() + refreshData.expires_in * 1000
+        ).toISOString();
+
+        await supabase
+          .from("connected_platforms")
+          .update({
+            access_token_encrypted: await encryptToken(
+              updatedAccessToken,
+              encryptionKey
+            ),
+            access_token_hash: hashToken(updatedAccessToken),
+            expires_at: expiresAt,
+            status: "connected",
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", platformData.id);
+
+        accessToken = updatedAccessToken;
+        console.log("Threads token refreshed successfully");
       } else {
         console.log(
           `Token refresh not yet implemented for platform: ${platform}`

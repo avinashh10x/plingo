@@ -20,42 +20,94 @@ export interface Notification {
   created_at: string;
 }
 
+const INITIAL_LOAD = 10;
+const LOAD_MORE_SIZE = 10;
+const MAX_IN_MEMORY = 20;
+
 export function useNotifications() {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [oldestLoadedId, setOldestLoadedId] = useState<string | null>(null);
 
-  const fetchNotifications = useCallback(async () => {
-    if (!user) {
-      setNotifications([]);
-      setIsLoading(false);
-      return;
+  const fetchNotifications = useCallback(
+    async (initial = true) => {
+      if (!user) {
+        setNotifications([]);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const limit = initial ? INITIAL_LOAD : LOAD_MORE_SIZE;
+
+        let query = supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        // If loading more, start from oldest loaded
+        if (!initial && oldestLoadedId) {
+          const { data: oldestNotif } = await supabase
+            .from("notifications")
+            .select("created_at")
+            .eq("id", oldestLoadedId)
+            .single();
+
+          if (oldestNotif) {
+            query = query.lt("created_at", oldestNotif.created_at);
+          }
+        }
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const newNotifications = (data || []) as Notification[];
+
+        if (initial) {
+          setNotifications(newNotifications);
+        } else {
+          // Add new notifications and maintain sliding window (max 20)
+          setNotifications((prev) => {
+            const combined = [...prev, ...newNotifications];
+            // Keep only newest 20
+            return combined.slice(0, MAX_IN_MEMORY);
+          });
+        }
+
+        // Update oldest loaded ID
+        if (newNotifications.length > 0) {
+          setOldestLoadedId(newNotifications[newNotifications.length - 1].id);
+        }
+
+        // Check if there are more notifications
+        setHasMore(newNotifications.length === limit);
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [user, oldestLoadedId]
+  );
+
+  const loadMore = useCallback(() => {
+    if (!isLoading && hasMore) {
+      fetchNotifications(false);
     }
-
-    try {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setNotifications((data || []) as Notification[]);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
+  }, [isLoading, hasMore, fetchNotifications]);
 
   useEffect(() => {
     if (user) {
-      fetchNotifications();
+      fetchNotifications(true);
     }
-  }, [user, fetchNotifications]);
+  }, [user]);
 
-  // Real-time subscription
+  // Real-time subscription - prepend new notifications
   useEffect(() => {
     if (!user) return;
 
@@ -71,7 +123,11 @@ export function useNotifications() {
         },
         (payload) => {
           const newNotification = payload.new as Notification;
-          setNotifications((prev) => [newNotification, ...prev]);
+          setNotifications((prev) => {
+            // Add new notification at top, maintain max 20
+            const updated = [newNotification, ...prev];
+            return updated.slice(0, MAX_IN_MEMORY);
+          });
         }
       )
       .subscribe();
@@ -151,9 +207,11 @@ export function useNotifications() {
     notifications,
     unreadCount,
     isLoading,
+    hasMore,
     markAsRead,
     markAllAsRead,
     createNotification,
-    refresh: fetchNotifications,
+    loadMore,
+    refresh: () => fetchNotifications(true),
   };
 }

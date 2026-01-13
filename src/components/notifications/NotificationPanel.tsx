@@ -53,8 +53,15 @@ const getNotificationIcon = (type: NotificationType) => {
 };
 
 export const NotificationPanel = () => {
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    hasMore,
+    markAsRead,
+    markAllAsRead,
+    loadMore,
+  } = useNotifications();
   const [open, setOpen] = useState(false);
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -62,6 +69,17 @@ export const NotificationPanel = () => {
     // Mark all as read when opening panel (Instagram-style)
     if (isOpen && unreadCount > 0) {
       markAllAsRead();
+    }
+  };
+
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const target = event.currentTarget;
+    const scrollPercentage =
+      (target.scrollTop + target.clientHeight) / target.scrollHeight;
+
+    // Load more when scrolled 80% down
+    if (scrollPercentage > 0.8 && hasMore && !isLoading) {
+      loadMore();
     }
   };
 
@@ -88,8 +106,8 @@ export const NotificationPanel = () => {
         <div className="border-b border-border px-4 py-3">
           <h3 className="font-semibold text-sm">Notifications</h3>
         </div>
-        <ScrollArea className="h-[400px]">
-          {isLoading ? (
+        <ScrollArea className="h-[400px]" onScrollCapture={handleScroll}>
+          {isLoading && notifications.length === 0 ? (
             <div className="p-4 text-center text-sm text-muted-foreground">
               Loading...
             </div>
@@ -101,14 +119,26 @@ export const NotificationPanel = () => {
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-border">
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                />
-              ))}
-            </div>
+            <>
+              <div className="divide-y divide-border">
+                {notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
+                  />
+                ))}
+              </div>
+              {isLoading && (
+                <div className="p-3 text-center text-xs text-muted-foreground">
+                  Loading more...
+                </div>
+              )}
+              {!hasMore && notifications.length >= 10 && (
+                <div className="p-3 text-center text-xs text-muted-foreground">
+                  No more notifications
+                </div>
+              )}
+            </>
           )}
         </ScrollArea>
       </PopoverContent>
