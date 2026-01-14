@@ -137,17 +137,25 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M5 13l4 4L19 7"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-foreground">
-            Thanks for joining the waitlist!
+            Account Under Verification
           </h1>
-          <p className="text-muted-foreground">
-            We're currently reviewing your account. You'll receive an email once
-            approved.
-          </p>
+          <div className="space-y-2 text-muted-foreground">
+            <p>User ID is verifying by Plingo, it will be approved soon.</p>
+            <p>
+              For more info email at{" "}
+              <a
+                href="mailto:thissideavinash@gamil.com"
+                className="text-primary hover:underline"
+              >
+                thissideavinash@gamil.com
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     );
