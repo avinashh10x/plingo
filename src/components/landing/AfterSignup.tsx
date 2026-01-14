@@ -4,7 +4,7 @@ const steps = [
   {
     num: "01",
     title: "Connect accounts",
-    desc: "Link your X, LinkedIn, or Threads accounts securely.",
+    desc: "Link your X or LinkedIn accounts securely.",
   },
   {
     num: "02",

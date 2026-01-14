@@ -31,13 +31,14 @@ const platforms = [
     color: "bg-blue-600",
     available: true,
   },
-  {
-    id: "threads",
-    name: "Threads",
-    icon: AtSign,
-    color: "bg-gradient-to-r from-purple-500 to-pink-500",
-    available: true,
-  },
+  // Threads removed for now
+  // {
+  //   id: "threads",
+  //   name: "Threads",
+  //   icon: AtSign,
+  //   color: "bg-gradient-to-r from-purple-500 to-pink-500",
+  //   available: true,
+  // },
 ];
 
 interface ConnectPlatformModalProps {
