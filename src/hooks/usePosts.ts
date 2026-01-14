@@ -451,6 +451,9 @@ export function usePosts({
         description: `${successCount} of ${schedules.length} posts scheduled.`,
       });
 
+      // Force update credits
+      window.dispatchEvent(new Event("plingo:refresh-credits"));
+
       return true;
     } catch (error) {
       console.error("Bulk schedule error:", error);
@@ -546,16 +549,10 @@ export function usePosts({
         description: `Successfully posted to ${platform}`,
       });
 
-      // Create notification
-      if (user) {
-        createNotification(
-          user.id,
-          "post_published",
-          "Post published",
-          `Your post was successfully published to ${platform}`,
-          id
-        );
-      }
+      // Force credit refresh
+      window.dispatchEvent(new Event("plingo:refresh-credits"));
+
+      // Notification is created by the backend Edge Function
 
       // Background refresh
       fetchPosts();

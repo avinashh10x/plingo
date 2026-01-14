@@ -25,7 +25,7 @@ const LOAD_MORE_SIZE = 10;
 const MAX_IN_MEMORY = 20;
 
 export function useNotifications() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasMore, setHasMore] = useState(true);
@@ -41,6 +41,9 @@ export function useNotifications() {
 
       try {
         const limit = initial ? INITIAL_LOAD : LOAD_MORE_SIZE;
+
+        // Get user's signup date for filtering admin_alerts
+        const userSignupDate = profile?.created_at || user.created_at;
 
         let query = supabase
           .from("notifications")
@@ -66,33 +69,41 @@ export function useNotifications() {
 
         if (error) throw error;
 
-        const newNotifications = (data || []) as Notification[];
+        // Filter out admin_alerts created before user's signup date
+        const filteredNotifications = (data || []).filter((n: any) => {
+          if (n.type === "admin_alert" && userSignupDate) {
+            return new Date(n.created_at) >= new Date(userSignupDate);
+          }
+          return true; // Show all other notification types
+        }) as Notification[];
 
         if (initial) {
-          setNotifications(newNotifications);
+          setNotifications(filteredNotifications);
         } else {
           // Add new notifications and maintain sliding window (max 20)
           setNotifications((prev) => {
-            const combined = [...prev, ...newNotifications];
+            const combined = [...prev, ...filteredNotifications];
             // Keep only newest 20
             return combined.slice(0, MAX_IN_MEMORY);
           });
         }
 
         // Update oldest loaded ID
-        if (newNotifications.length > 0) {
-          setOldestLoadedId(newNotifications[newNotifications.length - 1].id);
+        if (filteredNotifications.length > 0) {
+          setOldestLoadedId(
+            filteredNotifications[filteredNotifications.length - 1].id
+          );
         }
 
         // Check if there are more notifications
-        setHasMore(newNotifications.length === limit);
+        setHasMore(filteredNotifications.length === limit);
       } catch (error) {
         console.error("Error fetching notifications:", error);
       } finally {
         setIsLoading(false);
       }
     },
-    [user, oldestLoadedId]
+    [user, profile, oldestLoadedId]
   );
 
   const loadMore = useCallback(() => {

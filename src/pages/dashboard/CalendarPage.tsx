@@ -22,6 +22,10 @@ import {
   isFuture,
   isToday as isDateToday,
   addDays,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
+  subWeeks,
 } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -96,13 +100,25 @@ export const CalendarPage = () => {
   // State for Post Now confirmation
   const [postNowConfirm, setPostNowConfirm] = useState<any>(null);
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Calculate days based on view mode
+  const getViewDays = () => {
+    if (viewMode === "week") {
+      const weekStart = startOfWeek(currentMonth, { weekStartsOn: 0 });
+      const weekEnd = endOfWeek(currentMonth, { weekStartsOn: 0 });
+      return eachDayOfInterval({ start: weekStart, end: weekEnd });
+    } else {
+      const monthStart = startOfMonth(currentMonth);
+      const monthEnd = endOfMonth(currentMonth);
+      const daysInMonth = eachDayOfInterval({
+        start: monthStart,
+        end: monthEnd,
+      });
+      const startPadding = monthStart.getDay();
+      return [...Array(startPadding).fill(null), ...daysInMonth];
+    }
+  };
 
-  // Pad the start of the calendar
-  const startPadding = monthStart.getDay();
-  const paddedDays = [...Array(startPadding).fill(null), ...daysInMonth];
+  const paddedDays = getViewDays();
 
   // Filter posts that have a scheduled_at date (includes scheduled, posted, failed)
   const calendarPosts = useMemo(() => {
@@ -270,24 +286,44 @@ export const CalendarPage = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={() => {
+              if (viewMode === "week") {
+                setCurrentMonth(subWeeks(currentMonth, 1));
+              } else {
+                setCurrentMonth(subMonths(currentMonth, 1));
+              }
+            }}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h2 className="text-xl font-semibold text-foreground min-w-[160px] text-center">
-            {format(currentMonth, "MMMM yyyy")}
+          <h2 className="text-xl font-semibold text-foreground min-w-[200px] text-center">
+            {viewMode === "week"
+              ? `${format(
+                  startOfWeek(currentMonth, { weekStartsOn: 0 }),
+                  "MMM d"
+                )} - ${format(
+                  endOfWeek(currentMonth, { weekStartsOn: 0 }),
+                  "MMM d, yyyy"
+                )}`
+              : format(currentMonth, "MMMM yyyy")}
           </h2>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={() => {
+              if (viewMode === "week") {
+                setCurrentMonth(addWeeks(currentMonth, 1));
+              } else {
+                setCurrentMonth(addMonths(currentMonth, 1));
+              }
+            }}
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
-        <Button variant="outline" onClick={() => setCurrentMonth(new Date())}>
+        {/* <Button variant="outline" onClick={() => setCurrentMonth(new Date())}>
           Today
-        </Button>
+        </Button> */}
       </div>
 
       {/* Calendar Grid */}
@@ -356,11 +392,13 @@ export const CalendarPage = () => {
                             "bg-destructive/10 text-destructive"
                         )}
                       >
-                        <PlatformIcon
-                          platform={post.platforms?.[0] || "twitter"}
-                        />
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {(post.platforms || []).map((p: string) => (
+                            <PlatformIcon key={p} platform={p} />
+                          ))}
+                        </div>
                         <span className="truncate">
-                          {htmlToPlainText(post.content).slice(0, 15)}...
+                          {htmlToPlainText(post.content).slice(0, 12)}...
                         </span>
                         <span className="text-[10px] text-muted-foreground ml-auto">
                           {format(
@@ -403,10 +441,12 @@ export const CalendarPage = () => {
               <Card key={post.id} className="bg-card border-border">
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row items-start gap-4">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                      <PlatformIcon
-                        platform={post.platforms?.[0] || "twitter"}
-                      />
+                    <div className="flex items-center  flex-col gap-2">
+                      {(post.platforms || []).map((p: string) => (
+                        <div className="bg-muted  p-2 rounded-lg bg-muted shrink-0">
+                        <PlatformIcon key={p} platform={p} />
+                        </div>
+                      ))}
                     </div>
                     <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-1">
@@ -422,6 +462,25 @@ export const CalendarPage = () => {
                         >
                           {post.status}
                         </Badge>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground ">
+                          {(post.platforms || [])
+                            .map((p: string) => (
+                              <span key={p} className="capitalize">
+                                {p}
+                              </span>
+                            ))
+                            .reduce(
+                              (prev: any, curr: any, i: number) =>
+                                i === 0
+                                  ? [curr]
+                                  : [
+                                      ...prev,
+                                      <span key={`sep-${i}`}>, </span>,
+                                      curr,
+                                    ],
+                              []
+                            )}
+                        </div>
                       </div>
                       <p className="text-sm text-foreground break-words">
                         {htmlToPlainText(post.content)}

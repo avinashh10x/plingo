@@ -623,24 +623,160 @@ serve(async (req) => {
 
     const { post_id, platform, schedule_id } = JSON.parse(rawBody);
 
-    console.log(`Publishing post ${post_id} to ${platform}`);
-
-    // Get post details
-    const { data: post, error: postError } = await supabase
+    // Fetch Post Details
+    const { data: post, error: postFetchError } = await supabase
       .from("posts")
       .select("*")
       .eq("id", post_id)
       .single();
 
-    if (postError || !post) {
-      console.error("Post not found:", postError);
+    if (postFetchError || !post) {
+      console.error("Post not found:", postFetchError);
       return new Response(JSON.stringify({ error: "Post not found" }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Update status to posting
+    // Verify schedule/rate limits
+    const now = new Date();
+    const today = now.toISOString().split("T")[0];
+
+    // 1. Check Daily Limit (3 posts per platform per day)
+    const { count: dailyCount, error: countError } = await supabase
+      .from("posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", post.user_id)
+      .contains("platforms", [platform])
+      .gte("created_at", `${today}T00:00:00`)
+      .in("status", ["posted", "posting"]); // Include currently processing
+
+    if (countError) {
+      console.error("Failed to check daily limit:", countError);
+      return new Response(
+        JSON.stringify({ error: "System error checking limits" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if ((dailyCount || 0) >= 10) {
+      // 10 posts per platform per day
+      const msg = `Daily limit reached for ${platform} (10/day)`;
+      await supabase
+        .from("posts")
+        .update({ status: "failed", error_message: msg })
+        .eq("id", post_id);
+
+      return new Response(JSON.stringify({ error: msg }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // 2. Check Global Rate Limit (60 seconds between posts)
+    const { data: lastPost, error: lastPostError } = await supabase
+      .from("posts")
+      .select("created_at")
+      .eq("user_id", post.user_id)
+      .neq("id", post_id) // Exclude current
+      .in("status", ["posted", "posting"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (lastPost) {
+      const lastPostTime = new Date(lastPost.created_at).getTime();
+      const timeDiff = (now.getTime() - lastPostTime) / 1000; // seconds
+
+      if (timeDiff < 60) {
+        const waitTime = Math.ceil(60 - timeDiff);
+        const msg = `Please wait ${waitTime}s before posting again`;
+        await supabase
+          .from("posts")
+          .update({ status: "failed", error_message: msg })
+          .eq("id", post_id);
+
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // 3. Post Credits Check & Atomic Deduction
+    // If schedule_id exists, we assume credits were deducted at scheduling time.
+    if (!schedule_id) {
+      const cost = platform === "twitter" ? 10 : 5; // Twitter=10, LinkedIn=5
+
+      // Fetch current credits
+      const { data: userCredits, error: creditError } = await supabase
+        .from("user_credits")
+        .select("*")
+        .eq("user_id", post.user_id)
+        .single();
+
+      if (creditError && creditError.code !== "PGRST116") {
+        console.error("Failed to fetch credits:", creditError);
+        return new Response(
+          JSON.stringify({ error: "System error checking credits" }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Initialize or Reset Logic (Lazy Load)
+      let currentCredits = userCredits?.credits ?? 100;
+      const lastReset = userCredits?.last_reset_date
+        ? new Date(userCredits.last_reset_date)
+        : new Date(0);
+      const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      if (lastReset < currentMonth || !userCredits) {
+        currentCredits = 100;
+        await supabase.from("user_credits").upsert({
+          user_id: post.user_id,
+          credits: 100,
+          last_reset_date: today,
+        });
+      }
+
+      if (currentCredits < cost) {
+        const msg = `Insufficient credits. Need ${cost}, have ${currentCredits}.`;
+        await supabase
+          .from("posts")
+          .update({ status: "failed", error_message: msg })
+          .eq("id", post_id);
+
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // DEDUCT CREDITS (Optimistic Lock)
+      const { error: deductError } = await supabase
+        .from("user_credits")
+        .update({ credits: currentCredits - cost })
+        .eq("user_id", post.user_id)
+        .eq("credits", currentCredits);
+
+      if (deductError) {
+        return new Response(
+          JSON.stringify({ error: "Transaction failed, please retry" }),
+          {
+            status: 409,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+    }
+
+    // Proceed to Posting
     await supabase
       .from("posts")
       .update({ status: "posting" })
@@ -1071,18 +1207,10 @@ serve(async (req) => {
       console.log(
         `Successfully posted to ${platform}, post ID: ${result.postId}`
       );
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          postId: result.postId,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
     } else {
-      // Handle failure
+      // Post failed
+      console.error(`Post failed: ${result.error}`);
+
       await supabase
         .from("posts")
         .update({
@@ -1101,30 +1229,45 @@ serve(async (req) => {
           .eq("id", schedule_id);
       }
 
-      // Log failure
-      await supabase.from("post_logs").insert({
-        post_id,
-        action: "failed",
-        platform,
-        details: { error: result.error },
+      // Notify User (Realtime)
+      await supabase.from("notifications").insert({
+        user_id: post.user_id,
+        type: "post_failed",
+        title: "Post Failed",
+        message: `Failed to post to ${platform}: ${result.error}`,
+        post_id: post_id,
+        is_read: false,
       });
 
-      console.error(`Failed to post to ${platform}:`, result.error);
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: result.error,
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: result.error }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
+    // Notify User on Success (Realtime)
+    await supabase.from("notifications").insert({
+      user_id: post.user_id,
+      type: "post_published",
+      title: "Post Published",
+      message: `Successfully posted to ${platform}`,
+      post_id: post_id,
+      is_read: false,
+    });
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        postId: result.postId,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
   } catch (error: unknown) {
-    console.error("Publish post error:", error);
+    console.error("Publish error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+
     return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
