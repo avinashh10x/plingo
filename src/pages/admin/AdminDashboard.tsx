@@ -182,10 +182,11 @@ const NotificationsManager = ({
   const fetchNotifications = async () => {
     setIsLoading(true);
     try {
-      // Get count
+      // Get count of admin_alert notifications only
       const { count, error: countError } = await supabase
         .from("notifications")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .eq("type", "admin_alert");
 
       if (countError) throw countError;
       setTotalCount(count || 0);
@@ -193,10 +194,11 @@ const NotificationsManager = ({
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
 
-      // Get data (raw)
+      // Get admin_alert notifications only (not post updates)
       const { data: notificationsData, error } = await supabase
         .from("notifications")
         .select("*")
+        .eq("type", "admin_alert")
         .order("created_at", { ascending: false })
         .range(from, to);
 

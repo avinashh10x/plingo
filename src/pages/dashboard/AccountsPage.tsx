@@ -35,11 +35,11 @@ const SUPPORTED_PLATFORMS: {
     name: "LinkedIn",
     description: "Share professional content",
   },
-  {
-    id: "threads",
-    name: "Threads",
-    description: "Share updates on Meta Threads",
-  },
+  // {
+  //   id: "threads",
+  //   name: "Threads",
+  //   description: "Share updates on Meta Threads",
+  // },
 ];
 
 const PlatformIcon = ({
