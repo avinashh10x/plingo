@@ -5,8 +5,10 @@ import {
   Calendar,
   FileText,
   Link2,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const navItems = [
   {
@@ -39,6 +41,13 @@ const navItems = [
 export const MobileBottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  // We need to fetch the role here, but be careful of circular dependencies or missing context if not inside provider
+  // Assuming MobileBottomNav is inside QueryClientProvider
+  const { isAdmin } = useUserRole();
+
+  const allNavItems = isAdmin
+    ? [...navItems, { title: "Admin", icon: Shield, path: "/admin" }]
+    : navItems;
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -50,7 +59,7 @@ export const MobileBottomNav = () => {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border md:hidden">
       <nav className="flex items-center justify-around h-16 px-2">
-        {navItems.map((item) => {
+        {allNavItems.map((item) => {
           const active = isActive(item.path);
           return (
             <button

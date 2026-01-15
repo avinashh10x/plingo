@@ -154,7 +154,6 @@ export const TweetEditor = () => {
                 toast({
                   title: "Card limit reached",
                   description: `You can have up to ${MAX_CARDS} posts in the workspace.`,
-                  variant: "destructive",
                 });
                 return;
               }

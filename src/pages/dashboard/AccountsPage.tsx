@@ -10,14 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlatforms, PlatformType } from "@/hooks/usePlatforms";
-import { useUsage } from "@/hooks/useUsage";
 import {
   AnimatedTwitterIcon,
   AnimatedLinkedInIcon,
   AnimatedInstagramIcon,
   AnimatedThreadsIcon,
 } from "@/components/ui/animated-icon";
-import { UsageBar } from "@/components/usage/UsageBar";
 import { cn } from "@/lib/utils";
 
 const SUPPORTED_PLATFORMS: {
@@ -69,7 +67,6 @@ export const AccountsPage = () => {
     isConnected,
     getPlatformStatus,
   } = usePlatforms();
-  const { usage, isLoading: isUsageLoading } = useUsage();
 
   if (isLoading) {
     return (
@@ -140,7 +137,6 @@ export const AccountsPage = () => {
         {SUPPORTED_PLATFORMS.map((platform) => {
           const connected = isConnected(platform.id);
           const status = getPlatformStatus(platform.id);
-          const platformUsage = usage[platform.id as keyof typeof usage];
           const connecting = isConnecting === platform.id;
 
           return (
@@ -189,17 +185,6 @@ export const AccountsPage = () => {
                       <p className="text-sm text-foreground mt-1">
                         @{status.platform_username}
                       </p>
-                    )}
-
-                    {/* Usage Bar */}
-                    {connected && !isUsageLoading && platformUsage && (
-                      <div className="mt-3">
-                        <UsageBar
-                          postsUsed={platformUsage.postsUsed}
-                          limit={platformUsage.limit}
-                          platform={platform.id}
-                        />
-                      </div>
                     )}
                   </div>
 

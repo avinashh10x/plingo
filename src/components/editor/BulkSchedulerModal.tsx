@@ -205,7 +205,6 @@ export const BulkSchedulerModal = ({
         title: "Scheduling Limit Exceeded",
         description:
           "Currently, scheduling is only supported up to 1 year in advance.",
-        variant: "destructive",
       });
       return;
     }
@@ -253,7 +252,6 @@ export const BulkSchedulerModal = ({
       toast({
         title: "Scheduling failed",
         description: "Failed to schedule posts. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsScheduling(false);

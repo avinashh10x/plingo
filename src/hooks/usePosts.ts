@@ -218,7 +218,6 @@ export function usePosts({
       toast({
         title: "Error",
         description: "Failed to create post.",
-        variant: "destructive",
       });
       return null;
     }
@@ -261,7 +260,6 @@ export function usePosts({
       toast({
         title: "Error",
         description: "Failed to delete post.",
-        variant: "destructive",
       });
       return false;
     }
@@ -408,7 +406,6 @@ export function usePosts({
       toast({
         title: "❌ Scheduling failed",
         description: errorMessage,
-        variant: "destructive",
       });
       return false;
     }
@@ -458,12 +455,50 @@ export function usePosts({
     } catch (error) {
       console.error("Bulk schedule error:", error);
       toast({
-        title: "Bulk scheduling failed",
+        title: "Bulk scheduling update",
         description:
           error instanceof Error ? error.message : "Failed to schedule posts",
-        variant: "destructive",
       });
       return false;
+    }
+  };
+
+  // Helper to parse error messages
+  const parseError = async (error: any): Promise<string> => {
+    try {
+      // If it's a string, try to parse it as JSON
+      if (typeof error === "string") {
+        if (error.startsWith("{")) {
+          const parsed = JSON.parse(error);
+          return parsed.error || parsed.message || error;
+        }
+        return error;
+      }
+
+      // If it's a Supabase FunctionsHttpError
+      if (error?.context?.json) {
+        const body = await error.context.json();
+        return body.error || body.message || error.message;
+      }
+
+      // If error has a message property
+      if (error?.message) {
+        // Check for the specific "Edge Function returned a non-2xx status code" and try to dig deeper if possible,
+        // but usually the body is lost unless accessible via context.
+        // However, often the JSON body is put into the message if it's small?
+        // If not, we might check if 'context' exists.
+        if (error.message.startsWith("{")) {
+          const parsed = JSON.parse(error.message);
+          return parsed.error || parsed.message || error.message;
+        }
+        return error.message;
+      }
+
+      return "An unexpected error occurred";
+    } catch (e) {
+      return error instanceof Error
+        ? error.message
+        : "An unexpected error occurred";
     }
   };
 
@@ -499,34 +534,65 @@ export function usePosts({
       });
 
       if (error) {
-        // Parse error details for better user feedback
-        const errorMsg = error.message || "Unknown error occurred";
+        console.error("Supabase function error object:", error);
+
+        // Try to get the real error message from the response body if available
+        let detailedError = "";
+
+        // If it's a FunctionsHttpError, we might be able to read the body
+        if (error.context && typeof error.context.json === "function") {
+          try {
+            const body = await error.context.json();
+            detailedError = body.error || body.message;
+          } catch {
+            /* ignore */
+          }
+        }
+
+        const errorMsg =
+          detailedError || error.message || "Unknown error occurred";
+
+        // Check for specific JSON pattern in the message if it wasn't parsed from body
+        // Sometimes the message itself IS the JSON string
+        let cleanMsg = errorMsg;
+        try {
+          if (cleanMsg.startsWith("{")) {
+            const parsed = JSON.parse(cleanMsg);
+            cleanMsg = parsed.error || parsed.message || cleanMsg;
+          }
+        } catch {}
 
         // Check for common error patterns
         if (
-          errorMsg.includes("not connected") ||
-          errorMsg.includes("authentication")
+          cleanMsg.includes("not connected") ||
+          cleanMsg.includes("authentication")
         ) {
           throw new Error(
             `Your ${platform} account is not connected. Please reconnect in Settings.`
           );
-        } else if (errorMsg.includes("rate limit")) {
+        } else if (cleanMsg.includes("rate limit")) {
           throw new Error(
             `Rate limit exceeded for ${platform}. Please try again later.`
           );
         } else if (
-          errorMsg.includes("invalid token") ||
-          errorMsg.includes("expired")
+          cleanMsg.includes("invalid token") ||
+          cleanMsg.includes("expired")
         ) {
           throw new Error(
             `Your ${platform} session has expired. Please reconnect your account.`
           );
+        } else if (cleanMsg.includes("Insufficient credits")) {
+          // Format: "Insufficient credits. Need 10, have 0."
+          // Clean it up
+          throw new Error(
+            cleanMsg.replace("Insufficient credits.", "Not enough credits.")
+          );
         } else {
-          throw new Error(errorMsg);
+          throw new Error(cleanMsg);
         }
       }
 
-      // Check for error in response data
+      // Check for error in response data (200 OK but error in body)
       if (data?.error) {
         throw new Error(data.error);
       }
@@ -563,15 +629,28 @@ export function usePosts({
       fetchPosts();
       console.error("Publish error:", error);
 
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to publish post. Please check your connection and try again.";
+      let errorMessage = "Failed to publish post.";
+
+      if (error instanceof Error) {
+        // One last check if the error message itself is JSON
+        try {
+          if (error.message.startsWith("{")) {
+            const parsed = JSON.parse(error.message);
+            errorMessage = parsed.error || parsed.message || error.message;
+          } else {
+            errorMessage = error.message;
+          }
+        } catch {
+          errorMessage = error.message;
+        }
+      }
+
+      // Customize title based on error type
+      const isCreditError = errorMessage.toLowerCase().includes("credits");
 
       toast({
-        title: "❌ Publishing failed",
+        title: isCreditError ? "Top up required" : "Publishing stopped",
         description: errorMessage,
-        variant: "destructive",
       });
       return false;
     }

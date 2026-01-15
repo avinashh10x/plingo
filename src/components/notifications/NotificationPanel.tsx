@@ -147,6 +147,10 @@ export const NotificationPanel = () => {
 };
 
 const NotificationItem = ({ notification }: { notification: Notification }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const maxLength = 100;
+  const isLong = notification.message.length > maxLength;
+
   return (
     <div
       className={cn(
@@ -168,9 +172,25 @@ const NotificationItem = ({ notification }: { notification: Notification }) => {
             })}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1.5 leading-snug line-clamp-2">
-          {notification.message}
-        </p>
+        <div className="mt-1.5">
+          <p className="text-xs text-muted-foreground leading-snug break-words">
+            {isExpanded || !isLong
+              ? notification.message
+              : `${notification.message.slice(0, maxLength)}... `}
+            {isLong && !isExpanded && (
+              <span
+                role="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded(true);
+                }}
+                className="text-[10px] font-medium text-primary hover:underline cursor-pointer ml-1 select-none"
+              >
+                See more
+              </span>
+            )}
+          </p>
+        </div>
       </div>
       {!notification.is_read && (
         <div className="flex-shrink-0 self-center">

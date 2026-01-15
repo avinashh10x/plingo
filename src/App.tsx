@@ -22,11 +22,11 @@ import { ConnectPlatformModal } from "./components/platforms/ConnectPlatformModa
 
 // Lazy load heavy pages for better initial load performance
 const Profile = lazy(() => import("./pages/Profile"));
-const AdminDashboard = lazy(() =>
-  import("./pages/admin/AdminDashboard").then((m) => ({
-    default: m.AdminDashboard,
-  }))
-);
+import { AdminLayout } from "./layouts/AdminLayout";
+import { AdminOverview } from "./pages/admin/AdminOverview";
+import { UserManagement } from "./pages/admin/UserManagement";
+import { NotificationManager } from "./pages/admin/NotificationManager";
+import { ApiUsage } from "./pages/admin/ApiUsage";
 const DashboardHome = lazy(() =>
   import("./pages/dashboard/DashboardHome").then((m) => ({
     default: m.DashboardHome,
@@ -238,10 +238,13 @@ const AppContent = () => {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
 
-          <Route
-            path="/admin"
-            element={<Navigate to="/dashboard/admin" replace />}
-          />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="overview" replace />} />
+            <Route path="overview" element={<AdminOverview />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="notifications" element={<NotificationManager />} />
+            <Route path="status" element={<ApiUsage />} />
+          </Route>
 
           <Route
             path="/dashboard"
@@ -299,16 +302,7 @@ const AppContent = () => {
                 </Suspense>
               }
             />
-            <Route
-              path="admin"
-              element={
-                <AdminRoute>
-                  <Suspense fallback={<PageLoader />}>
-                    <AdminDashboard />
-                  </Suspense>
-                </AdminRoute>
-              }
-            />
+
             <Route
               path="create"
               element={<Navigate to="/dashboard/studio" replace />}

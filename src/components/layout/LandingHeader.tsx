@@ -45,10 +45,10 @@ export const LandingHeader = () => {
             animate={{ opacity: 1, x: 0 }}
             whileHover={{ scale: 1.02 }}
           >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center">
-              <img src="./logo2.png" alt="" />
+            <div className="w-32 rounded-lg flex items-center justify-center">
+              <img src="./Group.svg" alt="" className="w-full" />
             </div>
-            <span className="text-xl font-bold text-foreground">Plingo</span>
+            {/* <span className="text-xl font-bold text-foreground">Plingo</span> */}
           </motion.div>
         </Link>
 

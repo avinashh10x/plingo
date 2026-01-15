@@ -29,7 +29,6 @@ export function GoogleAuthButton() {
       toast({
         title: "Error",
         description: message,
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
