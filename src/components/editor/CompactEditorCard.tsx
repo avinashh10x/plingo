@@ -146,7 +146,6 @@ export const CompactEditorCard = ({
       toast({
         title: "Cannot post",
         description: "Please enter some content first.",
-        variant: "destructive",
       });
       return;
     }
@@ -158,7 +157,6 @@ export const CompactEditorCard = ({
       toast({
         title: "No connected platform",
         description: "Please connect a platform first.",
-        variant: "destructive",
       });
       return;
     }
@@ -170,7 +168,6 @@ export const CompactEditorCard = ({
         toast({
           title: "Failed to create post",
           description: "Could not create post in database. Please try again.",
-          variant: "destructive",
         });
         return;
       }
@@ -193,7 +190,6 @@ export const CompactEditorCard = ({
           error instanceof Error
             ? error.message
             : "An unexpected error occurred while posting.",
-        variant: "destructive",
       });
     } finally {
       setIsPosting(false);
@@ -205,7 +201,6 @@ export const CompactEditorCard = ({
       toast({
         title: "Cannot schedule",
         description: "Please enter some content first.",
-        variant: "destructive",
       });
       return;
     }
@@ -214,7 +209,6 @@ export const CompactEditorCard = ({
       toast({
         title: "Select a date",
         description: "Please pick a date and time for scheduling.",
-        variant: "destructive",
       });
       return;
     }

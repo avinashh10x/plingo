@@ -68,7 +68,7 @@ const navItems = [
 const adminItem = {
   title: "Admin Panel",
   icon: Shield,
-  path: "/dashboard/admin",
+  path: "/admin",
   tourId: "admin",
 };
 
@@ -153,16 +153,16 @@ export const AppSidebar = ({ isCollapsed = false }: AppSidebarProps) => {
       <div className="h-14 flex items-center px-3 border-b border-sidebar-border">
         <Link to={"/"}>
           {!isCollapsed ? (
-            <div className="flex items-center">
-              <span className="size-10">
-                <img src="/logo2.png" alt="" />
+            <div className="flex items-center gap-2">
+              <span className="size-6 m-1">
+                <img src="/logonly.svg" alt="" />
               </span>
               <h1 className="text-xl font-bold text-sidebar-primary">Plingo</h1>
             </div>
           ) : (
             <div className="w-full flex justify-center">
-              <span className="size-10">
-                <img src="/logo2.png" alt="" />
+              <span className="size-6">
+                <img src="/logonly.svg" alt="" />
               </span>
             </div>
           )}

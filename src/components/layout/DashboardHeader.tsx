@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { CreditsPanel } from "@/components/credits/CreditsPanel";
 import {
   Plus,
   Moon,
@@ -114,17 +115,21 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
     return (
       <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src="/logo2.png" alt="Plingo" className="h-8 w-8" />
-          <span className="font-bold text-lg">Plingo</span>
+          <img src="/logonly.svg" alt="Plingo" className="h-8 w-8" />
+          {/* <span className="font-bold text-lg">Plingo</span> */}
         </div>
 
         <div className="flex items-center gap-2">
           {/* Credits Badge - Mobile */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full border border-primary/20">
-            <Coins className="h-3.5 w-3.5 text-primary" />
-            <span className="text-xs font-medium text-primary">
-              <AnimatedCredits value={credits} />
-            </span>
+          <div className="flex items-center gap-1">
+            <CreditsPanel credits={credits}>
+              <button className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer outline-none">
+                <Coins className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-primary">
+                  <AnimatedCredits value={credits} />
+                </span>
+              </button>
+            </CreditsPanel>
           </div>
 
           <DropdownMenu>
@@ -170,12 +175,14 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
       {/* Right side actions */}
       <div className="flex items-center gap-3">
         {/* Credits Badge */}
-        <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20">
-          <Coins className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            <AnimatedCredits value={credits} /> Credits
-          </span>
-        </div>
+        <CreditsPanel credits={credits}>
+          <button className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer outline-none">
+            <Coins className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-primary">
+              <AnimatedCredits value={credits} /> Credits
+            </span>
+          </button>
+        </CreditsPanel>
 
         {/* Theme toggle */}
         <Tooltip>

@@ -24,7 +24,7 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-2 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_20px_5px_hsl(var(--primary)),inset_0px_2px_40px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[65%] right-1/2 bg-background" />
+        <div className="z-2 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_20px_5px_hsl(var(--primary)),inset_0px_2px_40px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[5%] md:-top-[20%] lg:-top-[65%] right-1/2 bg-background" />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />

@@ -83,7 +83,6 @@ export function useAuthOtp() {
           toast({
             title: "Validation Error",
             description: err.errors[0].message,
-            variant: "destructive",
           });
         }
         return false;
@@ -127,7 +126,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to send OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setLoginState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -139,7 +138,6 @@ export function useAuthOtp() {
       toast({
         title: "Invalid OTP",
         description: "Please enter the 6-digit code from your email.",
-        variant: "destructive",
       });
       return false;
     }
@@ -171,7 +169,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to verify OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setLoginState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -201,7 +199,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to resend OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setLoginState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -215,7 +213,6 @@ export function useAuthOtp() {
       toast({
         title: "Validation Error",
         description: "Please enter your full name",
-        variant: "destructive",
       });
       return false;
     }
@@ -255,7 +252,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to send OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setSignupState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -273,7 +270,6 @@ export function useAuthOtp() {
       toast({
         title: "Invalid OTP",
         description: "Please enter the 6-digit code from your email.",
-        variant: "destructive",
       });
       return false;
     }
@@ -302,7 +298,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to verify OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setSignupState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }
@@ -338,7 +334,7 @@ export function useAuthOtp() {
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : "Failed to resend OTP";
-      toast({ title: "Error", description: message, variant: "destructive" });
+      toast({ title: "Error", description: message });
       setSignupState((prev) => ({ ...prev, isLoading: false }));
       return false;
     }

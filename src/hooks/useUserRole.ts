@@ -5,11 +5,16 @@ import { useAuth } from "./useAuth";
 export type AppRole = "admin" | "user";
 
 export function useUserRole() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [role, setRole] = useState<AppRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchRole = useCallback(async () => {
+    // If auth is still loading, wait.
+    if (authLoading) {
+      return;
+    }
+
     // Always start loading when running this function
     setIsLoading(true);
 
@@ -52,7 +57,7 @@ export function useUserRole() {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     fetchRole();
@@ -63,7 +68,7 @@ export function useUserRole() {
   return {
     role,
     isAdmin,
-    isLoading,
+    isLoading: isLoading || authLoading,
     refresh: fetchRole,
   };
 }
