@@ -36,7 +36,7 @@ export const LandingHeader = () => {
   };
 
   return (
-    <header className="fixed top-5 left-0 right-0 z-50  ">
+    <header className="fixed top-5 left-0 right-0 z-50  px-6">
       <div className="max-w-7xl mx-auto h-16 flex items-center justify-between">
         <Link to="/">
           <motion.div

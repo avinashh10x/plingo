@@ -65,9 +65,10 @@ export const ChatContent = ({
       <div className="px-3 py-2 flex items-center justify-between border-b border-border bg-muted/20 shrink-0">
         <div className="flex items-center gap-2">
           <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-            <Bug className="h-3.5 w-3.5 text-primary" />
+            {/* <Bug className="h-3.5 w-3.5 text-primary" /> */}
+            <img src="/logonly.svg" alt="" className="size-6" />  
           </div>
-          <span className="text-sm font-medium">Buggy</span>
+          <span className="text-sm font-medium">Plingo AI</span>
         </div>
         <div className="flex items-center gap-1">
           <Tooltip>
@@ -187,8 +188,9 @@ export const ChatContent = ({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center h-full gap-3 text-center px-4 py-8"
             >
-              <div className="p-3 rounded-xl bg-primary/10">
-                <Sparkles className="h-6 w-6 text-primary" />
+              <div className="p-3 rounded-xl bg-primary/0">
+                {/* <Sparkles className="h-6 w-6 text-primary" /> */}
+                <img src="/logonly.svg" alt="" className="size-10" />
               </div>
               <div>
                 <p className="text-sm font-medium text-foreground">

@@ -1,54 +1,33 @@
-import { motion } from "framer-motion";
-import { Lock, key, Shield, PowerOff } from "lucide-react";
+import { Lock, Shield, Eye, Check } from "lucide-react";
+
+const TRUST_ITEMS = [
+  { label: "OAuth-based security", icon: Lock },
+  { label: "No password storage", icon: Check },
+  { label: "No auto-posting", icon: Shield },
+  { label: "No data reselling", icon: Shield },
+  { label: "Full user control", icon: Eye },
+  { label: "Industry-standard encryption", icon: Lock },
+];
 
 export const SafetyTrust = () => {
   return (
-    <section className="py-24 px-6 bg-background border-y border-border/40">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-6">
-          Your account safety is our priority
-        </h2>
-        <p className="text-muted-foreground text-lg mb-12">
-          We use official APIs and never store your sensitive passwords.
-        </p>
-
-        <div className="grid sm:grid-cols-2 gap-6 text-left">
-          <div className="p-6 rounded-xl bg-muted/30 border border-border/50">
-            <Lock className="w-8 h-8 text-primary mb-4" />
-            <h3 className="font-semibold mb-2">Secure OAuth Connections</h3>
-            <p className="text-sm text-muted-foreground">
-              We connect directly with platforms via their official secure login
-              pages.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-xl bg-muted/30 border border-border/50">
-            <Shield className="w-8 h-8 text-primary mb-4" />
-            <h3 className="font-semibold mb-2">No Auto-Posting</h3>
-            <p className="text-sm text-muted-foreground">
-              Nothing goes live without your explicit approval. You are in
-              control.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-xl bg-muted/30 border border-border/50">
-            <PowerOff className="w-8 h-8 text-primary mb-4" />
-            <h3 className="font-semibold mb-2">Disconnect Anytime</h3>
-            <p className="text-sm text-muted-foreground">
-              Revoke access instantly from your settings or within the social
-              platforms.
-            </p>
-          </div>
-
-          <div className="p-6 rounded-xl bg-muted/30 border border-border/50">
-            <Lock className="w-8 h-8 text-primary mb-4" />
-            <h3 className="font-semibold mb-2">Zero Password Storage</h3>
-            <p className="text-sm text-muted-foreground">
-              We literally cannot see your passwords. They never touch our
-              servers.
-            </p>
-          </div>
-        </div>
+    <section className="border-y border-border/40 bg-muted/20 px-6 py-8 md:my-20">
+      <div className="max-w-7xl mx-auto">
+        <ul className="flex flex-wrap items-center justify-between gap-6 md:gap-8">
+          {TRUST_ITEMS.map(({ label, icon: Icon }) => (
+            <li
+              key={label}
+              className="flex items-center gap-2"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                <Icon className="h-4 w-4 text-primary" />
+              </div>
+              <span className="text-sm font-medium whitespace-nowrap">
+                {label}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

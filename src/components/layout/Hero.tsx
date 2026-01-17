@@ -39,7 +39,7 @@ export const Hero = () => {
         >
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8 backdrop-blur-sm shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
-            <Sparkles className="h-3.5 w-3.5 fill-primary/20" />
+            {/* <Sparkles className="h-3.5 w-3.5 fill-primary/20" /> */}
             <span>Introducing · Plingo AI 2.0</span>
           </div>
 
