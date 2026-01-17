@@ -41,7 +41,7 @@ export const SectionTitle = ({
         )}
       </h2>
       {description && (
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto">
           {description}
         </p>
       )}

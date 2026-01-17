@@ -162,7 +162,11 @@ export const FAQ = () => {
         {/* Content Grid */}
         <div className="mt-16 grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Interactive Mascot */}
-          <div className="flex items-center justify-center lg:justify-start">
+          <div className="flex items-center justify-center lg:justify-start flex-col">
+            <p className="text-sm text-muted-foreground tracking-wide select-none">
+              Hmm… got some questions?
+            </p>
+
             <div
               ref={containerRef}
               className="relative aspect-square"

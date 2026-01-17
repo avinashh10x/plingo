@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
 import {
   Twitter,
   Linkedin,
@@ -12,9 +13,11 @@ import {
   CheckCircle2,
   Zap,
   TrendingUp,
+  Waypoints,
 } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SectionTitle } from "../ui/section-title";
 
 // Register GSAP plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -84,93 +87,56 @@ function VisualBox({ type }: { type: Step["visual"] }) {
   switch (type) {
     case "platforms":
       return (
-        <div className="flex gap-4">
-          {[
-            { Icon: Twitter, color: "from-blue-500 to-blue-600" },
-            { Icon: Linkedin, color: "from-blue-600 to-blue-700" },
-            { Icon: Instagram, color: "from-pink-500 to-purple-600" },
-          ].map(({ Icon, color }, i) => (
-            <div
-              key={i}
-              className={`w-14 h-14 rounded-xl bg-gradient-to-br ${color} flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-200`}
-            >
-              <Icon className="w-7 h-7 text-white" />
-            </div>
-          ))}
+        <div className="flex gap-4 border rounded-lg overflow-hidden">
+          <img
+            src="./journey/j1.webp"
+            alt=""
+            className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
+          />
         </div>
       );
 
     case "ai":
       return (
-        <div className="relative flex flex-col items-center gap-3">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-50 animate-pulse" />
-            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-xl">
-              <Sparkles className="w-8 h-8 text-white" />
-            </div>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Zap className="w-4 h-4 text-purple-500" />
-            <span className="text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
-              AI Engine Active
-            </span>
-          </div>
+        <div className="flex gap-4 border rounded-lg overflow-hidden">
+          <img
+            src="./journey/j2.webp"
+            alt=""
+            className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
+          />
         </div>
       );
 
     case "credits":
       return (
-        <div className="text-center space-y-3">
-          <div className="relative inline-block">
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full blur-lg opacity-30" />
-            <Wallet className="w-10 h-10 mx-auto text-emerald-500 relative" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-3xl font-bold bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">
-              250
-            </div>
-            <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Available Credits
-            </div>
-          </div>
-          <div className="flex items-center justify-center gap-1 text-xs text-emerald-500">
-            <TrendingUp className="w-3 h-3" />
-            <span>Active Plan</span>
-          </div>
+        <div className="flex gap-4 border rounded-lg overflow-hidden">
+          <img
+            src="./journey/j3.webp"
+            alt=""
+            className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
+          />
         </div>
       );
 
     case "calendar":
       return (
-        <div className="space-y-3">
-          <Calendar className="w-8 h-8 text-blue-500 mx-auto" />
-          <div className="grid grid-cols-7 gap-1.5">
-            {Array.from({ length: 21 }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-5 h-5 rounded ${
-                  [2, 5, 9, 14, 18].includes(i)
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 shadow-md"
-                    : "bg-muted/50"
-                }`}
-              />
-            ))}
-          </div>
+        <div className="flex gap-4 border rounded-lg overflow-hidden">
+          <img
+            src="./journey/j4b.avif"
+            alt=""
+            className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
+          />
         </div>
       );
 
     case "dashboard":
       return (
-        <div className="space-y-3 w-full px-4">
-          <div className="flex items-center gap-2">
-            <LayoutDashboard className="w-7 h-7 text-indigo-500" />
-            <div className="h-2 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full w-24" />
-          </div>
-          <div className="space-y-2">
-            <div className="h-2.5 bg-gradient-to-r from-muted to-muted/50 rounded-full w-full" />
-            <div className="h-2.5 bg-gradient-to-r from-muted to-muted/50 rounded-full w-4/5" />
-            <div className="h-2.5 bg-gradient-to-r from-muted to-muted/50 rounded-full w-3/5" />
-          </div>
+        <div className="flex gap-4 border rounded-lg overflow-hidden">
+          <img
+            src="./journey/j5.webp"
+            alt=""
+            className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
+          />
         </div>
       );
   }
@@ -205,7 +171,7 @@ export default function JourneySection() {
             end: "center center",
             scrub: 1,
           },
-        }
+        },
       );
 
       // Animate each circle when the line reaches it
@@ -259,7 +225,7 @@ export default function JourneySection() {
               scrub: 0.5,
               toggleActions: "play none none reverse",
             },
-          }
+          },
         );
 
         // Animate the number text color
@@ -280,7 +246,7 @@ export default function JourneySection() {
               scrub: 0.5,
               toggleActions: "play none none reverse",
             },
-          }
+          },
         );
       });
     });
@@ -291,21 +257,14 @@ export default function JourneySection() {
   return (
     <section className="relative py-24 px-6">
       {/* Section Header */}
-      <div className="max-w-7xl mx-auto text-center mb-32">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 ">
-          <CheckCircle2 className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            Platform Workflow
-          </span>
-        </div>
-        <h2 className="text-4xl md:text-5xl font-bold mb-4">
-          From Setup to Success in{" "}
-          <span className="text-foreground bg-clip-text ">Five Steps</span>
-        </h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          A streamlined workflow designed for modern teams. Get up and running
-          in minutes, scale effortlessly as you grow.
-        </p>
+      <div className="max-w-7xl mx-auto text-center !mb-10">
+        <SectionTitle
+        badgeIcon={<Waypoints className="w-4 h-4 text-primary" />}
+         badge="Platform Workflow"
+         highlightedText="Five Steps"
+         title="Start Scheduling in"
+         description="A streamlined workflow designed for modern teams. Get up and running in minutes, scale effortlessly as you grow."
+        />
       </div>
 
       {/* Journey Steps */}
@@ -324,7 +283,7 @@ export default function JourneySection() {
             <div
               key={step.id}
               ref={isFirst ? firstStepRef : isLast ? lastStepRef : null}
-              className="grid grid-cols-1 md:grid-cols-[1fr_100px_1fr] gap-8 md:gap-0 items-center min-h-[40vh] md:min-h-[60vh]"
+              className="grid grid-cols-1 md:grid-cols-[1fr_100px_1fr] gap-8 md:gap-0 items-center min-h-[60vh]"
             >
               {/* Content Side */}
               <div
@@ -386,7 +345,11 @@ export default function JourneySection() {
               </div>
 
               {/* Visual Side */}
-              <div
+              <motion.div
+                initial={{ opacity: 0.2, x: isEven ? -90 : 90 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ amount: 0.2, once: true }}
                 className={`${
                   isEven
                     ? "md:order-1 md:flex md:justify-start"
@@ -396,7 +359,7 @@ export default function JourneySection() {
                 <div className="w-full max-w-full md:max-w-md h-56 rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow duration-300">
                   <VisualBox type={step.visual} />
                 </div>
-              </div>
+              </motion.div>
             </div>
           );
         })}

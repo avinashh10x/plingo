@@ -19,6 +19,7 @@ import { GeneratedPost } from "./types";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Loader2, MessageSquare } from "lucide-react";
+import InteractiveAi from "@/components/landing/InteractiveAi";
 
 interface ChatContentProps {
   generatedItems: GeneratedPost[];
@@ -68,7 +69,7 @@ export const ChatContent = ({
             {/* <Bug className="h-3.5 w-3.5 text-primary" /> */}
             <img src="/logonly.svg" alt="" className="size-6" />  
           </div>
-          <span className="text-sm font-medium">Plingo AI</span>
+          <span className="text-sm font-medium">Buggy | Content Specialist</span>
         </div>
         <div className="flex items-center gap-1">
           <Tooltip>
@@ -188,17 +189,9 @@ export const ChatContent = ({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center h-full gap-3 text-center px-4 py-8"
             >
-              <div className="p-3 rounded-xl bg-primary/0">
+              <div className="p-3 rounded-xl bg-primary/0 absolute w-[100%] top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 {/* <Sparkles className="h-6 w-6 text-primary" /> */}
-                <img src="/logonly.svg" alt="" className="size-10" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  Buggy - Content Specialist
-                </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Generate engaging posts for any topic
-                </p>
+                <InteractiveAi/>
               </div>
             </motion.div>
           )}

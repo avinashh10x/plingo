@@ -1,17 +1,19 @@
 import { Twitter, Linkedin, Github, Instagram } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
 
 const SOCIAL_LINKS = [
-  { label: "Twitter", href: "https://twitter.com/plingoapp", icon: Twitter },
-  { label: "LinkedIn", href: "https://linkedin.com", icon: Linkedin },
-  { label: "Instagram", href: "https://instagram.com", icon: Instagram },
-  { label: "GitHub", href: "https://github.com", icon: Github },
+  { label: "Twitter", href: "https://twitter.com/avinash10x ", icon: Twitter },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/avinash-kumar-%F0%9F%8C%9F-519616249/", icon: Linkedin },
+  { label: "GitHub", href: "https://github.com/avinashh10x", icon: Github },
 ];
 
 export const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [time, setTime] = useState(() => new Date().toLocaleTimeString());
+  const textRef = useRef(null);
+  const isInView = useInView(textRef, { once: false, amount: 0.5 });
 
   // Live time updater
   useEffect(() => {
@@ -22,15 +24,33 @@ export const Footer = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const letters = "PLINGO".split("");
+
   return (
     <footer className="border-t border-border/40 bg-background overflow-hidden">
       {/* Big Brand Text - Full Width Edge to Edge */}
       <div className="w-full pt-10 pb-6">
-        <h2 
-          className="w-full text-[33vw] md:text-[31.5vw] leading-[0.85] font-oswald text-foreground/10 select-none text-center font-black tracking-[-0.05em] "
-          style={{ fontStretch: 'ultra-condensed' }}
+        <h2
+          ref={textRef}
+          className="w-full text-[33vw] md:text-[31.5vw] leading-[0.85] font-oswald text-foreground/10 select-none text-center font-black tracking-[-0.05em]"
+          style={{ fontStretch: "ultra-condensed" }}
         >
-          PLINGO
+          {letters.map((letter, index) => (
+            <motion.span
+              key={index}
+              initial={{ y: 20, opacity: 0 }}
+              whileInView={{ y: 0, opacity: 1 }}
+              viewport={{ once: false, amount: 0.5 }}
+              transition={{
+                duration: 0.8,
+                delay: index * 0.08,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              style={{ display: "inline-block" }}
+            >
+              {letter}
+            </motion.span>
+          ))}
         </h2>
       </div>
 
@@ -43,8 +63,8 @@ export const Footer = () => {
           {/* Bottom Row: Legal, Credit, Social */}
           <div className="flex flex-col md:flex-row items-center md:items-center justify-between gap-6 text-sm">
             {/* Legal Links + Time */}
-            <div className="flex items-center gap-6 text-muted-foreground order-2 md:order-1">
-              <span className="hover:text-foreground transition-colors font-mono text-xs">
+            <div className="flex-1 flex items-center gap-6 text-muted-foreground order-2 md:order-1">
+              <span className="hover:text-foreground transition-colors font-mono ">
                 {time}
               </span>
               <Link
@@ -62,7 +82,7 @@ export const Footer = () => {
             </div>
 
             {/* Center: Tagline + Copyright */}
-            <div className="flex flex-col items-center gap-1 order-1 md:order-2">
+            <div className="flex-1 flex flex-col items-center gap-1 order-1 md:order-2">
               <p className="text-sm text-muted-foreground text-center">
                 Made for smart creators who move fast.
               </p>
@@ -80,7 +100,7 @@ export const Footer = () => {
             </div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-4 order-3">
+            <div className="flex-1 flex items-center justify-end gap-4 order-3">
               {SOCIAL_LINKS.map(({ label, href, icon: Icon }) => (
                 <a
                   key={label}

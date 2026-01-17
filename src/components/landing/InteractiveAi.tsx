@@ -34,23 +34,6 @@ export default function InteractiveAi() {
   return (
     <section className="relative py-24 px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <span className="text-sm font-medium text-primary">AI-Powered</span>
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Meet Your{" "}
-            <span className="bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              AI Assistant
-            </span>
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Intelligent content generation that follows your every move
-          </p>
-        </div>
-
-        {/* Interactive Mascot */}
         <div
           ref={containerRef}
           className="relative flex items-center justify-center"
@@ -195,28 +178,7 @@ export default function InteractiveAi() {
             <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-purple-500/20 rounded-full blur-3xl -z-10 animate-pulse" />
           </div>
         </div>
-
-        {/* Feature Cards Below */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16">
-          <div className="p-6 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm">
-            <h3 className="font-semibold mb-2">Smart Detection</h3>
-            <p className="text-sm text-muted-foreground">
-              Watches your every move to provide contextual assistance
-            </p>
-          </div>
-          <div className="p-6 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm">
-            <h3 className="font-semibold mb-2">Adaptive Learning</h3>
-            <p className="text-sm text-muted-foreground">
-              Learns from your behavior to improve suggestions
-            </p>
-          </div>
-          <div className="p-6 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm">
-            <h3 className="font-semibold mb-2">Real-time Response</h3>
-            <p className="text-sm text-muted-foreground">
-              Instant reactions to your interactions and inputs
-            </p>
-          </div>
-        </div>
+     
       </div>
     </section>
   );

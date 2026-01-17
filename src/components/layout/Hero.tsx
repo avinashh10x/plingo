@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionTitle } from "../ui/section-title";
 
 export const Hero = () => {
   return (
@@ -24,63 +25,73 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-2 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_20px_5px_hsl(var(--primary)),inset_0px_2px_40px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[5%] md:-top-[20%] lg:-top-[65%] right-1/2 bg-background" />
+        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] -top-[15vw] right-1/2 bg-background" />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
         <div className="z-12 w-full h-[80%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
       </div>
 
-      <div className="max-w-7xl mx-auto text-center relative z-10">
+      <div className="max-w-7xl mx-auto text-center relative z-10 mb-[8vw]">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
+          className="space-y-8"
         >
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-8 backdrop-blur-sm shadow-[0_0_15px_hsl(var(--primary)/0.2)]">
-            {/* <Sparkles className="h-3.5 w-3.5 fill-primary/20" /> */}
-            <span>Introducing · Plingo AI 2.0</span>
+          <div>
+            <div
+              className={
+                "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6 center"
+              }
+            >
+              <span className="text-sm font-medium text-primary">
+                Introducing · Plingo AI 2.0
+              </span>
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+              Smarter Content Scheduling <br />
+              <span className="text-primary">Powered by AI</span>
+            </h2>
+
+            <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto md:hidden px-6">
+             From ideas to published posts — Plingo helps you plan, write, and schedule content faster, without the noise.
+            </p>
+            <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto max-md:hidden px-6">
+             From ideas to published posts — Plingo helps you plan, write, and schedule content faster, without the noise.
+            </p>
           </div>
 
-          {/* Headline */}
-          <h1 className="text-5xl md:text-5xl lg:text-6xl font-bold tracking-tight text-foreground mb-6 leading-[1.1]">
-            Build Smarter Content
-            <br />
-            Schedules With AI
-          </h1>
-
-          {/* Subheadline */}
-          <p className="text-lg md:text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed font-light">
-            An AI-powered scheduler that helps you <br />
-            plan, write, and publish content faster without clutter.
-          </p>
-
           {/* Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20">
-            <Link to="/dashboard">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-6 ">
+            {/* Primary CTA */}
+            <Link to="/dashboard" className="w-full md:w-auto">
               <motion.div
+                className="w-full md:w-auto"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
                   size="lg"
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-300"
+                  className="w-full md:w-auto bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_hsl(var(--primary)/0.3)] transition-all duration-300"
                 >
                   Get Started
                 </Button>
               </motion.div>
             </Link>
 
-            <Link to="/demo">
+            {/* Secondary CTA */}
+            <Link to="/demo" className="w-full md:w-auto">
               <motion.div
+                className="w-full md:w-auto"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
                   variant="outline"
                   size="lg"
-                  className="rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 hover:text-foreground backdrop-blur-sm"
+                  className="w-full md:w-auto rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 backdrop-blur-sm"
                 >
                   <Play className="h-4 w-4 mr-2 fill-current" />
                   Watch Demo
