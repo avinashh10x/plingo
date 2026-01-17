@@ -44,7 +44,7 @@ export const WhoThisIsFor = () => {
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/concrete-wall.png')]" />
 
       <div className="max-w-6xl mx-auto relative z-10">
-        <div className="text-center mb-16 md:mb-24">
+        <div className="text-center mb-16 md:mb-4">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Built for people who publish daily
           </h2>
@@ -66,6 +66,10 @@ export const WhoThisIsFor = () => {
                 <Avatar color="white" className="" />
                 <Avatar color="primary" className="" />
                 <Avatar color="primary" className="" />
+                <div>
+                  <div className="z-1  rotate-90 w-20 h-[50px] border-[2px] border-white [box-shadow:0px_0px_60px_5px_hsl(var(--primary)),inset_0px_0px_0px_0px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-[40%] -top-[5%] md:-top-[20%] lg:-top-[25%] right-1/2 bg-background" />
+                  <div className="z-5 aspect-square w-10 border-[2px] border-white [box-shadow:0px_0px_60px_5px_hsl(var(--primary)),inset_0px_0px_0px_0px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full -top-[5%] md:-top-[20%] lg:-top-[65%] right-1/2 bg-background" />
+                </div>
                 <Avatar color="white" className="" />
               </div>
 

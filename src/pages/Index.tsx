@@ -10,6 +10,9 @@ import { PricingExpectation } from "@/components/landing/PricingExpectation";
 import { FAQ } from "@/components/landing/FAQ";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { Footer } from "@/components/landing/Footer";
+import How1 from "@/components/landing/How1";
+import ScrollJourney from "@/components/landing/ScrollJourney";
+import InteractiveAi from "@/components/landing/InteractiveAi";
 
 const Index = () => {
   // Force dark mode on mount for landing page aesthetic
@@ -22,16 +25,19 @@ const Index = () => {
       <LandingHeader />
 
       {/* Main Content */}
-      <main>
+      <main className="space-y-20">
         <Hero />
-        <WhoThisIsFor /> 
-        <ProblemSolution />
-        <AfterSignup />
-        <CoreCapabilities />
+        <How1/>
+        <ScrollJourney />
+        {/* <WhoThisIsFor />  */}
+        {/* <InteractiveAi/> */}
+        {/* <ProblemSolution /> */}
+        {/* <AfterSignup /> */}
+        {/* <CoreCapabilities /> */}
         <SafetyTrust />
         <PricingExpectation />
         <FAQ />
-        <FinalCTA />
+        {/* <FinalCTA /> */}
       </main>
 
       <Footer />
