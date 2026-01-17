@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { LandingHeader } from "@/components/layout/LandingHeader";
 import { Hero } from "@/components/layout/Hero";
 import { WhoThisIsFor } from "@/components/landing/WhoThisIsFor";
@@ -15,19 +14,14 @@ import ScrollJourney from "@/components/landing/ScrollJourney";
 import InteractiveAi from "@/components/landing/InteractiveAi";
 
 const Index = () => {
-  // Force dark mode on mount for landing page aesthetic
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
-
   return (
     <div className="min-h-screen bg-background overflow-hidden selection:bg-primary/20">
       <LandingHeader />
 
       {/* Main Content */}
-      <main className="space-y-20">
+      <main className="md:space-y-20 space-y-2 ">
         <Hero />
-        <How1/>
+        <How1 />
         <ScrollJourney />
         {/* <WhoThisIsFor />  */}
         {/* <InteractiveAi/> */}

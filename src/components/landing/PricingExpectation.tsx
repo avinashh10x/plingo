@@ -62,7 +62,7 @@ export const PricingExpectation = () => {
         />
 
         {/* Pricing Content */}
-        <div className="mt-12 max-w-4xl mx-auto">
+        <div className="mt-12 max-w-4xl mx-auto border rounded-lg">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}

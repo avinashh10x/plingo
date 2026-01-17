@@ -37,7 +37,7 @@ const faqs = [
 // Using viewport height for responsive sizing
 const MASCOT_SIZE = {
   width: "auto", // Auto width to maintain aspect ratio
-  height: "50vh", // 50% of viewport height - change this value to adjust size
+  height: "clamp(200px, 40vh, 350px)", // Responsive height with min/max
 };
 
 export const FAQ = () => {
@@ -148,7 +148,7 @@ export const FAQ = () => {
   }, []);
 
   return (
-    <section className="py-20 px-6 border-t border-border/40">
+    <section className="py-12 md:py-20 px-6 border-t border-border/40 overflow-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Section Title */}
         <SectionTitle
@@ -160,9 +160,9 @@ export const FAQ = () => {
         />
 
         {/* Content Grid */}
-        <div className="mt-16 grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left: Interactive Mascot */}
-          <div className="flex items-center justify-center lg:justify-start flex-col">
+        <div className="mt-10 md:mt-16 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
+          {/* Left: Interactive Mascot - Hidden on mobile for better UX */}
+          <div className="hidden md:flex items-center justify-center lg:justify-start flex-col">
             <p className="text-sm text-muted-foreground tracking-wide select-none">
               Hmm… got some questions?
             </p>
@@ -316,7 +316,7 @@ export const FAQ = () => {
                 Still have questions?
               </p>
               <a
-                href="mailto:support@plingo.app"
+                href="mailto:thissideavinash@gmail.com"
                 className="text-sm font-medium text-primary hover:underline"
               >
                 Contact our support team →

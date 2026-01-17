@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { BarChart3, LogOut } from "lucide-react";
+import { BarChart3, LogOut, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -8,21 +8,28 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTheme } from "next-themes";
 
 export const LandingHeader = () => {
   const { user, profile, isAuthenticated, signOut } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/auth");
   };
 
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
   const getInitials = (
     name: string | null | undefined,
-    email: string | null | undefined
+    email: string | null | undefined,
   ) => {
     if (name)
       return name
@@ -45,10 +52,12 @@ export const LandingHeader = () => {
             animate={{ opacity: 1, x: 0 }}
             whileHover={{ scale: 1.02 }}
           >
-            <div className="w-32 rounded-lg flex items-center justify-center">
-              <img src="./Group.svg" alt="" className="w-full" />
+            <div className="w-6 rounded-lg flex items-center justify-center">
+              <img src="./favicon.svg" alt="" className="w-full" />
             </div>
-            {/* <span className="text-xl font-bold text-foreground">Plingo</span> */}
+            <span className="text-xl font-bold text-foreground font-oswald uppercase">
+              Plingo
+            </span>
           </motion.div>
         </Link>
 
@@ -78,7 +87,6 @@ export const LandingHeader = () => {
                       {profile.name || "User"}
                     </p>
                   </div>
-
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -90,6 +98,18 @@ export const LandingHeader = () => {
                   Dashboard
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  onClick={toggleTheme}
+                  className="cursor-pointer"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Moon className="mr-2 h-4 w-4" />
+                  )}
+                  {theme === "dark" ? "Light Mode" : "Dark Mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   onClick={handleSignOut}
                   className="cursor-pointer text-destructive focus:text-destructive"
                 >
@@ -100,7 +120,10 @@ export const LandingHeader = () => {
             </DropdownMenu>
           ) : (
             <Link to="/auth">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300">
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300"
+              >
                 Get Started
               </Button>
             </Link>

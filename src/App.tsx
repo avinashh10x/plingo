@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { ThemeProvider } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useThemeColor } from "@/hooks/useThemeColor";
@@ -30,32 +31,32 @@ import { ApiUsage } from "./pages/admin/ApiUsage";
 const DashboardHome = lazy(() =>
   import("./pages/dashboard/DashboardHome").then((m) => ({
     default: m.DashboardHome,
-  }))
+  })),
 );
 const ContentStudio = lazy(() =>
   import("./pages/dashboard/ContentStudio").then((m) => ({
     default: m.ContentStudio,
-  }))
+  })),
 );
 const CalendarPage = lazy(() =>
   import("./pages/dashboard/CalendarPage").then((m) => ({
     default: m.CalendarPage,
-  }))
+  })),
 );
 const DraftsPage = lazy(() =>
   import("./pages/dashboard/DraftsPage").then((m) => ({
     default: m.DraftsPage,
-  }))
+  })),
 );
 const AccountsPage = lazy(() =>
   import("./pages/dashboard/AccountsPage").then((m) => ({
     default: m.AccountsPage,
-  }))
+  })),
 );
 const SettingsPage = lazy(() =>
   import("./pages/dashboard/SettingsPage").then((m) => ({
     default: m.SettingsPage,
-  }))
+  })),
 );
 
 // Loading fallback for lazy components
@@ -320,9 +321,11 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <AppContent />
-    </TooltipProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <TooltipProvider>
+        <AppContent />
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

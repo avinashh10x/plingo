@@ -184,10 +184,6 @@ const Privacy = () => {
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
 
   useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
-
-  useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
