@@ -12,6 +12,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useThemeColor } from "@/hooks/useThemeColor";
 import { useAppStore } from "@/stores/appStore";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Privacy from "./pages/Privacy";
@@ -70,6 +71,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading, profile } = useAuth();
   const { showOnboarding, setShowOnboarding } = useAppStore();
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     // Show onboarding only if user hasn't seen it (DB flag) and is approved
@@ -78,9 +80,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       profile.status === "approved" &&
       profile.has_seen_onboarding === false
     ) {
-      setShowOnboarding(true);
+      if (window.innerWidth < 768) {
+        toast({
+          title: "Please use desktop",
+          description: "For onboarding process please open in desktop",
+        });
+      } else {
+        setShowOnboarding(true);
+      }
     }
-  }, [profile, setShowOnboarding]);
+  }, [profile, setShowOnboarding, toast]);
 
   const handleOnboardingComplete = async () => {
     setShowOnboarding(false);

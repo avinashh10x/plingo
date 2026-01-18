@@ -87,7 +87,7 @@ export const SettingsPage = () => {
 
   const getInitials = (
     name: string | null | undefined,
-    email: string | null | undefined
+    email: string | null | undefined,
   ) => {
     if (name && name.length > 0) {
       return (
@@ -167,7 +167,7 @@ export const SettingsPage = () => {
     }
 
     return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(
-      l * 100
+      l * 100,
     )}%`;
   };
 
@@ -456,7 +456,16 @@ export const SettingsPage = () => {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => setShowOnboarding(true)}
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    toast.error("Please use desktop", {
+                      description:
+                        "For onboarding process please open in desktop",
+                    });
+                  } else {
+                    setShowOnboarding(true);
+                  }
+                }}
               >
                 <PlayCircle className="h-4 w-4 mr-2" />
                 Replay Onboarding Tour

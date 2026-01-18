@@ -12,7 +12,7 @@ import {
   Link2,
   Coins,
 } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/appStore";
 import { useCredits } from "@/hooks/useCredits";
@@ -88,7 +88,7 @@ const AnimatedCredits = ({ value }: { value: number | null }) => {
         className={cn(
           "transition-all duration-300 ease-out",
           animation === "up" && "animate-slide-up",
-          animation === "down" && "animate-slide-down"
+          animation === "down" && "animate-slide-down",
         )}
       >
         {displayValue}
@@ -115,7 +115,9 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
     return (
       <header className="h-14 bg-card border-b border-border flex items-center justify-between px-4 sticky top-0 z-50">
         <div className="flex items-center gap-2">
-          <img src="/logonly.svg" alt="Plingo" className="h-8 w-8" />
+          <Link to="/">
+            <img src="/logonly.svg" alt="Plingo" className="h-8 w-8" />
+          </Link>
           {/* <span className="font-bold text-lg">Plingo</span> */}
         </div>
 
