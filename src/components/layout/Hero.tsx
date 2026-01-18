@@ -84,7 +84,7 @@ export const Hero = () => {
             </Link>
 
             {/* Secondary CTA */}
-            <Link to="/demo" className="w-full md:w-auto">
+            <a href="#how-it-works" className="w-full md:w-auto">
               <motion.div
                 className="w-full md:w-auto"
                 whileHover={{ scale: 1.05 }}
@@ -95,11 +95,11 @@ export const Hero = () => {
                   size="lg"
                   className="w-full md:w-auto rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 backdrop-blur-sm"
                 >
-                  <Play className="h-4 w-4 mr-2 fill-current" />
-                  Watch Demo
+                  {/* <Sparkles className="h-4 w-4 mr-2" /> */}
+                  How it Works
                 </Button>
               </motion.div>
-            </Link>
+            </a>
           </div>
         </motion.div>
       </div>

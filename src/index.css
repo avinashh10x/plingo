@@ -10,6 +10,10 @@
 /* Plingo Design System - VS Code Inspired */
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
