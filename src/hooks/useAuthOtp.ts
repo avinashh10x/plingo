@@ -57,18 +57,30 @@ export function useAuthOtp() {
     const timerRef = type === "login" ? loginTimerRef : signupTimerRef;
     const setState = type === "login" ? setLoginState : setSignupState;
 
+    // Clear any existing timer first
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // Set initial countdown
     setState((prev) => ({ ...prev, resendCountdown: RESEND_COOLDOWN }));
 
-    if (timerRef.current) clearInterval(timerRef.current);
+    // Use a local variable to track countdown for more reliable decrement
+    let countdown = RESEND_COOLDOWN;
 
     timerRef.current = setInterval(() => {
-      setState((prev) => {
-        if (prev.resendCountdown <= 1) {
-          if (timerRef.current) clearInterval(timerRef.current);
-          return { ...prev, resendCountdown: 0 };
+      countdown -= 1;
+
+      if (countdown <= 0) {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
         }
-        return { ...prev, resendCountdown: prev.resendCountdown - 1 };
-      });
+        setState((prev) => ({ ...prev, resendCountdown: 0 }));
+      } else {
+        setState((prev) => ({ ...prev, resendCountdown: countdown }));
+      }
     }, 1000);
   }, []);
 
@@ -88,7 +100,7 @@ export function useAuthOtp() {
         return false;
       }
     },
-    [toast]
+    [toast],
   );
 
   // Send OTP for login
@@ -108,7 +120,7 @@ export function useAuthOtp() {
       if (error) {
         if (error.message.includes("Signups not allowed")) {
           throw new Error(
-            "This email is not registered. Please sign up first."
+            "This email is not registered. Please sign up first.",
           );
         }
         throw error;
@@ -234,7 +246,7 @@ export function useAuthOtp() {
       if (error) {
         if (error.message.includes("User already registered")) {
           throw new Error(
-            "This email is already registered. Please sign in instead."
+            "This email is already registered. Please sign in instead.",
           );
         }
         throw error;

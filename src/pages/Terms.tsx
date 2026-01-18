@@ -17,16 +17,34 @@ const sections: Section[] = [
     content: (
       <>
         <p>
-          This Plingo Services Agreement ("Agreement") is a legal agreement
-          between Plingo Inc. ("Plingo", "we", or "us") and you or the entity
-          you represent ("you", "your", or "user") who registers on the Plingo
-          platform to utilize our hiring services, assessment services, and
-          other business solutions.
+          Plingo is a side project and platform designed to help creators stay
+          active and consistent on social media. These Terms of Service
+          ("Terms") govern your use of the Plingo platform.
         </p>
         <p>
-          Access or use of any Services is contingent upon your acceptance and
-          adherence to all stipulated terms and conditions in this Agreement. By
-          accessing or using the Services, you agree to be bound by these Terms.
+          By using Plingo, you agree to these Terms. If you don't agree, please
+          don't use the platform.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "what-plingo-is",
+    title: "What Plingo Is",
+    content: (
+      <>
+        <p>
+          Plingo is a content scheduling and management tool that helps you:
+        </p>
+        <ul className="list-disc list-inside space-y-2 ml-4">
+          <li>Plan and schedule posts across multiple social platforms</li>
+          <li>Generate content ideas with AI assistance</li>
+          <li>Organize your content in drafts and libraries</li>
+          <li>Stay consistent with your posting schedule</li>
+        </ul>
+        <p className="mt-4">
+          Plingo is an independent side project, not a company. It's built and
+          maintained by an individual developer.
         </p>
       </>
     ),
@@ -36,27 +54,13 @@ const sections: Section[] = [
     title: "Account Terms",
     content: (
       <>
-        <p>
-          In order to access and make use of the Services, you must complete the
-          registration process for a Plingo account ("Account"). Successful
-          completion of your Account registration necessitates the provision of
-          your full legal name, a valid email address, and any other information
-          marked as mandatory.
-        </p>
-        <p>You must be:</p>
+        <p>To use Plingo, you need to create an account. By doing so:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>
-            At least 18 years of age or meet the age of majority in your
-            jurisdiction
-          </li>
-          <li>Able to form a legally binding contract</li>
-          <li>Not barred from receiving services under applicable law</li>
+          <li>You must provide accurate information</li>
+          <li>You must be at least 18 years old</li>
+          <li>You are responsible for keeping your account secure</li>
+          <li>You are responsible for all activity under your account</li>
         </ul>
-        <p>
-          You acknowledge that the email address you provide upon Account
-          creation, or any subsequent updates, will serve as the primary mode of
-          communication between you and Plingo.
-        </p>
       </>
     ),
   },
@@ -65,97 +69,60 @@ const sections: Section[] = [
     title: "Acceptable Use",
     content: (
       <>
-        <p>You agree not to:</p>
+        <p>When using Plingo, you agree NOT to:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>
-            Reproduce, duplicate, copy, sell, resell, or exploit any part of the
-            Service without express written permission
-          </li>
-          <li>
-            Access the Services without explicit written permission from Plingo
-            for the purpose of building a competitive product
-          </li>
-          <li>
-            Use the Services to store or transmit infringing, libelous, or
-            otherwise unlawful or tortious material
-          </li>
-          <li>
-            Use the Services to store or transmit material in violation of
-            third-party privacy rights
-          </li>
-          <li>
-            Interfere with or disrupt the integrity or performance of the
-            Services
-          </li>
-          <li>
-            Attempt to gain unauthorized access to the Services or related
-            systems or networks
-          </li>
+          <li>Post illegal, harmful, or abusive content</li>
+          <li>Spam or abuse the scheduling features</li>
+          <li>Attempt to access other users' accounts or data</li>
+          <li>Use the platform to harass or harm others</li>
+          <li>Reverse engineer or attempt to exploit the platform</li>
+          <li>Violate the terms of connected social platforms</li>
         </ul>
-      </>
-    ),
-  },
-  {
-    id: "intellectual-property",
-    title: "Intellectual Property",
-    content: (
-      <>
-        <p>
-          The Service and all materials therein or transferred thereby,
-          including, without limitation, software, images, text, graphics,
-          illustrations, logos, patents, trademarks, service marks, copyrights,
-          photographs, audio, videos, and music, and all Intellectual Property
-          Rights related thereto, are the exclusive property of Plingo.
-        </p>
-        <p>
-          You retain ownership of any content you create, schedule, or publish
-          through our platform. By using our Services, you grant Plingo a
-          limited license to use, store, and process your content solely for the
-          purpose of providing the Services to you.
+        <p className="mt-4">
+          Violation of these rules may result in account suspension or
+          termination.
         </p>
       </>
     ),
   },
   {
-    id: "payment-terms",
-    title: "Payment Terms",
+    id: "your-content",
+    title: "Your Content",
     content: (
       <>
         <p>
-          If you select a paid plan, you agree to pay Plingo the applicable fees
-          for the selected plan. Payment obligations are non-cancelable and fees
-          paid are non-refundable, except as expressly set forth herein.
+          <strong>You own your content.</strong> Anything you create, write, or
+          schedule through Plingo remains yours.
+        </p>
+        <p>
+          By using Plingo, you grant us a limited license to store and process
+          your content solely to provide the service (e.g., scheduling posts,
+          saving drafts). We do not claim ownership of your content.
+        </p>
+        <p className="mt-4">
+          You are responsible for ensuring your content doesn't violate any laws
+          or third-party rights.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "payments",
+    title: "Payments & Credits",
+    content: (
+      <>
+        <p>
+          Plingo uses a credit-based system for certain features. Credits may be
+          purchased or earned through the platform.
         </p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>Fees are billed in advance on a monthly or annual basis</li>
-          <li>All fees are exclusive of applicable taxes</li>
-          <li>
-            You authorize us to charge your payment method on file for any
-            unpaid fees
-          </li>
-          <li>
-            Failure to pay may result in suspension or termination of your
-            account
-          </li>
+          <li>Credits are non-refundable once used</li>
+          <li>Unused credits may expire as stated in the platform</li>
+          <li>Prices are subject to change with notice</li>
         </ul>
-      </>
-    ),
-  },
-  {
-    id: "termination",
-    title: "Termination",
-    content: (
-      <>
-        <p>
-          You may terminate your account at any time by contacting customer
-          support or through your account settings. Upon termination, your right
-          to use the Services will immediately cease.
-        </p>
-        <p>
-          We may terminate or suspend your account immediately, without prior
-          notice or liability, for any reason, including without limitation if
-          you breach these Terms. Upon termination, your right to use the
-          Service will immediately cease.
+        <p className="mt-4">
+          As this is a side project, refund requests are handled on a
+          case-by-case basis. Contact us if you have concerns.
         </p>
       </>
     ),
@@ -165,17 +132,50 @@ const sections: Section[] = [
     title: "Disclaimers",
     content: (
       <>
+        <p>Plingo is provided "as is" without warranties. As a side project:</p>
+        <ul className="list-disc list-inside space-y-2 ml-4">
+          <li>We cannot guarantee 100% uptime</li>
+          <li>Features may change or be discontinued</li>
+          <li>Social platform integrations depend on third-party APIs</li>
+          <li>
+            We're not responsible if a scheduled post fails due to API changes
+          </li>
+        </ul>
+        <p className="mt-4">
+          We do our best to keep things running smoothly, but please understand
+          the limitations of a solo-developed project.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "termination",
+    title: "Termination",
+    content: (
+      <>
         <p>
-          THE SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT
-          WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT
-          LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-          PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+          You can delete your account at any time. Upon deletion, your data will
+          be removed from our systems.
         </p>
         <p>
-          Plingo does not warrant that the Services will be uninterrupted,
-          timely, secure, or error-free. Plingo does not warrant that the
-          results obtained from use of the Services will be accurate or
-          reliable.
+          We reserve the right to suspend or terminate accounts that violate
+          these Terms or abuse the platform.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: "changes",
+    title: "Changes to Terms",
+    content: (
+      <>
+        <p>
+          We may update these Terms from time to time. Significant changes will
+          be communicated via email or in-app notification.
+        </p>
+        <p>
+          Continued use of Plingo after changes means you accept the updated
+          Terms.
         </p>
       </>
     ),
@@ -185,13 +185,28 @@ const sections: Section[] = [
     title: "Contact Us",
     content: (
       <>
-        <p>
-          If you have any questions about these Terms of Service, please contact
-          us:
-        </p>
+        <p>Have questions about these Terms? Reach out:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>By email: legal@plingo.com</li>
-          <li>By visiting the contact page on our website</li>
+          <li>
+            Email:{" "}
+            <a
+              href="mailto:thissideavinash@gmail.com"
+              className="text-primary hover:underline"
+            >
+              thissideavinash@gmail.com
+            </a>
+          </li>
+          <li>
+            Twitter:{" "}
+            <a
+              href="https://twitter.com/avinash10x"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              @avinash10x
+            </a>
+          </li>
         </ul>
       </>
     ),
@@ -201,10 +216,6 @@ const sections: Section[] = [
 const Terms = () => {
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
-
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -218,7 +229,7 @@ const Terms = () => {
       {
         rootMargin: "-20% 0px -60% 0px",
         threshold: 0,
-      }
+      },
     );
 
     sections.forEach(({ id }) => {
@@ -250,7 +261,7 @@ const Terms = () => {
           <p className="text-muted-foreground">Last Updated: January 2026</p>
         </motion.div>
 
-        <main className="max-w-7xl mx-auto pb-24">
+        <main className="max-w-7xl mx-auto pb-24 px-6">
           <div className="flex gap-12">
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <nav className="sticky top-32 space-y-1">
@@ -261,10 +272,11 @@ const Terms = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all duration-200 ${activeSection === id
+                    className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      activeSection === id
                         ? "text-white bg-primary border-l-2 border-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      }`}
+                    }`}
                   >
                     {title}
                   </motion.button>

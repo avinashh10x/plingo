@@ -17,15 +17,15 @@ const sections: Section[] = [
     content: (
       <>
         <p>
-          Welcome to Plingo. We respect your privacy and are committed to
-          protecting your personal data. This privacy policy will inform you
-          about how we look after your personal data when you visit our website
-          and use our services.
+          Welcome to Plingo — a side project and platform designed to help
+          creators stay active and consistent on social media platforms. We
+          respect your privacy and are committed to being transparent about how
+          we handle your data.
         </p>
         <p>
-          By using Plingo, you agree to the collection and use of information
-          in accordance with this policy. We will not use or share your
-          information with anyone except as described in this Privacy Policy.
+          By using Plingo, you agree to the collection and use of information as
+          described in this policy. We do not sell your data or share it with
+          third parties for marketing purposes.
         </p>
       </>
     ),
@@ -35,17 +35,25 @@ const sections: Section[] = [
     title: "Data We Collect",
     content: (
       <>
-        <p>
-          We collect information that you provide directly to us, such as when
-          you create an account, connect social media platforms, or contact us
-          for support. This includes:
-        </p>
+        <p>We collect the following information when you use Plingo:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>Account information (name, email address, password)</li>
-          <li>Social media account access tokens</li>
-          <li>Content you create and schedule through our platform</li>
-          <li>Usage data and analytics</li>
-          <li>Communication preferences</li>
+          <li>
+            <strong>Account information:</strong> Your name and email address
+            (via OAuth login through providers like Google)
+          </li>
+          <li>
+            <strong>Social media tokens:</strong> OAuth access tokens to connect
+            your Twitter, LinkedIn, and other accounts — we never store your
+            passwords
+          </li>
+          <li>
+            <strong>Content you create:</strong> Posts, drafts, and scheduled
+            content you write within Plingo
+          </li>
+          <li>
+            <strong>Usage data:</strong> Basic analytics like feature usage to
+            improve the platform
+          </li>
         </ul>
       </>
     ),
@@ -55,55 +63,83 @@ const sections: Section[] = [
     title: "How We Use Your Data",
     content: (
       <>
-        <p>
-          We use your data to provide, maintain, and improve our services,
-          including scheduling and publishing content to your connected social
-          media accounts. Specifically, we use your information to:
-        </p>
+        <p>We use your data solely to provide and improve Plingo's services:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>Provide and maintain our service</li>
-          <li>Notify you about changes to our service</li>
-          <li>Allow you to participate in interactive features</li>
-          <li>Provide customer support</li>
-          <li>Gather analysis to improve our service</li>
-          <li>Monitor the usage of our service</li>
+          <li>To schedule and publish posts to your connected accounts</li>
+          <li>To save your drafts and content library</li>
+          <li>To provide AI-powered content suggestions</li>
+          <li>To send you important updates about the service</li>
+          <li>To improve platform performance and fix bugs</li>
         </ul>
+        <p className="mt-4">
+          <strong>We do NOT:</strong> Sell your data, auto-post without your
+          consent, or share your information with advertisers.
+        </p>
       </>
     ),
   },
   {
-    id: "data-security",
-    title: "Data Security",
+    id: "data-storage",
+    title: "Data Storage & Security",
     content: (
       <>
         <p>
-          We implement appropriate technical and organizational measures to
-          protect your personal data against unauthorized processing or
-          accidental loss. Your data is encrypted both in transit and at rest.
+          Your data is stored securely using industry-standard encryption. We
+          use secure database hosting and authentication, which provides
+          enterprise-grade security.
         </p>
-        <p>
-          We regularly review our security practices and update them as
-          necessary to maintain the safety of your information. However, no
-          method of transmission over the Internet is 100% secure, and we cannot
-          guarantee absolute security.
-        </p>
+        <ul className="list-disc list-inside space-y-2 ml-4">
+          <li>All data is Encrypted in transit (HTTPS)</li>
+          <li>OAuth tokens are stored securely and never exposed</li>
+          <li>We use Hashing to protect your data</li>
+          <li>Regular security reviews are conducted</li>
+        </ul>
       </>
     ),
   },
+  // {
+  //   id: "third-party",
+  //   title: "Third-Party Services",
+  //   content: (
+  //     <>
+  //       <p>Plingo integrates with the following services:</p>
+  //       <ul className="list-disc list-inside space-y-2 ml-4">
+  //         <li>
+  //           <strong>Supabase:</strong> Database and authentication
+  //         </li>
+  //         <li>
+  //           <strong>Twitter/X API:</strong> To post and manage tweets
+  //         </li>
+  //         <li>
+  //           <strong>LinkedIn API:</strong> To post to your LinkedIn profile
+  //         </li>
+  //         <li>
+  //           <strong>OpenAI/Gemini:</strong> For AI content generation features
+  //         </li>
+  //       </ul>
+  //       <p className="mt-4">
+  //         Each service has its own privacy policy. We only share the minimum
+  //         data required for each integration to function.
+  //       </p>
+  //     </>
+  //   ),
+  // },
   {
     id: "your-rights",
     title: "Your Rights",
     content: (
       <>
-        <p>You have the right to:</p>
+        <p>You have full control over your data:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>Access your personal data</li>
-          <li>Correct inaccurate personal data</li>
-          <li>Request deletion of your personal data</li>
-          <li>Object to processing of your personal data</li>
-          <li>Request transfer of your personal data</li>
-          <li>Withdraw consent at any time</li>
+          <li>Access and export your data at any time</li>
+          <li>Delete your account and all associated data</li>
+          <li>Disconnect social media accounts whenever you want</li>
+          <li>Opt out of non-essential communications</li>
         </ul>
+        <p className="mt-4">
+          To exercise any of these rights, contact us using the information
+          below.
+        </p>
       </>
     ),
   },
@@ -113,12 +149,30 @@ const sections: Section[] = [
     content: (
       <>
         <p>
-          If you have any questions about this Privacy Policy, please contact
-          us:
+          If you have any questions about this Privacy Policy or how we handle
+          your data, please reach out:
         </p>
         <ul className="list-disc list-inside space-y-2 ml-4">
-          <li>By email: support@plingo.com</li>
-          <li>By visiting the contact page on our website</li>
+          <li>
+            Email:{" "}
+            <a
+              href="mailto:thissideavinash@gmail.com"
+              className="text-primary hover:underline"
+            >
+              thissideavinash@gmail.com
+            </a>
+          </li>
+          <li>
+            Twitter:{" "}
+            <a
+              href="https://twitter.com/avinash10x"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              @avinash10x
+            </a>
+          </li>
         </ul>
       </>
     ),
@@ -128,10 +182,6 @@ const sections: Section[] = [
 const Privacy = () => {
   const [activeSection, setActiveSection] = useState(sections[0].id);
   const sectionRefs = useRef<{ [key: string]: HTMLElement | null }>({});
-
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -145,7 +195,7 @@ const Privacy = () => {
       {
         rootMargin: "-20% 0px -60% 0px",
         threshold: 0,
-      }
+      },
     );
 
     sections.forEach(({ id }) => {
@@ -177,7 +227,7 @@ const Privacy = () => {
           <p className="text-muted-foreground">Last Updated: January 2026</p>
         </motion.div>
 
-        <main className="max-w-7xl mx-auto pb-24">
+        <main className="max-w-7xl mx-auto pb-24 px-6">
           <div className="flex gap-12">
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <nav className="sticky top-32 space-y-1">
@@ -188,10 +238,11 @@ const Privacy = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.05 }}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all duration-200 ${activeSection === id
+                    className={`w-full text-left px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+                      activeSection === id
                         ? "text-white bg-primary border-l-2 border-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      }`}
+                    }`}
                   >
                     {title}
                   </motion.button>
