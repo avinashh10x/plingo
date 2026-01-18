@@ -50,16 +50,18 @@ export const Hero = () => {
               </span>
             </div>
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Smarter Content Scheduling <br />
               <span className="text-primary">Powered by AI</span>
-            </h2>
+            </h1>
 
             <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto md:hidden px-6">
-             From ideas to published posts — Plingo helps you plan, write, and schedule content faster, without the noise.
+              From ideas to published posts — Plingo helps you plan, write, and
+              schedule content faster, without the noise.
             </p>
             <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto max-md:hidden px-6">
-             From ideas to published posts — Plingo helps you plan, write, and schedule content faster, without the noise.
+              From ideas to published posts — Plingo helps you plan, write, and
+              schedule content faster, without the noise.
             </p>
           </div>
 

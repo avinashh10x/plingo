@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { LandingHeader } from "@/components/layout/LandingHeader";
 import { Footer } from "@/components/landing/Footer";
 import { useEffect, useState, useRef } from "react";
@@ -246,6 +247,14 @@ const Terms = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+      <Helmet>
+        <title>Terms of Service | Plingo</title>
+        <meta
+          name="description"
+          content="Read Plingo's Terms of Service. Learn about account terms, acceptable use, and your rights when using our platform."
+        />
+        <link rel="canonical" href="https://plingo.byavi.in/terms" />
+      </Helmet>
       <LandingHeader />
 
       <div className="">

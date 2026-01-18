@@ -90,7 +90,8 @@ function VisualBox({ type }: { type: Step["visual"] }) {
         <div className="flex gap-4 border rounded-lg overflow-hidden">
           <img
             src="./journey/j1.webp"
-            alt=""
+            alt="Unified Platform Connectivity Dashboard"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
           />
         </div>
@@ -101,7 +102,8 @@ function VisualBox({ type }: { type: Step["visual"] }) {
         <div className="flex gap-4 border rounded-lg overflow-hidden">
           <img
             src="./journey/j2.webp"
-            alt=""
+            alt="AI Content Generation Interface"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
           />
         </div>
@@ -112,7 +114,8 @@ function VisualBox({ type }: { type: Step["visual"] }) {
         <div className="flex gap-4 border rounded-lg overflow-hidden">
           <img
             src="./journey/j3.webp"
-            alt=""
+            alt="Credit Usage Tracking System"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
           />
         </div>
@@ -123,7 +126,8 @@ function VisualBox({ type }: { type: Step["visual"] }) {
         <div className="flex gap-4 border rounded-lg overflow-hidden">
           <img
             src="./journey/j4b.avif"
-            alt=""
+            alt="Content Calendar View"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
           />
         </div>
@@ -134,7 +138,8 @@ function VisualBox({ type }: { type: Step["visual"] }) {
         <div className="flex gap-4 border rounded-lg overflow-hidden">
           <img
             src="./journey/j5.webp"
-            alt=""
+            alt="Centralized Command Dashboard"
+            loading="lazy"
             className="w-full h-full object-cover rounded-lg scale-105 hover:scale-100 transition-all duration-500 ease-out"
           />
         </div>
@@ -259,11 +264,11 @@ export default function JourneySection() {
       {/* Section Header */}
       <div className="max-w-7xl mx-auto text-center !mb-10">
         <SectionTitle
-        badgeIcon={<Waypoints className="w-4 h-4 text-primary" />}
-         badge="Platform Workflow"
-         highlightedText="Five Steps"
-         title="Start Scheduling in"
-         description="A streamlined workflow designed for modern teams. Get up and running in minutes, scale effortlessly as you grow."
+          badgeIcon={<Waypoints className="w-4 h-4 text-primary" />}
+          badge="Platform Workflow"
+          highlightedText="Five Steps"
+          title="Start Scheduling in"
+          description="A streamlined workflow designed for modern teams. Get up and running in minutes, scale effortlessly as you grow."
         />
       </div>
 

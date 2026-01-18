@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { LandingHeader } from "@/components/layout/LandingHeader";
 import { Footer } from "@/components/landing/Footer";
 import { useEffect, useState, useRef } from "react";
@@ -212,6 +213,14 @@ const Privacy = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/20">
+      <Helmet>
+        <title>Privacy Policy | Plingo</title>
+        <meta
+          name="description"
+          content="Learn how Plingo handles your data. We respect your privacy and are transparent about data collection and usage."
+        />
+        <link rel="canonical" href="https://plingo.byavi.in/privacy" />
+      </Helmet>
       <LandingHeader />
 
       <div className="">

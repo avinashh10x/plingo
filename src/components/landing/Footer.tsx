@@ -5,7 +5,11 @@ import { motion, useInView } from "framer-motion";
 
 const SOCIAL_LINKS = [
   { label: "Twitter", href: "https://twitter.com/avinash10x ", icon: Twitter },
-  { label: "LinkedIn", href: "https://www.linkedin.com/in/avinash-kumar-%F0%9F%8C%9F-519616249/", icon: Linkedin },
+  {
+    label: "LinkedIn",
+    href: "https://www.linkedin.com/in/avinash-kumar-%F0%9F%8C%9F-519616249/",
+    icon: Linkedin,
+  },
   { label: "GitHub", href: "https://github.com/avinashh10x", icon: Github },
 ];
 
@@ -30,10 +34,11 @@ export const Footer = () => {
     <footer className="border-t border-border/40 bg-background overflow-hidden">
       {/* Big Brand Text - Full Width Edge to Edge */}
       <div className="w-full pt-10 pb-6">
-        <h2
+        <div
           ref={textRef}
           className="w-full text-[33vw] md:text-[31.5vw] leading-[0.85] font-oswald text-foreground/10 select-none text-center font-black tracking-[-0.05em]"
           style={{ fontStretch: "ultra-condensed" }}
+          aria-hidden="true"
         >
           {letters.map((letter, index) => (
             <motion.span
@@ -51,7 +56,7 @@ export const Footer = () => {
               {letter}
             </motion.span>
           ))}
-        </h2>
+        </div>
       </div>
 
       {/* All Content Below */}

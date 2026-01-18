@@ -1,4 +1,5 @@
 "use client";
+import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -72,12 +73,20 @@ export default function Auth() {
 
   return (
     <div className="h-screen bg-background flex items-center justify-center p-4 md:p-6 overflow-hidden">
+      <Helmet>
+        <title>Sign In | Plingo</title>
+        <meta
+          name="description"
+          content="Sign in or create an account to access Plingo's social media scheduling tools."
+        />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       {/* Main Card Container */}
       <motion.div
         className="w-full max-w-7xl transition-all duration-300 ease-in-out max-h-[95vh] bg-foreground/5 rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
         transition={{
-          opacity: { duration: 0.500 },
-          y: { duration: 0.500},
+          opacity: { duration: 0.5 },
+          y: { duration: 0.5 },
           layout: { type: "spring", stiffness: 300, damping: 30 },
         }}
       >
@@ -92,7 +101,11 @@ export default function Auth() {
               </span>
             </Link> */}
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-              Welcome to <Link to="/" className="text-primary"> Plingo</Link>
+              Welcome to{" "}
+              <Link to="/" className="text-primary">
+                {" "}
+                Plingo
+              </Link>
             </h1>
             <p className="text-muted-foreground mt-1 text-sm">
               Sign in to manage your content
