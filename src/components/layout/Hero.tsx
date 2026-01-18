@@ -25,7 +25,7 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] sm:-top-[25vw] xs:-top-[20vw] top-[10vw] right-1/2 bg-background" />
+        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] -top-[20vw]  right-1/2 bg-background" />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
@@ -45,21 +45,21 @@ export const Hero = () => {
                 "inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6 center"
               }
             >
-              <span className="text-sm font-medium text-primary">
+              <span className="text-xs font-medium text-primary">
                 Introducing · Plingo AI 2.0
               </span>
             </div>
 
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+            <h1 className="text-3xl md:text-5xl font-bold mb-4 px-6">
               Smarter Content Scheduling <br />
               <span className="text-primary">Powered by AI</span>
             </h1>
 
-            <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto md:hidden px-6">
+            <p className="text-sm text-muted-foreground/50 max-w-2xl mx-auto md:hidden px-6">
               From ideas to published posts — Plingo helps you plan, write, and
               schedule content faster, without the noise.
             </p>
-            <p className="text-lg text-muted-foreground/50 max-w-2xl mx-auto max-md:hidden px-6">
+            <p className="text-sm text-muted-foreground/50 max-w-2xl mx-auto max-md:hidden px-6">
               From ideas to published posts — Plingo helps you plan, write, and
               schedule content faster, without the noise.
             </p>
