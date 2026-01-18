@@ -13,10 +13,10 @@ export const Hero = () => {
           {/* bars */}
           <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
           <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
-          <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
-          <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
-          <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
-          <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
+          <div className="w-[15%] h-full bg-primary/10 border border-foreground/20" />
+          <div className="w-[20%] h-full bg-primary/10 border border-foreground/20" />
+          <div className="w-[20%] h-full bg-primary/10 border border-foreground/20" />
+          <div className="w-[15%] h-full bg-primary/10 border border-foreground/20" />
           <div className="w-[10%] h-full bg-primary/10 border border-foreground/20" />
           <div className="w-[10%] h-full bg-foreground/10 border border-foreground/20" />
 
@@ -25,7 +25,7 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] -top-[20vw]  right-1/2 bg-background" />
+        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] top-[20vw]  right-1/2 bg-background " />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
