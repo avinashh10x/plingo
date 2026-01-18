@@ -54,7 +54,7 @@ export const FAQ = () => {
         {/* Content Grid */}
         <div className="mt-10 md:mt-16 grid lg:grid-cols-2 gap-8 md:gap-12 items-center ">
           {/* Left: Interactive Mascot - Hidden on mobile for better UX */}
-          <div className="hidden md:flex items-center justify-center lg:justify-start flex-col relative border bg-[url('./journey/bg.png')] bg-cover bg-center h-full rounded-xl">
+          <div className="hidden md:flex items-center justify-center lg:justify-start flex-col relative border bg-[url('/journey/bg.webp')] bg-cover bg-center h-full rounded-xl">
             <p className="text-lg text-muted-foreground tracking-wide  font-sentient select-none absolute top-[20%]">
               Hmm… got some questions?
             </p>

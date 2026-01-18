@@ -237,7 +237,7 @@ export default function Auth() {
 
         {/* Right Side - Visual */}
         <div className="hidden lg:flex flex-1 items-center justify-center relative overflow-hidden rounded-2xl m-7">
-          <div className="hidden md:flex items-center justify-center lg:justify-start flex-col relative border bg-[url('./journey/bg.png')] bg-cover bg-center h-full w-full rounded-xl">
+          <div className="hidden md:flex items-center justify-center lg:justify-start flex-col relative border bg-[url('/journey/bg.webp')] bg-cover bg-center h-full w-full rounded-xl">
             <AnimatePresence mode="wait">
               <motion.div
                 key="empty"
