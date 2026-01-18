@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Mail, Hash } from "lucide-react";
+import { OtpInput } from "@/components/ui/otp-input";
+import { Loader2, Mail } from "lucide-react";
 import type { OtpState } from "@/hooks/useAuthOtp";
 
 interface LoginFormProps {
@@ -52,26 +53,17 @@ export function LoginForm({
 
       {/* OTP Field - appears after OTP sent */}
       {otpSent && (
-        <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-          <Label htmlFor="login-otp">Verification Code</Label>
-          <div className="relative">
-            <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="login-otp"
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
-              placeholder="Enter 6-digit code"
-              value={otp}
-              onChange={(e) =>
-                onUpdateState({ otp: e.target.value.replace(/\D/g, "") })
-              }
-              className="pl-10 text-center text-lg tracking-widest"
-              required
-              autoFocus
-            />
-          </div>
+        <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+          <Label className="text-center block">Enter Verification Code</Label>
+          <OtpInput
+            value={otp}
+            onChange={(value) => onUpdateState({ otp: value })}
+            disabled={isLoading}
+            autoFocus
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            We sent a 6-digit code to {email}
+          </p>
         </div>
       )}
 

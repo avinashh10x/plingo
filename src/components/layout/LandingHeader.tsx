@@ -122,7 +122,7 @@ export const LandingHeader = () => {
             <Link to="/auth">
               <Button
                 size="sm"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-all duration-300"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-8 h-12 text-base font-semibold transition-all duration-300"
               >
                 Get Started
               </Button>

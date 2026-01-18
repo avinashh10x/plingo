@@ -147,7 +147,7 @@ export const ChatContent = ({
       </div>
 
       {/* Chat messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto  scrollbar-hide">
         <AnimatePresence mode="wait">
           {generatedItems.length > 0 ? (
             <motion.div
@@ -189,9 +189,9 @@ export const ChatContent = ({
               exit={{ opacity: 0 }}
               className="flex flex-col items-center justify-center h-full gap-3 text-center px-4 py-8"
             >
-              <div className="p-3 rounded-xl bg-primary/0 absolute w-[100%] top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="p-3 rounded-xl absolute w-[100%] top-[50%] left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                 {/* <Sparkles className="h-6 w-6 text-primary" /> */}
-                <InteractiveAi/>
+                <InteractiveAi size="h-[20vh]" standalone={false} />
               </div>
             </motion.div>
           )}
