@@ -132,6 +132,8 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
                 </span>
               </button>
             </CreditsPanel>
+
+            <NotificationPanel />
           </div>
 
           <DropdownMenu>
