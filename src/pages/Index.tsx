@@ -89,7 +89,7 @@ const Index = () => {
       <LandingHeader />
 
       {/* Main Content */}
-      <main className="md:space-y-20 space-y-2 ">
+      <main className="md:space-y-20 space-y-1 ">
         <Hero />
         <How1 />
         <ScrollJourney />
