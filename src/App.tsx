@@ -29,6 +29,7 @@ import { AdminOverview } from "./pages/admin/AdminOverview";
 import { UserManagement } from "./pages/admin/UserManagement";
 import { NotificationManager } from "./pages/admin/NotificationManager";
 import { ApiUsage } from "./pages/admin/ApiUsage";
+import About from "./pages/About";
 const DashboardHome = lazy(() =>
   import("./pages/dashboard/DashboardHome").then((m) => ({
     default: m.DashboardHome,
@@ -246,6 +247,7 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/about" element={<About />} />
           <Route path="/terms" element={<Terms />} />
 
           <Route path="/admin" element={<AdminLayout />}>

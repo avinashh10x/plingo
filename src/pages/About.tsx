@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   ArrowRight,
   Sparkles,
@@ -13,42 +14,48 @@ import {
   Shield,
   Clock,
   Rocket,
+  Hammer,
+  Coffee,
+  Bug,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionTitle } from "@/components/ui/section-title";
+import { LandingHeader } from "@/components/layout/LandingHeader";
+import { Footer } from "@/components/landing/Footer";
 
 const values = [
   {
     icon: Zap,
-    title: "Speed & Efficiency",
+    title: "Built for Speed",
     description:
-      "We believe your time is valuable. Our platform automates the tedious parts of social media management.",
+      "Because who has time to post manually? AI writes it, bulk scheduling handles it. Your job? Just hit approve and go back to building cool stuff.",
   },
   {
     icon: Shield,
-    title: "Privacy First",
+    title: "Your Data = Your Business",
     description:
-      "Your content and data are yours. We use enterprise-grade encryption and never share your information.",
+      "We're not selling your stuff to advertisers. Your posts, your platforms, your privacy. That's it.",
   },
   {
     icon: Heart,
-    title: "User-Centric Design",
+    title: "Made by a Solo Dev",
     description:
-      "Every feature is built with real user feedback. We prioritize simplicity without sacrificing power.",
+      "Not a corporate team trying to squeeze every penny. Just a dev who got tired of juggling 5 social media tabs and built a fix.",
   },
   {
     icon: Globe,
-    title: "Accessibility",
+    title: "No BS Pricing",
     description:
-      "Great tools shouldn't be expensive. We offer transparent pricing that grows with your needs.",
+      "Free to start. No hidden fees. Pay when you need more. Simple as that. (We're still figuring out the perfect model, tbh)",
   },
 ];
 
 const stats = [
-  { value: "10K+", label: "Posts Scheduled" },
-  { value: "500+", label: "Active Users" },
-  { value: "99.9%", label: "Uptime" },
-  { value: "24/7", label: "Support" },
+  { icon: Hammer, label: "Still Building", subtext: "(and breaking things)" },
+  { icon: Coffee, label: "Coffee Consumed", subtext: "(lost count tbh)" },
+  { icon: Bug, label: "Bugs Fixed", subtext: "(you'll find more)" },
+  { icon: User, label: "Solo Mission", subtext: "(for now!)" },
 ];
 
 const container = {
@@ -72,6 +79,48 @@ const itemVariant = {
 export default function About() {
   return (
     <div className="min-h-screen bg-background">
+      <LandingHeader />
+      <Helmet>
+        <title>About Us - Plingo | AI-Powered Social Media Management</title>
+        <meta
+          name="description"
+          content="Learn about Plingo's mission to empower creators and businesses with intelligent social media automation. Discover our values and commitment to privacy-first design."
+        />
+        <meta
+          name="keywords"
+          content="about plingo, social media management, company values, mission, AI automation, creator tools"
+        />
+        <link rel="canonical" href="https://plingo.byavi.in/about" />
+
+        {/* Open Graph */}
+        <meta
+          property="og:title"
+          content="About Plingo - Building the Future of Social Media Management"
+        />
+        <meta
+          property="og:description"
+          content="Empowering creators with AI-powered social media automation. Learn about our mission and values."
+        />
+        <meta property="og:url" content="https://plingo.byavi.in/about" />
+        <meta
+          property="og:image"
+          content="https://plingo.byavi.in/og-image.png"
+        />
+
+        {/* Twitter */}
+        <meta
+          name="twitter:title"
+          content="About Plingo - Building the Future of Social Media Management"
+        />
+        <meta
+          name="twitter:description"
+          content="Empowering creators with AI-powered social media automation."
+        />
+        <meta
+          name="twitter:image"
+          content="https://plingo.byavi.in/og-image.png"
+        />
+      </Helmet>
       {/* Hero Section */}
       <section className="relative overflow-hidden py-24 px-6">
         <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -83,19 +132,28 @@ export default function About() {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-4">
               <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">About Us</span>
+              <span className="text-sm font-medium text-primary">
+                The Real Talk™
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Building the Future of{" "}
-              <span className="text-primary">Social Media Management</span>
+              Social Media Shouldn't Be <br />
+              <span className="text-primary">Your Full-Time Job</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Plingo is an AI-powered platform that helps creators, marketers,
-              and businesses streamline their social media workflow. We combine
-              intelligent automation with intuitive design to save you time and
-              amplify your reach.
+              Look, you're here to build products, create content, or run your
+              business — not spend 3 hours a day scheduling tweets. That's why
+              Plingo exists. AI writes it, bulk scheduling posts it, you focus
+              on what actually matters.
+            </p>
+
+            <p className="text-base text-muted-foreground/80 max-w-2xl mx-auto">
+              Built by a solo dev who was tired of context-switching between 5
+              tabs just to post the same thing on Twitter and LinkedIn. If
+              you've ever groaned at "schedule your content consistently," this
+              is for you.
             </p>
           </motion.div>
         </div>
@@ -106,31 +164,45 @@ export default function About() {
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
         </div>
       </section>
-
-      {/* Stats Section */}
-      <section className="py-12 px-6 border-y border-border/50">
+      {/* Stats Section - Fun & Honest */}
+      <section className="py-12 px-6 border-y border-border/50 bg-muted/20">
+        <div className="max-w-7xl mx-auto text-center mb-8">
+          <h3 className="text-xl md:text-2xl font-semibold mb-2">
+            The "We're Just Getting Started" Stats
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            (aka we're collecting data while you read this)
+          </p>
+        </div>
         <motion.div
           variants={container}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8"
+          className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8"
         >
-          {stats.map((stat, index) => (
-            <motion.div
-              key={index}
-              variants={itemVariant}
-              className="text-center"
-            >
-              <div className="text-3xl md:text-4xl font-bold text-primary mb-2">
-                {stat.value}
-              </div>
-              <div className="text-sm text-muted-foreground">{stat.label}</div>
-            </motion.div>
-          ))}
+          {stats.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <motion.div
+                key={index}
+                variants={itemVariant}
+                className="text-center flex flex-col items-center"
+              >
+                <div className="mb-4 p-4 rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
+                  <Icon className="w-8 h-8 md:w-10 md:h-10" />
+                </div>
+                <div className="text-sm font-semibold text-foreground mb-1">
+                  {stat.label}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {stat.subtext}
+                </div>
+              </motion.div>
+            );
+          })}
         </motion.div>
-      </section>
-
+      </section>{" "}
       {/* Mission Section */}
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
@@ -146,39 +218,60 @@ export default function About() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
                 <Target className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                  Our Mission
+                  Why This Exists
                 </span>
               </div>
 
               <h2 className="text-3xl md:text-4xl font-bold">
-                Empowering Creators, One Post at a Time
+                You've Got Better Things to Do
               </h2>
 
               <div className="space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  We started Plingo because we experienced the same frustration
-                  you do — juggling multiple platforms, manually scheduling
-                  posts, and losing countless hours to repetitive tasks.
+                  Here's the thing: I built Plingo because I was spending more
+                  time <strong>scheduling tweets</strong> than actually writing
+                  code. Sound familiar?
                 </p>
                 <p>
-                  Our mission is simple: give creators and businesses the tools
-                  to focus on what matters — creating great content — while we
-                  handle the rest. With AI-powered automation, intelligent
-                  scheduling, and seamless integrations, we're building the most
-                  efficient social media command center.
+                  You're launching a product, writing content, or growing your
+                  brand. The last thing you need is another tab open, manually
+                  copy-pasting between Twitter and LinkedIn, setting reminders,
+                  and losing your flow state every 2 hours.
                 </p>
-                <p>
-                  Whether you're a solo creator or managing a team, Plingo
-                  adapts to your workflow, not the other way around.
+                <p className="font-medium text-foreground">
+                  So here's the deal: Plingo handles the boring stuff.
                 </p>
+                <ul className="space-y-3 ml-4">
+                  <li className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                    <span>
+                      <strong>AI writes it</strong> — Generate posts in seconds,
+                      not hours
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                    <span>
+                      <strong>Bulk scheduling</strong> — Queue a week's worth of
+                      content in 10 minutes
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                    <span>
+                      <strong>Multi-platform</strong> — One post, multiple
+                      platforms. Done.
+                    </span>
+                  </li>
+                </ul>
               </div>
 
               <Link to="/dashboard">
                 <Button
                   size="lg"
-                  className="rounded-full px-8 shadow-lg hover:shadow-xl transition-all"
+                  className="rounded-full mt-6 px-8 shadow-lg hover:shadow-xl transition-all"
                 >
-                  Start Your Journey
+                  Try It (It's Free)
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -199,9 +292,9 @@ export default function About() {
                       <Rocket className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <div className="font-semibold">Innovation</div>
+                      <div className="font-semibold">Ship Faster</div>
                       <div className="text-sm text-muted-foreground">
-                        AI-powered automation
+                        Less time on social = more time building
                       </div>
                     </div>
                   </div>
@@ -211,9 +304,9 @@ export default function About() {
                       <Clock className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <div className="font-semibold">Efficiency</div>
+                      <div className="font-semibold">Save Hours Weekly</div>
                       <div className="text-sm text-muted-foreground">
-                        Save hours every week
+                        Seriously, track it. You'll be shocked.
                       </div>
                     </div>
                   </div>
@@ -223,9 +316,10 @@ export default function About() {
                       <TrendingUp className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                      <div className="font-semibold">Growth</div>
+                      <div className="font-semibold">Stay Consistent</div>
                       <div className="text-sm text-muted-foreground">
-                        Scale your presence
+                        Algorithms love consistency. You love not thinking about
+                        it.
                       </div>
                     </div>
                   </div>
@@ -238,16 +332,15 @@ export default function About() {
           </div>
         </div>
       </section>
-
       {/* Values Section */}
       <section className="py-24 px-6 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <SectionTitle
             badgeIcon={<Heart className="w-4 h-4 text-primary" />}
-            badge="Our Values"
-            highlightedText="principles"
-            title="The "
-            description="We're guided by a core set of beliefs that shape everything we build and every decision we make."
+            badge="Core Values"
+            highlightedText="we actually believe"
+            title="The stuff "
+            description="No corporate buzzwords. Just real talk about how we're building this thing."
           />
 
           <motion.div
@@ -284,7 +377,6 @@ export default function About() {
           </motion.div>
         </div>
       </section>
-
       {/* CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto text-center">
@@ -297,13 +389,14 @@ export default function About() {
           >
             <div className="space-y-4">
               <h2 className="text-3xl md:text-5xl font-bold">
-                Ready to Transform Your
+                Ready to Get Your Time Back?
                 <br />
-                <span className="text-primary">Social Media Workflow?</span>
+                <span className="text-primary">Let's Do This</span>
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Join thousands of creators and businesses using Plingo to save
-                time and grow their online presence.
+                Free to start. No credit card. No setup wizard that takes 20
+                minutes. Just sign in and start scheduling. Seriously, that's
+                it.
               </p>
             </div>
 
@@ -313,7 +406,7 @@ export default function About() {
                   size="lg"
                   className="rounded-full px-8 shadow-[0_0_20px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] transition-all"
                 >
-                  Get Started Free
+                  Start Free
                   <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
@@ -322,15 +415,29 @@ export default function About() {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="rounded-full px-8 border-primary/30 hover:bg-primary/10"
+                  className="rounded-full px-8 border-primary/30 hover:bg-primary/10 hover:text-primary"
                 >
-                  Learn More
+                  See How It Works
                 </Button>
               </Link>
             </div>
+
+            <p className="text-sm text-muted-foreground/70">
+              P.S. — If you find bugs (you will), just tweet at{" "}
+              <a
+                href="https://twitter.com/avinash10x"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline"
+              >
+                avinash
+              </a>
+              . I promise I'll fix them... eventually!!!
+            </p>
           </motion.div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
