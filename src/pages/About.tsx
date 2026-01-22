@@ -204,29 +204,30 @@ export default function About() {
         </motion.div>
       </section>{" "}
       {/* Mission Section */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 overflow-hidden">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
             {/* Text Content */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
-              className="space-y-6"
+              className="space-y-8"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-md">
                 <Target className="w-4 h-4 text-primary" />
                 <span className="text-xs font-semibold text-primary uppercase tracking-wider">
                   Why This Exists
                 </span>
               </div>
 
-              <h2 className="text-3xl md:text-4xl font-bold">
-                You've Got Better Things to Do
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tight leading-tight">
+                You've Got Better <br />
+                <span className="text-primary">Things to Do</span>
               </h2>
 
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
+              <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
                 <p>
                   Here's the thing: I built Plingo because I was spending more
                   time <strong>scheduling tweets</strong> than actually writing
@@ -238,38 +239,38 @@ export default function About() {
                   copy-pasting between Twitter and LinkedIn, setting reminders,
                   and losing your flow state every 2 hours.
                 </p>
-                <p className="font-medium text-foreground">
-                  So here's the deal: Plingo handles the boring stuff.
-                </p>
-                <ul className="space-y-3 ml-4">
-                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span>
-                      <strong>AI writes it</strong> — Generate posts in seconds,
-                      not hours
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span>
-                      <strong>Bulk scheduling</strong> — Queue a week's worth of
-                      content in 10 minutes
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
-                    <span>
-                      <strong>Multi-platform</strong> — One post, multiple
-                      platforms. Done.
-                    </span>
-                  </li>
-                </ul>
+
+                <div className="pl-6 border-l-2 border-primary/30 space-y-4 my-8">
+                  <p className="font-medium text-foreground text-xl">
+                    So here's the deal: Plingo handles the boring stuff.
+                  </p>
+                  <ul className="space-y-3">
+                    <li className="flex items-center gap-3">
+                      <Zap className="w-5 h-5 text-primary" />
+                      <span>
+                        <strong>AI writes it</strong> — Seconds, not hours
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <span>
+                        <strong>Bulk scheduling</strong> — Weeks in minutes
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-primary" />
+                      <span>
+                        <strong>Multi-platform</strong> — One click, everywhere
+                      </span>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <Link to="/dashboard">
                 <Button
                   size="lg"
-                  className="rounded-full mt-6 px-8 shadow-lg hover:shadow-xl transition-all"
+                  className="rounded-full mt-6 px-8 h-12 text-base shadow-[0_4px_20px_-4px_hsl(var(--primary)/0.5)] hover:shadow-[0_4px_25px_0px_hsl(var(--primary)/0.6)] hover:-translate-y-1 transition-all duration-300"
                 >
                   Try It (It's Free)
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -277,58 +278,62 @@ export default function About() {
               </Link>
             </motion.div>
 
-            {/* Visual Element */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="relative"
-            >
-              <div className="relative rounded-2xl border border-border/50 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm p-8 shadow-2xl">
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <Rocket className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-semibold">Ship Faster</div>
-                      <div className="text-sm text-muted-foreground">
-                        Less time on social = more time building
-                      </div>
-                    </div>
-                  </div>
+            {/* Visual Element - Staggered Cards */}
+            <div className="relative h-[600px] w-full flex items-center justify-center perspective-1000">
+              {/* Background Glows */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 blur-3xl rounded-full" />
 
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <Clock className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-semibold">Save Hours Weekly</div>
-                      <div className="text-sm text-muted-foreground">
-                        Seriously, track it. You'll be shocked.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <div className="font-semibold">Stay Consistent</div>
-                      <div className="text-sm text-muted-foreground">
-                        Algorithms love consistency. You love not thinking about
-                        it.
-                      </div>
-                    </div>
-                  </div>
+              {/* Card 1: Ship Faster (Top Left) */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, rotate: -6 }}
+                whileInView={{ opacity: 1, y: -60, rotate: -6 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="absolute left-0 md:left-8 top-20 w-64 p-6 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-xl shadow-2xl ring-1 ring-white/5"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-4">
+                  <Rocket className="w-6 h-6 text-blue-400" />
                 </div>
+                <h3 className="font-bold text-lg mb-1">Ship Faster</h3>
+                <p className="text-sm text-muted-foreground">
+                  Less time tweeting, more time shipping.
+                </p>
+              </motion.div>
 
-                {/* Decorative glow */}
-                <div className="absolute -z-10 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/10 blur-3xl rounded-full" />
-              </div>
-            </motion.div>
+              {/* Card 2: Save Hours (Center Right) */}
+              <motion.div
+                initial={{ opacity: 0, x: 40, rotate: 6 }}
+                whileInView={{ opacity: 1, x: 40,y: -100, rotate: 6 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="absolute right-0 md:right-8 top-1/2 -translate-y-1/2 w-64 p-6 rounded-2xl border border-white/10 bg-card/60 backdrop-blur-xl shadow-2xl ring-1 ring-white/5 z-20"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-white/10 flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-amber-400" />
+                </div>
+                <h3 className="font-bold text-lg mb-1">Save 10+ Hours</h3>
+                <p className="text-sm text-muted-foreground">
+                  Automate the boring stuff completely.
+                </p>
+              </motion.div>
+
+              {/* Card 3: Consistency (Bottom Left) */}
+              <motion.div
+                initial={{ opacity: 0, y: -40, rotate: -3 }}
+                whileInView={{ opacity: 1, y: 80, rotate: -3 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="absolute left-8 md:left-20 bottom-32 w-64 p-6 rounded-2xl border border-white/10 bg-card/30 backdrop-blur-xl shadow-2xl ring-1 ring-white/5 z-10"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-white/10 flex items-center justify-center mb-4">
+                  <TrendingUp className="w-6 h-6 text-emerald-400" />
+                </div>
+                <h3 className="font-bold text-lg mb-1">Stay Consistent</h3>
+                <p className="text-sm text-muted-foreground">
+                  Algorithms love it, you don't even think about it.
+                </p>
+              </motion.div>
+            </div>
           </div>
         </div>
       </section>
