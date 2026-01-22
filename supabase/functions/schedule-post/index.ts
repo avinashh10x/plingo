@@ -35,7 +35,7 @@ serve(async (req) => {
       {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   }
 
@@ -59,7 +59,7 @@ serve(async (req) => {
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -88,7 +88,7 @@ serve(async (req) => {
     const now = new Date();
     let delaySeconds = Math.max(
       0,
-      Math.floor((scheduledDate.getTime() - now.getTime()) / 1000)
+      Math.floor((scheduledDate.getTime() - now.getTime()) / 1000),
     );
 
     if (delaySeconds === 0) {
@@ -97,7 +97,7 @@ serve(async (req) => {
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -108,10 +108,10 @@ serve(async (req) => {
 
     // Check for existing schedules around the same time window (±5 minutes)
     const windowStart = new Date(
-      scheduledDate.getTime() - 5 * 60 * 1000
+      scheduledDate.getTime() - 5 * 60 * 1000,
     ).toISOString();
     const windowEnd = new Date(
-      scheduledDate.getTime() + 5 * 60 * 1000
+      scheduledDate.getTime() + 5 * 60 * 1000,
     ).toISOString();
 
     const { data: conflictingSchedules } = await supabaseClient
@@ -130,7 +130,7 @@ serve(async (req) => {
       console.log(
         `Smart scheduling: Added ${staggerOffset + randomDelay}s delay due to ${
           conflictingSchedules.length
-        } conflicting schedules`
+        } conflicting schedules`,
       );
     }
 
@@ -157,7 +157,7 @@ serve(async (req) => {
           {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -184,7 +184,7 @@ serve(async (req) => {
           {
             status: 402,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -201,7 +201,7 @@ serve(async (req) => {
           {
             status: 409,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
     }
@@ -235,6 +235,7 @@ serve(async (req) => {
           post_id,
           rule_id,
           scheduled_at,
+          platform,
           status: "scheduled",
         })
         .select()
@@ -274,7 +275,7 @@ serve(async (req) => {
           : `https://${supabaseUrl}`;
         const publishUrl = new URL(
           "/functions/v1/publish-post",
-          baseUrl
+          baseUrl,
         ).toString();
 
         // QStash v2 expects the destination URL in the path.
@@ -369,7 +370,7 @@ serve(async (req) => {
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -392,7 +393,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: unknown) {
     console.error("Schedule post error:", error);

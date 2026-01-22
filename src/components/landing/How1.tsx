@@ -59,7 +59,7 @@ const steps = [
 
 function How1() {
   return (
-    <section id="how-it-works" className="w-full z-20 py-20 px-4 md:px-8">
+    <section id="how-it-works" className="w-full z-20 py-20 px-6 md:px-8">
       <div className="max-w-7xl mx-auto space-y-24">
         <SectionTitle
           badgeIcon={<PenTool className="w-4 h-4 text-primary" />}

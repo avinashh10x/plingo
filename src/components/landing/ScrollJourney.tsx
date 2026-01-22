@@ -340,7 +340,7 @@ export default function JourneySection() {
                   {/* Step Number Circle */}
                   <div
                     ref={(el) => (circleRefs.current[index] = el)}
-                    className="relative w-12 h-12 rounded-full border-2 border-muted-foreground/30 bg-muted/50 flex items-center justify-center font-bold text-lg transition-all duration-300"
+                    className="relative w-12 h-12 rounded-full border-2 border-muted-foreground/30 bg-background flex items-center justify-center font-bold text-lg transition-all duration-300"
                   >
                     <span className="relative text-muted-foreground">
                       {step.id}

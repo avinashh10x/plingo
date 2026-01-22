@@ -25,14 +25,14 @@ export const Hero = () => {
           <div className=" absolute w-[40%] top-0 right-0 h-full bg-gradient-to-l from-background via-background/80 to-transparent" />
         </div>
         {/* curve */}
-        <div className="z-5 aspect-square w-[95%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] -top-[5vw]  right-1/2 bg-background " />
+        <div className="z-5 aspect-square w-[90%] border-[2px] border-white [box-shadow:0px_0px_70px_5px_hsl(var(--primary)),inset_0px_2px_70px_20px_hsl(var(--primary))]  absolute translate-y-1/2 translate-x-1/2 rounded-full lg:-top-[35vw] md:-top-[30vw] -top-[5vw]  right-1/2 bg-background " />
 
         {/* fading the curve */}
         <div className="z-11 w-full h-[90%] bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
         <div className="z-12 w-full h-[80%]  bg-gradient-to-t from-background via-background/80 to-transparent absolute bottom-0 left-0" />
       </div>
 
-      <div className="max-w-7xl mx-auto text-center relative z-10  mb-[8vw]">
+      <div className="max-w-7xl mx-auto text-center relative z-10  mb-[8vw] px-6 ">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -93,7 +93,7 @@ export const Hero = () => {
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full md:w-auto rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 backdrop-blur-sm"
+                  className="w-full md:w-auto rounded-full px-8 h-12 text-base border-primary/30 text-foreground hover:bg-primary/10 hover:text-primary backdrop-blur-sm"
                 >
                   {/* <Sparkles className="h-4 w-4 mr-2" /> */}
                   How it Works

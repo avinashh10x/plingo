@@ -62,7 +62,7 @@ export const LandingHeader = () => {
         </Link>
 
         <motion.div
-          className="flex items-center gap-4"
+          className="flex items-center justify-center  gap-4"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
         >
@@ -71,7 +71,7 @@ export const LandingHeader = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="pl-2 pr-4 h-10 gap-2 hover:bg-muted/50 "
+                  className="pl-2 pr-0 h-10 gap-2 hover:bg-muted/50 "
                 >
                   <Avatar className="h-7 w-7 border border-border">
                     <AvatarImage

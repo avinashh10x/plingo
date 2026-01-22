@@ -36,7 +36,7 @@ export const Footer = () => {
       <div className="w-full pt-10 pb-6">
         <div
           ref={textRef}
-          className="w-full text-[33vw] md:text-[31.5vw] leading-[0.85] font-oswald text-foreground/10 select-none text-center font-black tracking-[-0.05em]"
+          className="w-full text-[33vw] md:text-[31.5vw] leading-[0.85] font-oswald text-foreground/10 hover:text-primary transition-colors duration-700 ease-in-out select-none text-center font-black tracking-[-0.05em]"
           style={{ fontStretch: "ultra-condensed" }}
           aria-hidden="true"
         >
