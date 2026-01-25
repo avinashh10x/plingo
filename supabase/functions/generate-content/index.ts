@@ -52,33 +52,63 @@ ${toneGuide}
 GOAL:
 Write compelling, scroll-stopping content that gets engagement. You understand what makes people click, share, and comment.
 
+HUMANIZATION RULES (CRITICAL):
+- Write like a real person typing on their phone or laptop
+- Use natural word choices a human would actually use in conversation
+- Vary sentence length naturally (mix short punchy lines with longer flowing ones)
+- Include minor imperfections that feel authentic (fragment sentences where natural, casual punctuation)
+- Think like a human: What would someone ACTUALLY say about this topic?
+- Avoid all AI-typical patterns and phrases (see banned list below)
+
+BANNED AI PATTERNS (NEVER USE THESE):
+❌ "In today's fast-paced world"
+❌ "Unlock the power of..."
+❌ "Game-changer"
+❌ "Revolutionary"
+❌ "Dive deep into..."
+❌ "Let's explore..."
+❌ "Here's the thing..."
+❌ "At the end of the day..."
+❌ "Behold"
+❌ "Embark on a journey"
+❌ "Delve into"
+❌ "Navigate the landscape"
+❌ Excessive use of "leverage," "optimize," "synergy"
+❌ Generic motivational clichés unless specifically requested
+❌ Overly dramatic or grandiose language
+❌ Starting every sentence with "Imagine if..."
+
 WRITING RULES:
 - Match the requested tone exactly — this is your personality for this conversation
-- Write like a human, not a robot
-- No filler phrases like "Behold," "Let's dive in," "Here's the thing"
-- No cringe motivational quotes unless that's the tone requested
-- Be concise — every word should earn its place
+- Write like a REAL human, not a corporate robot or motivational poster
+- Sound like someone who's knowledgeable but approachable
+- Use contractions naturally (I'm, you're, don't) unless formal tone is specified
+- Vary your sentence structure (don't start every sentence the same way)
+- Be specific and concrete, not vague and abstract
 - Never use markdown formatting. Return plain text only.
+- No filler or fluff — every word must add value
 
 CONTENT QUALITY:
-- Hook readers in the first line
+- Hook readers in the first line with something interesting, not obvious
 - Make it relevant and CURRENT — reference recent trends, events, or timely topics when applicable
 - Based on real trends, not made-up facts
 - No fake statistics or hallucinated data
+- Use specific examples instead of generic statements
 - Platform-aware:
-  - Twitter/X → max 280 chars
-  - LinkedIn → professional narrative
-  - Instagram → caption-friendly
-- Hashtags: relevant & limited (1-2 max)
+  - Twitter/X → max 280 chars, punchy and direct
+  - LinkedIn → professional narrative, storytelling
+  - Instagram → caption-friendly, visual context
+- Hashtags: relevant & limited (1-2 max), not spammy
 
 MULTIPLE POSTS:
 When asked for multiple posts:
 - Each must feel distinct, not just rephrased
-- Vary the angle, hook, or format
-- Different CTA approaches
+- Vary the angle, hook, or format completely
+- Different CTA approaches (question, statement, challenge, etc.)
+- Change up the structure and voice between posts
 
 OUTPUT STYLE:
-Short, punchy, effective. No emojis unless it fits the tone.`;
+Short, punchy, effective. Sound like a real person. No emojis unless it genuinely fits the tone and platform.`;
 };
 
 // Strip markdown formatting from text
@@ -107,7 +137,7 @@ interface ChatMessage {
 function buildMessages(
   systemPrompt: string,
   chatHistory: ChatMessage[],
-  currentPrompt: string
+  currentPrompt: string,
 ): Array<{ role: string; content: string }> {
   const messages: Array<{ role: string; content: string }> = [
     { role: "system", content: systemPrompt },
@@ -130,14 +160,14 @@ async function callHuggingFace(
   token: string,
   modelId: string,
   messages: Array<{ role: string; content: string }>,
-  timeout: number = 60000
+  timeout: number = 60000,
 ): Promise<string> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
   try {
     console.log(
-      `Calling HF model: ${modelId} with ${messages.length} messages`
+      `Calling HF model: ${modelId} with ${messages.length} messages`,
     );
 
     const response = await fetch(HF_API_URL, {
@@ -173,7 +203,7 @@ async function callHuggingFace(
       }
 
       throw new Error(
-        `API error: ${response.status} - ${errorText.slice(0, 100)}`
+        `API error: ${response.status} - ${errorText.slice(0, 100)}`,
       );
     }
 
@@ -199,7 +229,7 @@ async function callHuggingFace(
 async function callLLM(
   token: string,
   selectedModel: string,
-  messages: Array<{ role: string; content: string }>
+  messages: Array<{ role: string; content: string }>,
 ): Promise<{ text: string; model: string }> {
   const primaryModelId = MODELS[selectedModel] || MODELS["mistral-7b"];
   const fallbackModelId =
@@ -250,7 +280,7 @@ serve(async (req) => {
       });
     }
 
-    const postCount = Math.min(Math.max(1, parseInt(count) || 1), 10);
+    const postCount = Math.min(Math.max(1, parseInt(count) || 1), 35);
     const isChat = type === "chat";
 
     // Get Hugging Face Token
@@ -266,7 +296,7 @@ serve(async (req) => {
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -329,17 +359,17 @@ Keep responses concise and suitable for social media.`;
     const messages = buildMessages(
       systemPrompt,
       chatHistory as ChatMessage[],
-      taskPrompt
+      taskPrompt,
     );
 
     console.log(
-      `Generating content with model: ${model}, type: ${type}, history: ${chatHistory.length} messages`
+      `Generating content with model: ${model}, type: ${type}, history: ${chatHistory.length} messages`,
     );
 
     const { text: generatedText, model: usedModel } = await callLLM(
       HF_TOKEN,
       model,
-      messages
+      messages,
     );
 
     if (!generatedText) {
@@ -350,7 +380,7 @@ Keep responses concise and suitable for social media.`;
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -376,7 +406,7 @@ Keep responses concise and suitable for social media.`;
       JSON.stringify({ content: result, model: usedModel, type }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: any) {
     console.error("Error in generate-content function:", error);

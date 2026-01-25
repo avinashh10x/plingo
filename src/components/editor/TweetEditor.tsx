@@ -23,7 +23,7 @@ import { CompactEditorCard } from "./CompactEditorCard";
 import { BulkSchedulerModal } from "./BulkSchedulerModal";
 import { toast } from "@/hooks/use-toast";
 
-const MAX_CARDS = 30;
+const MAX_CARDS = 35;
 
 export const TweetEditor = () => {
   const {
@@ -47,7 +47,9 @@ export const TweetEditor = () => {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -67,7 +69,7 @@ export const TweetEditor = () => {
         reorderEditorPosts(arrayMove(editorPosts, oldIndex, newIndex));
       }
     },
-    [editorPosts, reorderEditorPosts]
+    [editorPosts, reorderEditorPosts],
   );
 
   const handleCardFocus = useCallback((postId: string) => {
@@ -241,7 +243,7 @@ export const TweetEditor = () => {
                   key={post.id}
                   onClick={() =>
                     handleIndicatorClick(
-                      editorPosts.findIndex((p) => p.id === post.id)
+                      editorPosts.findIndex((p) => p.id === post.id),
                     )
                   }
                   className={`rounded-full ${

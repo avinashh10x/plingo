@@ -72,7 +72,7 @@ export const CompactChatInput = ({
     const val = e.target.value;
     if (
       val === "" ||
-      (/^\d+$/.test(val) && parseInt(val) >= 0 && parseInt(val) <= 10)
+      (/^\d+$/.test(val) && parseInt(val) >= 0 && parseInt(val) <= 35)
     ) {
       onPostCountChange(val);
     }
@@ -89,7 +89,7 @@ export const CompactChatInput = ({
       textarea.style.height = "auto";
       const newHeight = Math.min(
         Math.max(textarea.scrollHeight, minHeight),
-        maxHeight
+        maxHeight,
       );
       textarea.style.height = `${newHeight}px`;
     } else {
@@ -175,7 +175,7 @@ export const CompactChatInput = ({
                           m.badge === "Fast" &&
                             "bg-green-500/20 text-green-500",
                           m.badge === "Creative" &&
-                            "bg-purple-500/20 text-purple-500"
+                            "bg-purple-500/20 text-purple-500",
                         )}
                       >
                         {m.badge}
@@ -202,7 +202,7 @@ export const CompactChatInput = ({
             placeholder="0"
             value={postCount}
             onChange={handlePostCountChange}
-            className="h-5 w-8 px-1 text-[10px] text-center bg-muted/30 border-border"
+            className="h-5 w-10 px-1 text-[10px] text-center bg-muted/30 border-border"
           />
           <span className="text-[10px] text-muted-foreground">posts</span>
         </div>

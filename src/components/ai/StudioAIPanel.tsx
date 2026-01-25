@@ -41,7 +41,7 @@ export const StudioAIPanel = () => {
           id: `chat-${currentChatId}-${i}`,
           content: m.content,
           isUserMessage: m.role === "user",
-        })
+        }),
       );
       setGeneratedItems(allMessages);
     } else {
@@ -54,7 +54,7 @@ export const StudioAIPanel = () => {
 
     // Check 10 message limit per chat
     const currentMessageCount = currentChat?.messages?.length || 0;
-    const MAX_MESSAGES_PER_CHAT = 10;
+    const MAX_MESSAGES_PER_CHAT = 100;
 
     if (currentMessageCount >= MAX_MESSAGES_PER_CHAT) {
       toast({
@@ -92,7 +92,7 @@ export const StudioAIPanel = () => {
             tone,
             chatHistory,
           },
-        }
+        },
       );
 
       if (error) throw error;
