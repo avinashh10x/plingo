@@ -44,12 +44,12 @@ async function hmacSha256Base64Url(data: string, key: string): Promise<string> {
     new TextEncoder().encode(key.trim()),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const sig = await crypto.subtle.sign(
     "HMAC",
     cryptoKey,
-    new TextEncoder().encode(data)
+    new TextEncoder().encode(data),
   );
   return bytesToBase64Url(new Uint8Array(sig));
 }
@@ -57,7 +57,7 @@ async function hmacSha256Base64Url(data: string, key: string): Promise<string> {
 async function sha256Base64Url(body: string): Promise<string> {
   const digest = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(body)
+    new TextEncoder().encode(body),
   );
   return bytesToBase64Url(new Uint8Array(digest));
 }
@@ -81,7 +81,7 @@ async function verifyQStashSignature(opts: {
   try {
     header = JSON.parse(new TextDecoder().decode(base64UrlToBytes(headerB64)));
     payload = JSON.parse(
-      new TextDecoder().decode(base64UrlToBytes(payloadB64))
+      new TextDecoder().decode(base64UrlToBytes(payloadB64)),
     );
   } catch (e) {
     console.log("Failed to parse JWT header/payload:", e);
@@ -143,18 +143,18 @@ async function encryptToken(token: string, key: string): Promise<string> {
     new TextEncoder().encode(key.slice(0, 32).padEnd(32, "0")),
     { name: "AES-GCM" },
     false,
-    ["encrypt"]
+    ["encrypt"],
   );
 
   const encrypted = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
     keyMaterial,
-    new TextEncoder().encode(token)
+    new TextEncoder().encode(token),
   );
 
   const ivBase64 = btoa(String.fromCharCode(...iv));
   const encryptedBase64 = btoa(
-    String.fromCharCode(...new Uint8Array(encrypted))
+    String.fromCharCode(...new Uint8Array(encrypted)),
   );
 
   return `${ivBase64}:${encryptedBase64}`;
@@ -163,13 +163,13 @@ async function encryptToken(token: string, key: string): Promise<string> {
 // Decrypt token using AES-GCM
 async function decryptToken(
   encryptedToken: string,
-  key: string
+  key: string,
 ): Promise<string> {
   try {
     const [ivBase64, encryptedBase64] = encryptedToken.split(":");
     const iv = Uint8Array.from(atob(ivBase64), (c) => c.charCodeAt(0));
     const encrypted = Uint8Array.from(atob(encryptedBase64), (c) =>
-      c.charCodeAt(0)
+      c.charCodeAt(0),
     );
 
     const keyMaterial = await crypto.subtle.importKey(
@@ -177,13 +177,13 @@ async function decryptToken(
       new TextEncoder().encode(key.slice(0, 32).padEnd(32, "0")),
       { name: "AES-GCM" },
       false,
-      ["decrypt"]
+      ["decrypt"],
     );
 
     const decrypted = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       keyMaterial,
-      encrypted
+      encrypted,
     );
 
     return new TextDecoder().decode(decrypted);
@@ -295,7 +295,7 @@ const platformAdapters: Record<
   {
     post: (
       content: string,
-      accessToken: string
+      accessToken: string,
     ) => Promise<{ success: boolean; postId?: string; error?: string }>;
   }
 > = {
@@ -317,7 +317,7 @@ const platformAdapters: Record<
       console.log(
         "Twitter API response status:",
         response.status,
-        response.ok ? "success" : "failed"
+        response.ok ? "success" : "failed",
       );
 
       if (!response.ok) {
@@ -392,7 +392,7 @@ const platformAdapters: Record<
 
       // Get Threads user ID
       const userResponse = await fetch(
-        `https://graph.threads.net/v1.0/me?fields=id&access_token=${accessToken}`
+        `https://graph.threads.net/v1.0/me?fields=id&access_token=${accessToken}`,
       );
 
       if (!userResponse.ok) {
@@ -414,7 +414,7 @@ const platformAdapters: Record<
             text: content,
             access_token: accessToken,
           }),
-        }
+        },
       );
 
       const createData = await createResponse.json();
@@ -445,7 +445,7 @@ const platformAdapters: Record<
             creation_id: containerId,
             access_token: accessToken,
           }),
-        }
+        },
       );
 
       const publishData = await publishResponse.json();
@@ -542,7 +542,7 @@ serve(async (req) => {
           jwtPayload = JSON.parse(atob(normalized + padding));
           console.log(
             "QStash request received from:",
-            jwtPayload?.iss || "unknown"
+            jwtPayload?.iss || "unknown",
           );
         } catch (e) {
           console.error("Failed to parse JWT payload");
@@ -577,14 +577,14 @@ serve(async (req) => {
     } else if (!authHeader) {
       // No QStash signature and no auth header - reject
       console.error(
-        "Missing authentication - no QStash signature or Authorization header"
+        "Missing authentication - no QStash signature or Authorization header",
       );
       return new Response(
         JSON.stringify({ error: "Unauthorized - authentication required" }),
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     } else {
       // Direct user call with Supabase auth - verify the JWT
@@ -604,7 +604,7 @@ serve(async (req) => {
             {
               status: 401,
               headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
+            },
           );
         }
 
@@ -616,7 +616,7 @@ serve(async (req) => {
           {
             status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
     }
@@ -658,7 +658,7 @@ serve(async (req) => {
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        },
       );
     }
 
@@ -676,11 +676,12 @@ serve(async (req) => {
       });
     }
 
-    // 2. Check Global Rate Limit (60 seconds between posts)
+    // 2. Check Per-Platform Rate Limit (30 seconds between posts to the same platform)
     const { data: lastPost, error: lastPostError } = await supabase
       .from("posts")
       .select("created_at")
       .eq("user_id", post.user_id)
+      .contains("platforms", [platform]) // Only check same platform
       .neq("id", post_id) // Exclude current
       .in("status", ["posted", "posting"])
       .order("created_at", { ascending: false })
@@ -691,8 +692,8 @@ serve(async (req) => {
       const lastPostTime = new Date(lastPost.created_at).getTime();
       const timeDiff = (now.getTime() - lastPostTime) / 1000; // seconds
 
-      if (timeDiff < 60) {
-        const waitTime = Math.ceil(60 - timeDiff);
+      if (timeDiff < 30) {
+        const waitTime = Math.ceil(30 - timeDiff);
         const msg = `Please wait ${waitTime}s before posting again`;
         await supabase
           .from("posts")
@@ -725,7 +726,7 @@ serve(async (req) => {
           {
             status: 500,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
 
@@ -771,7 +772,7 @@ serve(async (req) => {
           {
             status: 409,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
     }
@@ -811,7 +812,7 @@ serve(async (req) => {
     // Decrypt access token
     let accessToken = await decryptToken(
       platformData.access_token_encrypted,
-      encryptionKey
+      encryptionKey,
     );
 
     // Check if token is expired and refresh if needed
@@ -850,7 +851,7 @@ serve(async (req) => {
 
       const refreshToken = await decryptToken(
         platformData.refresh_token_encrypted,
-        encryptionKey
+        encryptionKey,
       );
 
       if (platform === "twitter") {
@@ -891,14 +892,14 @@ serve(async (req) => {
             headers: {
               "Content-Type": "application/x-www-form-urlencoded",
               Authorization: `Basic ${btoa(
-                `${twitterClientId}:${twitterClientSecret}`
+                `${twitterClientId}:${twitterClientSecret}`,
               )}`,
             },
             body: new URLSearchParams({
               grant_type: "refresh_token",
               refresh_token: refreshToken,
             }),
-          }
+          },
         );
 
         const tokenText = await tokenResponse.text();
@@ -913,7 +914,7 @@ serve(async (req) => {
           const err = String(
             tokens?.error_description ??
               tokens?.error ??
-              `Twitter refresh failed (status ${tokenResponse.status})`
+              `Twitter refresh failed (status ${tokenResponse.status})`,
           );
           console.error("Twitter token refresh failed:", err, tokens);
 
@@ -956,7 +957,7 @@ serve(async (req) => {
         const updates: Record<string, unknown> = {
           access_token_encrypted: await encryptToken(
             updatedAccessToken,
-            encryptionKey
+            encryptionKey,
           ),
           access_token_hash: hashToken(updatedAccessToken),
           expires_at: expiresAt,
@@ -968,7 +969,7 @@ serve(async (req) => {
           const updatedRefreshToken = String(tokens.refresh_token);
           updates.refresh_token_encrypted = await encryptToken(
             updatedRefreshToken,
-            encryptionKey
+            encryptionKey,
           );
           updates.refresh_token_hash = hashToken(updatedRefreshToken);
         }
@@ -1018,7 +1019,7 @@ serve(async (req) => {
         const refreshResponse = await fetch(
           `https://graph.threads.net/access_token?` +
             `grant_type=th_refresh_token&` +
-            `access_token=${accessToken}`
+            `access_token=${accessToken}`,
         );
 
         const refreshData = await refreshResponse.json();
@@ -1053,7 +1054,7 @@ serve(async (req) => {
 
         const updatedAccessToken = refreshData.access_token;
         const expiresAt = new Date(
-          Date.now() + refreshData.expires_in * 1000
+          Date.now() + refreshData.expires_in * 1000,
         ).toISOString();
 
         await supabase
@@ -1061,7 +1062,7 @@ serve(async (req) => {
           .update({
             access_token_encrypted: await encryptToken(
               updatedAccessToken,
-              encryptionKey
+              encryptionKey,
             ),
             access_token_hash: hashToken(updatedAccessToken),
             expires_at: expiresAt,
@@ -1074,7 +1075,7 @@ serve(async (req) => {
         console.log("Threads token refreshed successfully");
       } else {
         console.log(
-          `Token refresh not yet implemented for platform: ${platform}`
+          `Token refresh not yet implemented for platform: ${platform}`,
         );
       }
     }
@@ -1119,63 +1120,10 @@ serve(async (req) => {
     // Convert sanitized HTML content to plain text before posting
     const plainTextContent = htmlToPlainText(contentValidation.sanitized);
 
-    // Check usage limit before posting
-    const monthYear = new Date().toISOString().slice(0, 7); // YYYY-MM format
-    const POST_LIMIT = 20; // Monthly limit per platform
-
-    const { data: usageData } = await supabase
-      .from("user_usage")
-      .select("posts_used")
-      .eq("user_id", post.user_id)
-      .eq("platform", platform)
-      .eq("month_year", monthYear)
-      .single();
-
-    const currentUsage = usageData?.posts_used ?? 0;
-
-    if (currentUsage >= POST_LIMIT) {
-      const limitError = `Monthly limit of ${POST_LIMIT} posts for ${platform} exceeded`;
-      console.log(limitError);
-
-      await supabase
-        .from("posts")
-        .update({ status: "failed", error_message: limitError })
-        .eq("id", post_id);
-
-      if (schedule_id) {
-        await supabase
-          .from("post_schedules")
-          .update({ status: "failed", error_message: limitError })
-          .eq("id", schedule_id);
-      }
-
-      return new Response(JSON.stringify({ error: limitError }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     // Post using adapter
     const result = await adapter.post(plainTextContent, accessToken);
 
     if (result.success) {
-      // Increment usage counter
-      if (usageData) {
-        await supabase
-          .from("user_usage")
-          .update({ posts_used: currentUsage + 1 })
-          .eq("user_id", post.user_id)
-          .eq("platform", platform)
-          .eq("month_year", monthYear);
-      } else {
-        await supabase.from("user_usage").insert({
-          user_id: post.user_id,
-          platform,
-          month_year: monthYear,
-          posts_used: 1,
-        });
-      }
-
       // Update post status
       await supabase
         .from("posts")
@@ -1205,7 +1153,7 @@ serve(async (req) => {
       });
 
       console.log(
-        `Successfully posted to ${platform}, post ID: ${result.postId}`
+        `Successfully posted to ${platform}, post ID: ${result.postId}`,
       );
     } else {
       // Post failed
@@ -1262,7 +1210,7 @@ serve(async (req) => {
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (error: unknown) {
     console.error("Publish error:", error);

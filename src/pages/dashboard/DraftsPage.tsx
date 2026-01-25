@@ -126,7 +126,7 @@ export const DraftsPage = () => {
   const [editContent, setEditContent] = useState("");
   const [reschedulingPost, setReschedulingPost] = useState<any>(null);
   const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>(
-    undefined
+    undefined,
   );
   // State for Post Now confirmation
   const [postNowConfirm, setPostNowConfirm] = useState<any>(null);
@@ -283,10 +283,10 @@ export const DraftsPage = () => {
                               post.status === "posted"
                                 ? "default"
                                 : post.status === "scheduled"
-                                ? "secondary"
-                                : post.status === "failed"
-                                ? "destructive"
-                                : "outline"
+                                  ? "secondary"
+                                  : post.status === "failed"
+                                    ? "destructive"
+                                    : "outline"
                             }
                             className="text-xs"
                           >
@@ -297,17 +297,17 @@ export const DraftsPage = () => {
                             {post.status === "posted" && post.posted_at
                               ? `Posted ${format(
                                   new Date(post.posted_at),
-                                  "MMM d, h:mm a"
+                                  "MMM d, h:mm a",
                                 )}`
                               : post.status === "scheduled" && post.scheduled_at
-                              ? `Scheduled ${format(
-                                  new Date(post.scheduled_at),
-                                  "MMM d, h:mm a"
-                                )}`
-                              : `Created ${format(
-                                  new Date(post.created_at),
-                                  "MMM d, h:mm a"
-                                )}`}
+                                ? `Scheduled ${format(
+                                    new Date(post.scheduled_at),
+                                    "MMM d, h:mm a",
+                                  )}`
+                                : `Created ${format(
+                                    new Date(post.created_at),
+                                    "MMM d, h:mm a",
+                                  )}`}
                           </span>
                         </div>
                       </div>
@@ -355,7 +355,7 @@ export const DraftsPage = () => {
                                 setReschedulingPost(post);
                                 if (post.scheduled_at) {
                                   setNewScheduleDate(
-                                    new Date(post.scheduled_at)
+                                    new Date(post.scheduled_at),
                                   );
                                 }
                               }}
@@ -464,7 +464,7 @@ export const DraftsPage = () => {
                   await schedulePost(
                     reschedulingPost.id,
                     newDate,
-                    reschedulingPost.platforms
+                    reschedulingPost.platforms,
                   );
                   setReschedulingPost(null);
                 }
@@ -491,10 +491,14 @@ export const DraftsPage = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (postNowConfirm) {
-                  postNowConfirm.platforms?.forEach((p: string) =>
-                    publishNow(postNowConfirm.id, p)
+                  const platforms = postNowConfirm.platforms || [];
+                  // Publish to each platform - results are handled by publishNow toasts
+                  await Promise.allSettled(
+                    platforms.map((p: string) =>
+                      publishNow(postNowConfirm.id, p),
+                    ),
                   );
                   setPostNowConfirm(null);
                 }

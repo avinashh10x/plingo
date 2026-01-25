@@ -1,23 +1,7 @@
-// Usage limits per platform per month
-export const USAGE_LIMITS = {
-  twitter: 20,
-  // Add more platforms here as needed
-  instagram: 20,
-  linkedin: 20,
-  facebook: 20,
-  threads: 20,
-  tiktok: 20,
-  youtube: 20,
-  pinterest: 20,
-} as const;
-
-// Default limit for any platform not explicitly defined
-export const DEFAULT_POST_LIMIT = 20;
-
-// Twitter Free Tier API Limits (app-wide)
+// Twitter Free Tier API Limits (app-wide) - Reference only
 export const TWITTER_API_LIMITS = {
   write: 500, // 500 tweets per month for the app
-  read: 100,  // ~100 read requests per 15 min window
+  read: 100, // ~100 read requests per 15 min window
 } as const;
 
 // Smart scheduling settings
@@ -27,8 +11,3 @@ export const SCHEDULING_CONFIG = {
   // Maximum random delay added to scheduled posts (in seconds)
   MAX_RANDOM_DELAY_SECONDS: 120,
 } as const;
-
-// Get limit for a specific platform
-export function getPlatformLimit(platform: string): number {
-  return USAGE_LIMITS[platform as keyof typeof USAGE_LIMITS] ?? DEFAULT_POST_LIMIT;
-}

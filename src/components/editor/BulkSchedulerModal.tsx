@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   format,
@@ -41,6 +41,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAppStore, EditorPost, ScheduleMode } from "@/stores/appStore";
 import { usePosts, ScheduleRule } from "@/hooks/usePosts";
 import {
@@ -67,12 +69,106 @@ const DAY_MAP: Record<string, number> = {
   saturday: 6,
 };
 
-// Generate time slots from 00:00 to 23:30 in 30-minute intervals
-const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
-  const hours = Math.floor(i / 2);
-  const minutes = i % 2 === 0 ? "00" : "30";
-  return `${hours.toString().padStart(2, "0")}:${minutes}`;
-});
+// Time Input Component (same as DateTimePicker)
+type Period = "AM" | "PM";
+const TimeInputBulk = ({
+  time,
+  onTimeChange,
+}: {
+  time: string;
+  onTimeChange: (time: string) => void;
+}) => {
+  const [hours, minutes] = time.split(":");
+  const hour24 = parseInt(hours);
+  const hour12 = hour24 % 12 || 12;
+  const period: Period = hour24 >= 12 ? "PM" : "AM";
+
+  const [localHour, setLocalHour] = useState(hour12.toString());
+  const [localMinute, setLocalMinute] = useState(minutes);
+
+  useEffect(() => {
+    const [h, m] = time.split(":");
+    const h24 = parseInt(h);
+    const h12 = h24 % 12 || 12;
+    setLocalHour(h12.toString());
+    setLocalMinute(m);
+  }, [time]);
+
+  const commitHour = () => {
+    const newHour = parseInt(localHour) || 12;
+    const clampedHour = Math.min(Math.max(newHour, 1), 12);
+    const currentPeriod = parseInt(hours) >= 12 ? "PM" : "AM";
+    const hour24New =
+      currentPeriod === "PM" ? (clampedHour % 12) + 12 : clampedHour % 12;
+    setLocalHour(clampedHour.toString());
+    onTimeChange(`${hour24New.toString().padStart(2, "0")}:${minutes}`);
+  };
+
+  const commitMinute = () => {
+    const newMinute = parseInt(localMinute) || 0;
+    const clampedMinute = Math.min(Math.max(newMinute, 0), 59);
+    setLocalMinute(clampedMinute.toString().padStart(2, "0"));
+    onTimeChange(`${hours}:${clampedMinute.toString().padStart(2, "0")}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    if (newPeriod && (newPeriod === "AM" || newPeriod === "PM")) {
+      const currentHour = parseInt(hours);
+      let newHour: number;
+      if (newPeriod === "PM" && currentHour < 12) {
+        newHour = currentHour + 12;
+      } else if (newPeriod === "AM" && currentHour >= 12) {
+        newHour = currentHour - 12;
+      } else {
+        newHour = currentHour;
+      }
+      onTimeChange(`${newHour.toString().padStart(2, "0")}:${minutes}`);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      <Input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localHour}
+        onChange={(e) =>
+          setLocalHour(e.target.value.replace(/\D/g, "").slice(0, 2))
+        }
+        onBlur={commitHour}
+        onKeyDown={(e) => e.key === "Enter" && commitHour()}
+        className="w-12 h-9 text-center text-sm p-1"
+      />
+      <span className="text-lg">:</span>
+      <Input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localMinute}
+        onChange={(e) =>
+          setLocalMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
+        }
+        onBlur={commitMinute}
+        onKeyDown={(e) => e.key === "Enter" && commitMinute()}
+        className="w-12 h-9 text-center text-sm p-1"
+      />
+      <ToggleGroup
+        type="single"
+        value={period}
+        onValueChange={handlePeriodChange}
+        className="ml-1"
+      >
+        <ToggleGroupItem value="AM" className="h-9 px-3 text-xs">
+          AM
+        </ToggleGroupItem>
+        <ToggleGroupItem value="PM" className="h-9 px-3 text-xs">
+          PM
+        </ToggleGroupItem>
+      </ToggleGroup>
+    </div>
+  );
+};
 
 // Helper to strip HTML and get plain text
 const stripHtml = (html: string): string => {
@@ -91,7 +187,7 @@ export const BulkSchedulerModal = ({
   const { activeRules, isLoading: rulesLoading } = useScheduleRules();
 
   const [scheduleTab, setScheduleTab] = useState<"saved" | "custom">(
-    activeRules.length > 0 ? "saved" : "custom"
+    activeRules.length > 0 ? "saved" : "custom",
   );
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [mode, setMode] = useState<ScheduleMode>("daily");
@@ -197,7 +293,7 @@ export const BulkSchedulerModal = ({
     // Check for 365-day limit
     const oneYearFromNow = addDays(new Date(), 365);
     const hasLatePosts = scheduleAssignments.some((a) =>
-      isBefore(oneYearFromNow, a.scheduledAt)
+      isBefore(oneYearFromNow, a.scheduledAt),
     );
 
     if (hasLatePosts) {
@@ -232,7 +328,7 @@ export const BulkSchedulerModal = ({
         ({ post, scheduledAt }, index) => ({
           post_id: postIds[index],
           scheduled_at: scheduledAt.toISOString(), // Send exact ISO timestamp
-        })
+        }),
       );
 
       // Get platforms from first post (they should all be the same in bulk)
@@ -260,7 +356,9 @@ export const BulkSchedulerModal = ({
 
   const toggleCustomDay = (day: number) => {
     setCustomDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
+      prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day].sort(),
     );
   };
 
@@ -286,9 +384,9 @@ export const BulkSchedulerModal = ({
     const timeFormatted = format(
       setMinutes(
         setHours(new Date(), parseInt(rule.time.slice(0, 2))),
-        parseInt(rule.time.slice(3, 5))
+        parseInt(rule.time.slice(3, 5)),
       ),
-      "h:mm a"
+      "h:mm a",
     );
     if (rule.name) return `${rule.name} (${timeFormatted})`;
     return `${
@@ -297,7 +395,7 @@ export const BulkSchedulerModal = ({
   };
 
   const hasValidContent = selectedPosts.every(
-    (post) => stripHtml(post.content).trim().length > 0
+    (post) => stripHtml(post.content).trim().length > 0,
   );
   const canProceed =
     hasValidContent &&
@@ -385,7 +483,7 @@ export const BulkSchedulerModal = ({
                                 "w-full p-3 rounded-lg border text-left transition-colors",
                                 selectedRuleId === rule.id
                                   ? "bg-primary/10 border-primary"
-                                  : "bg-muted/50 border-border hover:border-primary/50"
+                                  : "bg-muted/50 border-border hover:border-primary/50",
                               )}
                               whileHover={{ scale: 1.01 }}
                               whileTap={{ scale: 0.99 }}
@@ -416,7 +514,7 @@ export const BulkSchedulerModal = ({
                               variant="outline"
                               className={cn(
                                 "w-full justify-start text-left font-normal",
-                                !startDate && "text-muted-foreground"
+                                !startDate && "text-muted-foreground",
                               )}
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -431,10 +529,17 @@ export const BulkSchedulerModal = ({
                             <Calendar
                               mode="single"
                               selected={startDate}
-                              onSelect={(date) => date && setStartDate(date)}
+                              onSelect={(date) => {
+                                if (date) {
+                                  setStartDate(date);
+                                  console.log("Date selected:", date);
+                                }
+                              }}
                               disabled={(date) =>
                                 isBefore(date, startOfDay(new Date()))
                               }
+                              defaultMonth={startDate}
+                              className="pointer-events-auto"
                               initialFocus
                             />
                           </PopoverContent>
@@ -473,7 +578,7 @@ export const BulkSchedulerModal = ({
                                     "px-3 py-2 rounded-md text-sm font-medium border transition-colors",
                                     customDays.includes(index)
                                       ? "bg-primary text-primary-foreground border-primary"
-                                      : "bg-muted border-border hover:border-primary/50"
+                                      : "bg-muted border-border hover:border-primary/50",
                                   )}
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
@@ -492,27 +597,7 @@ export const BulkSchedulerModal = ({
                           <Clock className="h-4 w-4 text-primary" />
                           Posting Time
                         </Label>
-                        <Select value={time} onValueChange={setTime}>
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select time" />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[200px]">
-                            {TIME_SLOTS.map((slot) => (
-                              <SelectItem key={slot} value={slot}>
-                                {format(
-                                  setMinutes(
-                                    setHours(
-                                      new Date(),
-                                      parseInt(slot.split(":")[0])
-                                    ),
-                                    parseInt(slot.split(":")[1])
-                                  ),
-                                  "h:mm a"
-                                )}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <TimeInputBulk time={time} onTimeChange={setTime} />
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -527,11 +612,11 @@ export const BulkSchedulerModal = ({
                         setMinutes(
                           setHours(
                             new Date(),
-                            parseInt(effectiveSchedule.time.split(":")[0])
+                            parseInt(effectiveSchedule.time.split(":")[0]),
                           ),
-                          parseInt(effectiveSchedule.time.split(":")[1])
+                          parseInt(effectiveSchedule.time.split(":")[1]),
                         ),
-                        "h:mm a"
+                        "h:mm a",
                       )}
                     </p>
                   </div>

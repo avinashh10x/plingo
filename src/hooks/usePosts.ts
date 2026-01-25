@@ -52,7 +52,7 @@ const POSTS_SYNC_EVENT = "plingo:posts-sync";
 function emitPostsSync(payload: PostsSyncPayload) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(
-    new CustomEvent<PostsSyncPayload>(POSTS_SYNC_EVENT, { detail: payload })
+    new CustomEvent<PostsSyncPayload>(POSTS_SYNC_EVENT, { detail: payload }),
   );
 }
 
@@ -170,7 +170,7 @@ export function usePosts({
           }
           case "update":
             return prev.map((p) =>
-              p.id === payload.id ? { ...p, ...payload.updates } : p
+              p.id === payload.id ? { ...p, ...payload.updates } : p,
             );
           case "delete":
             return prev.filter((p) => p.id !== payload.id);
@@ -187,7 +187,7 @@ export function usePosts({
 
   const createPost = async (
     content: string = "",
-    platforms: PlatformType[] = []
+    platforms: PlatformType[] = [],
   ): Promise<Post | null> => {
     if (!user) return null;
 
@@ -225,7 +225,7 @@ export function usePosts({
 
   const updatePost = async (
     id: string,
-    updates: Partial<Post>
+    updates: Partial<Post>,
   ): Promise<boolean> => {
     try {
       const { error } = await supabase
@@ -236,7 +236,7 @@ export function usePosts({
       if (error) throw error;
 
       setPosts((prev) =>
-        prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
+        prev.map((p) => (p.id === id ? { ...p, ...updates } : p)),
       );
       emitPostsSync({ type: "update", id, updates });
       return true;
@@ -296,7 +296,7 @@ export function usePosts({
   const schedulePost = async (
     id: string,
     scheduledAt: Date,
-    platforms?: PlatformType[]
+    platforms?: PlatformType[],
   ): Promise<boolean> => {
     const nextIso = scheduledAt.toISOString();
 
@@ -327,23 +327,23 @@ export function usePosts({
         const msg =
           typeof details === "string"
             ? details
-            : details?.error ?? error.message;
+            : (details?.error ?? error.message);
 
         // Provide user-friendly error messages
         if (msg.includes("past") || msg.includes("already passed")) {
           throw new Error(
-            "Cannot schedule posts in the past. Please select a future date and time."
+            "Cannot schedule posts in the past. Please select a future date and time.",
           );
         } else if (
           msg.includes("not connected") ||
           msg.includes("authentication")
         ) {
           throw new Error(
-            "Platform not connected. Please connect your account in Settings."
+            "Platform not connected. Please connect your account in Settings.",
           );
         } else if (msg.includes("maxDelay") || msg.includes("quota")) {
           throw new Error(
-            "Scheduling limit: On the free plan, you can only schedule up to 7 days in advance."
+            "Scheduling limit: On the free plan, you can only schedule up to 7 days in advance.",
           );
         } else {
           throw new Error(msg || "Failed to schedule post");
@@ -360,8 +360,8 @@ export function usePosts({
                 scheduled_at: nextIso,
                 ...(platforms ? { platforms } : {}),
               }
-            : p
-        )
+            : p,
+        ),
       );
 
       emitPostsSync({
@@ -386,7 +386,7 @@ export function usePosts({
           "post_scheduled",
           "Post scheduled",
           `Your post is scheduled for ${scheduledAt.toLocaleString()}`,
-          id
+          id,
         );
       }
 
@@ -413,7 +413,7 @@ export function usePosts({
 
   const bulkSchedule = async (
     schedules: Array<{ post_id: string; scheduled_at: string }>,
-    platforms?: PlatformType[]
+    platforms?: PlatformType[],
   ): Promise<boolean> => {
     try {
       // Get current session for explicit auth header
@@ -504,13 +504,15 @@ export function usePosts({
 
   const publishNow = async (
     id: string,
-    platform: PlatformType
+    platform: PlatformType,
+    options?: { silent?: boolean },
   ): Promise<boolean> => {
+    const silent = options?.silent ?? false;
     // Optimistically update UI
     setPosts((prev) =>
       prev.map((p) =>
-        p.id === id ? { ...p, status: "posting" as PostStatus } : p
-      )
+        p.id === id ? { ...p, status: "posting" as PostStatus } : p,
+      ),
     );
 
     try {
@@ -568,24 +570,24 @@ export function usePosts({
           cleanMsg.includes("authentication")
         ) {
           throw new Error(
-            `Your ${platform} account is not connected. Please reconnect in Settings.`
+            `Your ${platform} account is not connected. Please reconnect in Settings.`,
           );
         } else if (cleanMsg.includes("rate limit")) {
           throw new Error(
-            `Rate limit exceeded for ${platform}. Please try again later.`
+            `Rate limit exceeded for ${platform}. Please try again later.`,
           );
         } else if (
           cleanMsg.includes("invalid token") ||
           cleanMsg.includes("expired")
         ) {
           throw new Error(
-            `Your ${platform} session has expired. Please reconnect your account.`
+            `Your ${platform} session has expired. Please reconnect your account.`,
           );
         } else if (cleanMsg.includes("Insufficient credits")) {
           // Format: "Insufficient credits. Need 10, have 0."
           // Clean it up
           throw new Error(
-            cleanMsg.replace("Insufficient credits.", "Not enough credits.")
+            cleanMsg.replace("Insufficient credits.", "Not enough credits."),
           );
         } else {
           throw new Error(cleanMsg);
@@ -606,14 +608,16 @@ export function usePosts({
                 status: "posted" as PostStatus,
                 posted_at: new Date().toISOString(),
               }
-            : p
-        )
+            : p,
+        ),
       );
 
-      toast({
-        title: "✨ Post published!",
-        description: `Successfully posted to ${platform}`,
-      });
+      if (!silent) {
+        toast({
+          title: "✨ Post published!",
+          description: `Successfully posted to ${platform}`,
+        });
+      }
 
       // Force credit refresh
       window.dispatchEvent(new Event("plingo:refresh-credits"));
@@ -648,10 +652,12 @@ export function usePosts({
       // Customize title based on error type
       const isCreditError = errorMessage.toLowerCase().includes("credits");
 
-      toast({
-        title: isCreditError ? "Top up required" : "Publishing stopped",
-        description: errorMessage,
-      });
+      if (!silent) {
+        toast({
+          title: isCreditError ? "Top up required" : "Publishing stopped",
+          description: errorMessage,
+        });
+      }
       return false;
     }
   };

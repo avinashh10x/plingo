@@ -51,7 +51,7 @@ const PlatformIcon = ({
         "p-1.5 rounded-md transition-colors",
         selected
           ? "bg-primary/10 text-primary"
-          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted",
       )}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
@@ -151,9 +151,9 @@ export const CompactEditorCard = ({
     }
 
     const platforms = post.platforms || ["twitter"];
-    const connectedPlatform = platforms.find((p) => isConnected(p));
+    const connectedPlatforms = platforms.filter((p) => isConnected(p));
 
-    if (!connectedPlatform) {
+    if (connectedPlatforms.length === 0) {
       toast({
         title: "No connected platform",
         description: "Please connect a platform first.",
@@ -172,16 +172,55 @@ export const CompactEditorCard = ({
         return;
       }
 
-      const success = await publishNow(newPost.id, connectedPlatform as any);
-      if (success) {
-        // Only remove from editor if posting succeeded
+      // Publish to ALL connected platforms (silent mode - we'll show combined toast)
+      const results = await Promise.allSettled(
+        connectedPlatforms.map((p) =>
+          publishNow(newPost.id, p as any, { silent: true }),
+        ),
+      );
+
+      // Collect successful and failed platforms
+      const successPlatforms: string[] = [];
+      const failedPlatforms: string[] = [];
+
+      results.forEach((result, index) => {
+        const platform = connectedPlatforms[index];
+        if (result.status === "fulfilled" && result.value === true) {
+          successPlatforms.push(platform);
+        } else {
+          failedPlatforms.push(platform);
+        }
+      });
+
+      // Show combined toasts
+      if (successPlatforms.length > 0) {
+        const platformNames = successPlatforms
+          .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+          .join(", ");
+        toast({
+          title: "✨ Post published!",
+          description: `Successfully posted to ${platformNames}`,
+        });
+      }
+
+      if (failedPlatforms.length > 0) {
+        const platformNames = failedPlatforms
+          .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+          .join(", ");
+        toast({
+          title: "Publishing failed",
+          description: `Failed to post to ${platformNames}`,
+        });
+      }
+
+      if (successPlatforms.length > 0) {
+        // Only remove from editor if at least one posting succeeded
         if (editorPosts.length === 1) {
           clearEditorPosts();
         } else {
           removeEditorPost(post.id);
         }
       }
-      // publishNow already shows error toast if it fails
     } catch (error) {
       console.error("Post error:", error);
       toast({
@@ -226,7 +265,7 @@ export const CompactEditorCard = ({
         const ok = await schedulePost(
           newPost.id,
           scheduledAt,
-          platforms as any
+          platforms as any,
         );
         if (!ok) return;
 
@@ -261,7 +300,7 @@ export const CompactEditorCard = ({
           "group relative bg-card border border-border rounded-lg p-3 transition-all duration-200",
           isCurrentlyDragging && "opacity-90 shadow-xl ring-2 ring-primary/50",
           post.selected &&
-            "ring-2 ring-primary ring-offset-1 ring-offset-background"
+            "ring-2 ring-primary ring-offset-1 ring-offset-background",
         )}
       >
         {/* Left side: drag + checkbox */}
@@ -321,8 +360,8 @@ export const CompactEditorCard = ({
                     charCount > MAX_CHARS
                       ? "text-destructive"
                       : charCount > MAX_CHARS * 0.9
-                      ? "text-amber-500"
-                      : "text-muted-foreground"
+                        ? "text-amber-500"
+                        : "text-muted-foreground",
                   )}
                 >
                   {charCount}/{MAX_CHARS}
@@ -375,7 +414,7 @@ export const CompactEditorCard = ({
                     try {
                       await createPost(
                         post.content,
-                        post.platforms || ["twitter"]
+                        post.platforms || ["twitter"],
                       );
                       // Only remove if successful
                       if (editorPosts.length === 1) {

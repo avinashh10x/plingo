@@ -71,19 +71,19 @@ export const LandingHeader = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="pl-2 pr-0 h-10 gap-2 hover:bg-muted/50 "
+                  className="pl-2 pr-0 h-10 gap-2 hover:bg-muted/50 hover:text-primary "
                 >
                   <Avatar className="h-7 w-7 border border-border">
                     <AvatarImage
                       src={profile.avatar_url || undefined}
                       alt={profile.name || "User"}
                     />
-                    <AvatarFallback className="text-xs bg-primary/10 text-primary">
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary hover:text-primary">
                       {getInitials(profile.name, profile.email)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:block text-right w-full">
-                    <p className="text-sm font-medium leading-none">
+                    <p className="text-sm font-medium leading-none hover:text-primary">
                       {profile.name || "User"}
                     </p>
                   </div>
@@ -101,7 +101,7 @@ export const LandingHeader = () => {
                   onClick={toggleTheme}
                   className="cursor-pointer"
                 >
-                  {theme === "dark" ? (
+                  {theme === "light" ? (
                     <Sun className="mr-2 h-4 w-4" />
                   ) : (
                     <Moon className="mr-2 h-4 w-4" />

@@ -95,7 +95,7 @@ export const CalendarPage = () => {
   const [reschedulingPost, setReschedulingPost] = useState<any>(null);
   const [editContent, setEditContent] = useState("");
   const [newScheduleDate, setNewScheduleDate] = useState<Date | undefined>(
-    undefined
+    undefined,
   );
   // State for Post Now confirmation
   const [postNowConfirm, setPostNowConfirm] = useState<any>(null);
@@ -300,10 +300,10 @@ export const CalendarPage = () => {
             {viewMode === "week"
               ? `${format(
                   startOfWeek(currentMonth, { weekStartsOn: 0 }),
-                  "MMM d"
+                  "MMM d",
                 )} - ${format(
                   endOfWeek(currentMonth, { weekStartsOn: 0 }),
-                  "MMM d, yyyy"
+                  "MMM d, yyyy",
                 )}`
               : format(currentMonth, "MMMM yyyy")}
           </h2>
@@ -366,14 +366,14 @@ export const CalendarPage = () => {
                     isSelected
                       ? "border-primary bg-primary/5"
                       : "border-transparent hover:bg-muted/50",
-                    !isSameMonth(day, currentMonth) && "opacity-50"
+                    !isSameMonth(day, currentMonth) && "opacity-50",
                   )}
                 >
                   <span
                     className={cn(
                       "text-sm font-medium",
                       isToday && "text-primary",
-                      isSelected && "text-primary"
+                      isSelected && "text-primary",
                     )}
                   >
                     {format(day, "d")}
@@ -389,7 +389,7 @@ export const CalendarPage = () => {
                           post.status === "scheduled" &&
                             "bg-primary/10 text-primary",
                           post.status === "failed" &&
-                            "bg-destructive/10 text-destructive"
+                            "bg-destructive/10 text-destructive",
                         )}
                       >
                         <div className="flex items-center gap-0.5 shrink-0">
@@ -403,7 +403,7 @@ export const CalendarPage = () => {
                         <span className="text-[10px] text-muted-foreground ml-auto">
                           {format(
                             new Date(post.scheduled_at || post.posted_at!),
-                            "h:mm a"
+                            "h:mm a",
                           )}
                         </span>
                       </div>
@@ -444,7 +444,7 @@ export const CalendarPage = () => {
                     <div className="flex items-center  flex-col gap-2">
                       {(post.platforms || []).map((p: string) => (
                         <div className="bg-muted  p-2 rounded-lg bg-muted shrink-0">
-                        <PlatformIcon key={p} platform={p} />
+                          <PlatformIcon key={p} platform={p} />
                         </div>
                       ))}
                     </div>
@@ -455,8 +455,8 @@ export const CalendarPage = () => {
                             post.status === "posted"
                               ? "default"
                               : post.status === "failed"
-                              ? "destructive"
-                              : "secondary"
+                                ? "destructive"
+                                : "secondary"
                           }
                           className="text-xs"
                         >
@@ -478,7 +478,7 @@ export const CalendarPage = () => {
                                       <span key={`sep-${i}`}>, </span>,
                                       curr,
                                     ],
-                              []
+                              [],
                             )}
                         </div>
                       </div>
@@ -490,7 +490,7 @@ export const CalendarPage = () => {
                         <span className="text-xs text-muted-foreground">
                           {format(
                             new Date(post.scheduled_at || post.posted_at!),
-                            "h:mm a"
+                            "h:mm a",
                           )}
                         </span>
                       </div>
@@ -622,7 +622,7 @@ export const CalendarPage = () => {
                   await schedulePost(
                     reschedulingPost.id,
                     newDate,
-                    reschedulingPost.platforms
+                    reschedulingPost.platforms,
                   );
                   setReschedulingPost(null);
                 }
@@ -649,10 +649,13 @@ export const CalendarPage = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
+              onClick={async () => {
                 if (postNowConfirm) {
-                  postNowConfirm.platforms?.forEach((p: string) =>
-                    publishNow(postNowConfirm.id, p)
+                  const platforms = postNowConfirm.platforms || [];
+                  await Promise.allSettled(
+                    platforms.map((p: string) =>
+                      publishNow(postNowConfirm.id, p),
+                    ),
                   );
                   setPostNowConfirm(null);
                 }

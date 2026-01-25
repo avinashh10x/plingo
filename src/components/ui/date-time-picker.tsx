@@ -39,19 +39,37 @@ interface TimeInputProps {
 
 const TimeInput = ({ time, onTimeChange }: TimeInputProps) => {
   const [hours, minutes] = time.split(":");
-  const hour12 = parseInt(hours) % 12 || 12;
-  const period: Period = parseInt(hours) >= 12 ? "PM" : "AM";
+  const hour24 = parseInt(hours);
+  const hour12 = hour24 % 12 || 12;
+  const period: Period = hour24 >= 12 ? "PM" : "AM";
 
-  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newHour = parseInt(e.target.value) || 0;
+  // Local state for typing - allows free text input without immediate clamping
+  const [localHour, setLocalHour] = useState(hour12.toString());
+  const [localMinute, setLocalMinute] = useState(minutes);
+
+  // Sync local state when external time changes
+  useEffect(() => {
+    const [h, m] = time.split(":");
+    const h24 = parseInt(h);
+    const h12 = h24 % 12 || 12;
+    setLocalHour(h12.toString());
+    setLocalMinute(m);
+  }, [time]);
+
+  const commitHour = () => {
+    const newHour = parseInt(localHour) || 12;
     const clampedHour = Math.min(Math.max(newHour, 1), 12);
-    const hour24 = period === "PM" ? (clampedHour % 12) + 12 : clampedHour % 12;
-    onTimeChange(`${hour24.toString().padStart(2, "0")}:${minutes}`);
+    const currentPeriod = parseInt(hours) >= 12 ? "PM" : "AM";
+    const hour24New =
+      currentPeriod === "PM" ? (clampedHour % 12) + 12 : clampedHour % 12;
+    setLocalHour(clampedHour.toString());
+    onTimeChange(`${hour24New.toString().padStart(2, "0")}:${minutes}`);
   };
 
-  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newMinute = parseInt(e.target.value) || 0;
+  const commitMinute = () => {
+    const newMinute = parseInt(localMinute) || 0;
     const clampedMinute = Math.min(Math.max(newMinute, 0), 59);
+    setLocalMinute(clampedMinute.toString().padStart(2, "0"));
     onTimeChange(`${hours}:${clampedMinute.toString().padStart(2, "0")}`);
   };
 
@@ -73,20 +91,28 @@ const TimeInput = ({ time, onTimeChange }: TimeInputProps) => {
   return (
     <div className="flex items-center gap-1">
       <Input
-        type="number"
-        min={1}
-        max={12}
-        value={hour12}
-        onChange={handleHourChange}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localHour}
+        onChange={(e) =>
+          setLocalHour(e.target.value.replace(/\D/g, "").slice(0, 2))
+        }
+        onBlur={commitHour}
+        onKeyDown={(e) => e.key === "Enter" && commitHour()}
         className="w-12 h-8 text-center text-sm p-1"
       />
       <span>:</span>
       <Input
-        type="number"
-        min={0}
-        max={59}
-        value={minutes}
-        onChange={handleMinuteChange}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={localMinute}
+        onChange={(e) =>
+          setLocalMinute(e.target.value.replace(/\D/g, "").slice(0, 2))
+        }
+        onBlur={commitMinute}
+        onKeyDown={(e) => e.key === "Enter" && commitMinute()}
         className="w-12 h-8 text-center text-sm p-1"
       />
       <ToggleGroup
@@ -183,8 +209,7 @@ export const DateTimePicker = ({
           variant="outline"
           size="sm"
           className={cn("gap-1.5", compact && "!h-5 text-xs px-2 ")}
-          
-        > 
+        >
           <CalendarIcon className={cn("h-3 w-3", compact && "h-2 w-2 ")} />
           {triggerLabel || "Schedule"}
         </Button>
