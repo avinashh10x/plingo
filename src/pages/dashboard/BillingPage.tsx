@@ -158,7 +158,7 @@ export function BillingPage() {
             </span>
             <Clock className="h-4 w-4 text-blue-500" />
           </div>
-          <p className="text-2xl font-bold">{credits ?? 0}</p>
+          <p className="text-2xl font-bold">{formatTokens(credits ?? 0)}</p>
           <p className="text-xs text-muted-foreground">of 100 remaining</p>
         </div>
 

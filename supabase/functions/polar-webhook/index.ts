@@ -71,8 +71,10 @@ serve(async (req) => {
     const order = event.data;
     const orderId = order.id;
 
-    // Polar uses total_amount (in cents) — try multiple field names for safety
-    const amountCents = order.total_amount ?? order.amount ?? order.amount_subtotal ?? 0;
+    // Polar uses total_amount for what the user actually paid (can be 0 if 100% discount)
+    // subtotal_amount is the value of the product before discounts. We grant tokens based on subtotal.
+    const paidAmountCents = order.total_amount ?? order.amount ?? 0;
+    const grossAmountCents = order.subtotal_amount ?? order.amount ?? 0;
     const currency = order.currency ?? "usd";
     const checkoutId = order.checkout_id ?? null;
 
@@ -96,7 +98,8 @@ serve(async (req) => {
 
     console.log("Order parsed:", {
       orderId,
-      amountCents,
+      paidAmountCents,
+      grossAmountCents,
       currency,
       customerEmail,
       supabaseUserId,
@@ -122,7 +125,8 @@ serve(async (req) => {
           await processTokenGrant(supabase, {
             userId: profileData.user_id,
             orderId,
-            amountCents,
+            paidAmountCents,
+            grossAmountCents,
             checkoutId,
             customerEmail,
           });
@@ -144,7 +148,8 @@ serve(async (req) => {
     await processTokenGrant(supabase, {
       userId: supabaseUserId,
       orderId,
-      amountCents,
+      paidAmountCents,
+      grossAmountCents,
       checkoutId,
       customerEmail,
     });
@@ -170,12 +175,13 @@ async function processTokenGrant(
   params: {
     userId: string;
     orderId: string;
-    amountCents: number;
+    paidAmountCents: number;
+    grossAmountCents: number;
     checkoutId: string | null;
     customerEmail: string | null;
   },
 ) {
-  const { userId, orderId, amountCents, checkoutId, customerEmail } = params;
+  const { userId, orderId, paidAmountCents, grossAmountCents, checkoutId, customerEmail } = params;
 
   // Idempotency check
   const { data: existing } = await supabase
@@ -189,13 +195,13 @@ async function processTokenGrant(
     return;
   }
 
-  const tokensGranted = calculateTokens(amountCents);
-  console.log(`Granting ${tokensGranted} tokens for ${amountCents} cents to user ${userId}`);
+  const tokensGranted = calculateTokens(grossAmountCents);
+  console.log(`Granting ${tokensGranted} tokens for ${grossAmountCents} cents gross value (paid: ${paidAmountCents}) to user ${userId}`);
 
   // 1. Insert transaction record
   const { error: txError } = await supabase.from("token_transactions").insert({
     user_id: userId,
-    amount_cents: amountCents,
+    amount_cents: paidAmountCents,
     tokens_granted: tokensGranted,
     polar_order_id: orderId,
     polar_checkout_id: checkoutId,
