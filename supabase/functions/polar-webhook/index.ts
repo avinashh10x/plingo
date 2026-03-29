@@ -1,78 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+import { Webhook } from "npm:standardwebhooks";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
 };
-
-// ============================================================
-// Standard Webhooks Signature Verification
-// ============================================================
-
-function base64Decode(input: string): Uint8Array {
-  const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
-  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
-  const binary = atob(normalized + padding);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-  return btoa(binary);
-}
-
-async function verifyWebhookSignature(
-  body: string,
-  headers: { webhookId: string; webhookTimestamp: string; webhookSignature: string },
-  secret: string,
-): Promise<boolean> {
-  try {
-    const secretBytes = base64Decode(secret.startsWith("whsec_") ? secret.slice(6) : secret);
-    const signedContent = `${headers.webhookId}.${headers.webhookTimestamp}.${body}`;
-
-    // Verify timestamp tolerance (5 minutes)
-    const timestamp = parseInt(headers.webhookTimestamp, 10);
-    const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - timestamp) > 300) {
-      console.error("Webhook timestamp out of tolerance:", { timestamp, now, diff: now - timestamp });
-      return false;
-    }
-
-    const key = await crypto.subtle.importKey(
-      "raw",
-      secretBytes,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"],
-    );
-
-    const signature = await crypto.subtle.sign(
-      "HMAC",
-      key,
-      new TextEncoder().encode(signedContent),
-    );
-
-    const expectedSig = bytesToBase64(new Uint8Array(signature));
-    const signatures = headers.webhookSignature.split(" ");
-
-    for (const sig of signatures) {
-      const [version, sigValue] = sig.split(",");
-      if (version === "v1" && sigValue === expectedSig) {
-        return true;
-      }
-    }
-
-    console.error("No matching signature found");
-    return false;
-  } catch (err) {
-    console.error("Signature verification error:", err);
-    return false;
-  }
-}
 
 // ============================================================
 // Token Calculation: $3 = 1500 tokens → 5 tokens per cent
@@ -106,34 +40,19 @@ serve(async (req) => {
   try {
     const rawBody = await req.text();
 
-    // Extract Standard Webhooks headers
-    const webhookId = req.headers.get("webhook-id") ?? "";
-    const webhookTimestamp = req.headers.get("webhook-timestamp") ?? "";
-    const webhookSignature = req.headers.get("webhook-signature") ?? "";
+    console.log("Webhook received. Validating signature...");
 
-    console.log("Webhook received. Headers present:", {
-      hasId: !!webhookId,
-      hasTimestamp: !!webhookTimestamp,
-      hasSignature: !!webhookSignature,
-    });
-
-    if (!webhookId || !webhookTimestamp || !webhookSignature) {
-      console.error("Missing webhook headers");
-      return new Response(JSON.stringify({ error: "Missing webhook headers" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Verify signature
-    const isValid = await verifyWebhookSignature(
-      rawBody,
-      { webhookId, webhookTimestamp, webhookSignature },
-      webhookSecret,
-    );
-
-    if (!isValid) {
-      console.error("Invalid webhook signature");
+    // standardwebhooks expects "whsec_" prefix (Standard Webhooks format)
+    // Polar uses "polar_whs_" prefix for their secrets, so we swap it to conform.
+    const standardSecret = webhookSecret.replace("polar_whs_", "whsec_");
+    const webhook = new Webhook(standardSecret);
+    
+    let event: any;
+    try {
+      const headers = Object.fromEntries(req.headers.entries());
+      event = webhook.verify(rawBody, headers);
+    } catch (err) {
+      console.error("Invalid webhook signature:", err);
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -141,9 +60,6 @@ serve(async (req) => {
     }
 
     console.log("Webhook signature verified ✓");
-
-    // Parse event
-    const event = JSON.parse(rawBody);
     const eventType = event.type;
 
     console.log("Event type:", eventType);
