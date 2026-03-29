@@ -7,11 +7,10 @@ const corsHeaders = {
 };
 
 // ============================================================
-// Standard Webhooks Signature Verification (Polar uses this)
+// Standard Webhooks Signature Verification
 // ============================================================
 
 function base64Decode(input: string): Uint8Array {
-  // Handle base64url or standard base64
   const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
   const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
   const binary = atob(normalized + padding);
@@ -28,61 +27,55 @@ function bytesToBase64(bytes: Uint8Array): string {
 
 async function verifyWebhookSignature(
   body: string,
-  headers: {
-    webhookId: string;
-    webhookTimestamp: string;
-    webhookSignature: string;
-  },
+  headers: { webhookId: string; webhookTimestamp: string; webhookSignature: string },
   secret: string,
 ): Promise<boolean> {
-  // Standard Webhooks: secret is prefixed with "whsec_"
-  const secretBytes = base64Decode(secret.startsWith("whsec_") ? secret.slice(6) : secret);
+  try {
+    const secretBytes = base64Decode(secret.startsWith("whsec_") ? secret.slice(6) : secret);
+    const signedContent = `${headers.webhookId}.${headers.webhookTimestamp}.${body}`;
 
-  // Construct the signed content: "{msg_id}.{timestamp}.{body}"
-  const signedContent = `${headers.webhookId}.${headers.webhookTimestamp}.${body}`;
+    // Verify timestamp tolerance (5 minutes)
+    const timestamp = parseInt(headers.webhookTimestamp, 10);
+    const now = Math.floor(Date.now() / 1000);
+    if (Math.abs(now - timestamp) > 300) {
+      console.error("Webhook timestamp out of tolerance:", { timestamp, now, diff: now - timestamp });
+      return false;
+    }
 
-  // Verify timestamp is within tolerance (5 minutes)
-  const timestamp = parseInt(headers.webhookTimestamp, 10);
-  const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - timestamp) > 300) {
-    console.error("Webhook timestamp too old or too new:", { timestamp, now, diff: now - timestamp });
+    const key = await crypto.subtle.importKey(
+      "raw",
+      secretBytes,
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["sign"],
+    );
+
+    const signature = await crypto.subtle.sign(
+      "HMAC",
+      key,
+      new TextEncoder().encode(signedContent),
+    );
+
+    const expectedSig = bytesToBase64(new Uint8Array(signature));
+    const signatures = headers.webhookSignature.split(" ");
+
+    for (const sig of signatures) {
+      const [version, sigValue] = sig.split(",");
+      if (version === "v1" && sigValue === expectedSig) {
+        return true;
+      }
+    }
+
+    console.error("No matching signature found");
+    return false;
+  } catch (err) {
+    console.error("Signature verification error:", err);
     return false;
   }
-
-  // Compute HMAC-SHA256
-  const key = await crypto.subtle.importKey(
-    "raw",
-    secretBytes,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(signedContent),
-  );
-
-  const expectedSig = bytesToBase64(new Uint8Array(signature));
-
-  // The signature header can contain multiple sigs separated by spaces
-  // Each is prefixed with "v1,"
-  const signatures = headers.webhookSignature.split(" ");
-  for (const sig of signatures) {
-    const [version, sigValue] = sig.split(",");
-    if (version === "v1" && sigValue === expectedSig) {
-      return true;
-    }
-  }
-
-  console.error("No matching signature found");
-  return false;
 }
 
 // ============================================================
-// Token Calculation (SERVER-SIDE ONLY)
-// $3 = 1500 tokens → 500 tokens per dollar → 5 tokens per cent
+// Token Calculation: $3 = 1500 tokens → 5 tokens per cent
 // ============================================================
 function calculateTokens(amountCents: number): number {
   return amountCents * 5;
@@ -118,6 +111,12 @@ serve(async (req) => {
     const webhookTimestamp = req.headers.get("webhook-timestamp") ?? "";
     const webhookSignature = req.headers.get("webhook-signature") ?? "";
 
+    console.log("Webhook received. Headers present:", {
+      hasId: !!webhookId,
+      hasTimestamp: !!webhookTimestamp,
+      hasSignature: !!webhookSignature,
+    });
+
     if (!webhookId || !webhookTimestamp || !webhookSignature) {
       console.error("Missing webhook headers");
       return new Response(JSON.stringify({ error: "Missing webhook headers" }), {
@@ -141,16 +140,17 @@ serve(async (req) => {
       });
     }
 
-    console.log("Webhook signature verified successfully");
+    console.log("Webhook signature verified ✓");
 
     // Parse event
     const event = JSON.parse(rawBody);
     const eventType = event.type;
 
-    console.log("Received Polar event:", eventType);
+    console.log("Event type:", eventType);
+    console.log("Full event data keys:", Object.keys(event.data || {}));
 
-    // We only care about order.created for token fulfillment
-    if (eventType !== "order.created") {
+    // Accept both order.created and order.paid
+    if (eventType !== "order.created" && eventType !== "order.paid") {
       console.log(`Ignoring event type: ${eventType}`);
       return new Response(JSON.stringify({ received: true }), {
         status: 200,
@@ -160,135 +160,88 @@ serve(async (req) => {
 
     const order = event.data;
     const orderId = order.id;
-    const amountCents = order.amount; // Amount in cents
-    const currency = order.currency;
-    const customerEmail = order.customer?.email ?? order.customer_email ?? null;
+
+    // Polar uses total_amount (in cents) — try multiple field names for safety
+    const amountCents = order.total_amount ?? order.amount ?? order.amount_subtotal ?? 0;
+    const currency = order.currency ?? "usd";
     const checkoutId = order.checkout_id ?? null;
 
-    // Get the supabase_user_id from order metadata
-    const supabaseUserId = order.metadata?.supabase_user_id ?? null;
+    // Get customer email from multiple possible locations
+    const customerEmail =
+      order.customer?.email ??
+      order.customer_email ??
+      order.billing_address?.email ??
+      null;
 
-    console.log("Order details:", {
+    // Get supabase user_id from multiple possible locations:
+    // 1. metadata.supabase_user_id (our custom field)
+    // 2. customer.external_id (set via external_customer_id in checkout)
+    // 3. customer.metadata.supabase_user_id
+    const supabaseUserId =
+      order.metadata?.supabase_user_id ??
+      order.customer?.external_id ??
+      order.customer?.metadata?.supabase_user_id ??
+      order.custom_field_data?.supabase_user_id ??
+      null;
+
+    console.log("Order parsed:", {
       orderId,
       amountCents,
       currency,
       customerEmail,
       supabaseUserId,
       checkoutId,
+      orderStatus: order.status,
+      metadataKeys: Object.keys(order.metadata || {}),
+      customerKeys: Object.keys(order.customer || {}),
     });
 
     if (!supabaseUserId) {
-      console.error("No supabase_user_id in order metadata. Cannot credit tokens.");
-      // Still return 200 to prevent Polar from retrying
+      // Try to find user by email as fallback
+      console.warn("No supabase_user_id found. Attempting email lookup...");
+
+      if (customerEmail) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("user_id")
+          .eq("email", customerEmail)
+          .maybeSingle();
+
+        if (profileData?.user_id) {
+          console.log("Found user by email:", profileData.user_id);
+          await processTokenGrant(supabase, {
+            userId: profileData.user_id,
+            orderId,
+            amountCents,
+            checkoutId,
+            customerEmail,
+          });
+
+          return new Response(
+            JSON.stringify({ received: true, method: "email_lookup" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
+
+      console.error("Cannot identify user. No supabase_user_id and email lookup failed.");
       return new Response(
-        JSON.stringify({ error: "Missing supabase_user_id in metadata" }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
+        JSON.stringify({ error: "Cannot identify user", received: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    // Idempotency check: has this order already been processed?
-    const { data: existing } = await supabase
-      .from("token_transactions")
-      .select("id")
-      .eq("polar_order_id", orderId)
-      .maybeSingle();
-
-    if (existing) {
-      console.log(`Order ${orderId} already processed. Skipping duplicate.`);
-      return new Response(JSON.stringify({ received: true, duplicate: true }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Calculate tokens: cents × 5
-    const tokensGranted = calculateTokens(amountCents);
-
-    console.log(`Granting ${tokensGranted} tokens for $${(amountCents / 100).toFixed(2)} payment`);
-
-    // 1. Insert transaction record
-    const { error: txError } = await supabase.from("token_transactions").insert({
-      user_id: supabaseUserId,
-      amount_cents: amountCents,
-      tokens_granted: tokensGranted,
-      polar_order_id: orderId,
-      polar_checkout_id: checkoutId,
-      customer_email: customerEmail,
-      status: "completed",
+    await processTokenGrant(supabase, {
+      userId: supabaseUserId,
+      orderId,
+      amountCents,
+      checkoutId,
+      customerEmail,
     });
 
-    if (txError) {
-      console.error("Failed to insert token transaction:", txError);
-      return new Response(JSON.stringify({ error: "Database error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // 2. Credit purchased_tokens to user
-    // First check if user_credits row exists
-    const { data: userCredits, error: fetchError } = await supabase
-      .from("user_credits")
-      .select("purchased_tokens")
-      .eq("user_id", supabaseUserId)
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Failed to fetch user credits:", fetchError);
-      return new Response(JSON.stringify({ error: "Database error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    if (userCredits) {
-      // Update existing row
-      const newTotal = (userCredits.purchased_tokens ?? 0) + tokensGranted;
-      const { error: updateError } = await supabase
-        .from("user_credits")
-        .update({ purchased_tokens: newTotal, updated_at: new Date().toISOString() })
-        .eq("user_id", supabaseUserId);
-
-      if (updateError) {
-        console.error("Failed to update purchased_tokens:", updateError);
-        return new Response(JSON.stringify({ error: "Database error" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    } else {
-      // Create new row (edge case: user doesn't have credits row yet)
-      const { error: insertError } = await supabase.from("user_credits").insert({
-        user_id: supabaseUserId,
-        credits: 100,
-        purchased_tokens: tokensGranted,
-        last_reset_date: new Date().toISOString().split("T")[0],
-      });
-
-      if (insertError) {
-        console.error("Failed to insert user credits:", insertError);
-        return new Response(JSON.stringify({ error: "Database error" }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    console.log(`Successfully credited ${tokensGranted} tokens to user ${supabaseUserId}`);
-
     return new Response(
-      JSON.stringify({
-        received: true,
-        tokens_granted: tokensGranted,
-        user_id: supabaseUserId,
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
+      JSON.stringify({ received: true, success: true }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error) {
     console.error("Webhook handler error:", error);
@@ -298,3 +251,92 @@ serve(async (req) => {
     });
   }
 });
+
+// ============================================================
+// Process Token Grant (atomic)
+// ============================================================
+async function processTokenGrant(
+  supabase: any,
+  params: {
+    userId: string;
+    orderId: string;
+    amountCents: number;
+    checkoutId: string | null;
+    customerEmail: string | null;
+  },
+) {
+  const { userId, orderId, amountCents, checkoutId, customerEmail } = params;
+
+  // Idempotency check
+  const { data: existing } = await supabase
+    .from("token_transactions")
+    .select("id")
+    .eq("polar_order_id", orderId)
+    .maybeSingle();
+
+  if (existing) {
+    console.log(`Order ${orderId} already processed. Skipping.`);
+    return;
+  }
+
+  const tokensGranted = calculateTokens(amountCents);
+  console.log(`Granting ${tokensGranted} tokens for ${amountCents} cents to user ${userId}`);
+
+  // 1. Insert transaction record
+  const { error: txError } = await supabase.from("token_transactions").insert({
+    user_id: userId,
+    amount_cents: amountCents,
+    tokens_granted: tokensGranted,
+    polar_order_id: orderId,
+    polar_checkout_id: checkoutId,
+    customer_email: customerEmail,
+    status: "completed",
+  });
+
+  if (txError) {
+    // If it's a unique constraint violation, it's a duplicate
+    if (txError.code === "23505") {
+      console.log("Duplicate order detected via constraint. Skipping.");
+      return;
+    }
+    console.error("Failed to insert transaction:", txError);
+    throw txError;
+  }
+
+  // 2. Atomic credit update using upsert + increment
+  const { data: userCredits } = await supabase
+    .from("user_credits")
+    .select("purchased_tokens")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (userCredits) {
+    const newTotal = (userCredits.purchased_tokens ?? 0) + tokensGranted;
+    const { error: updateError } = await supabase
+      .from("user_credits")
+      .update({
+        purchased_tokens: newTotal,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+
+    if (updateError) {
+      console.error("Failed to update purchased_tokens:", updateError);
+      throw updateError;
+    }
+  } else {
+    const { error: insertError } = await supabase.from("user_credits").insert({
+      user_id: userId,
+      credits: 100,
+      purchased_tokens: tokensGranted,
+      last_reset_date: new Date().toISOString().split("T")[0],
+    });
+
+    if (insertError) {
+      console.error("Failed to insert user_credits:", insertError);
+      throw insertError;
+    }
+  }
+
+  console.log(`✓ Credited ${tokensGranted} tokens to user ${userId}`);
+}

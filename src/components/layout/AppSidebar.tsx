@@ -5,6 +5,7 @@ import {
   Calendar,
   FileText,
   Link2,
+  CreditCard,
   Settings,
   LogOut,
   Shield,
@@ -56,6 +57,12 @@ const navItems = [
     icon: Link2,
     path: "/dashboard/accounts",
     tourId: "accounts",
+  },
+  {
+    title: "Billing",
+    icon: CreditCard,
+    path: "/dashboard/billing",
+    tourId: "billing",
   },
   {
     title: "Settings",

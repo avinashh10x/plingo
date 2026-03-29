@@ -47,31 +47,17 @@ export const CreditsPanel = ({
 
     setIsCheckoutLoading(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error("No session found");
-        return;
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/polar-checkout`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({}),
+      const { data, error } = await supabase.functions.invoke("polar-checkout", {
+        body: {},
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error("Checkout error:", data);
+      if (error) {
+        console.error("Checkout error:", error);
         return;
       }
 
       // Redirect to Polar checkout
-      if (data.checkout_url) {
+      if (data?.checkout_url) {
         window.location.href = data.checkout_url;
       }
     } catch (error) {

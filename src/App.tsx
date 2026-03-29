@@ -60,6 +60,11 @@ const SettingsPage = lazy(() =>
     default: m.SettingsPage,
   })),
 );
+const BillingPage = lazy(() =>
+  import("./pages/dashboard/BillingPage").then((m) => ({
+    default: m.BillingPage,
+  })),
+);
 
 // Loading fallback for lazy components
 const PageLoader = () => (
@@ -311,6 +316,14 @@ const AppContent = () => {
               element={
                 <Suspense fallback={<PageLoader />}>
                   <SettingsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="billing"
+              element={
+                <Suspense fallback={<PageLoader />}>
+                  <BillingPage />
                 </Suspense>
               }
             />

@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -52,11 +51,12 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { amount, success_url } = body;
 
-    // Build checkout request
+    // Build checkout request — use external_customer_id for Polar's customer linking
     const checkoutPayload: Record<string, any> = {
       product_id: polarProductId,
       customer_email: user.email,
-      success_url: success_url || `${req.headers.get("origin") || "https://plingo.dev"}/dashboard?payment=success`,
+      external_customer_id: user.id,
+      success_url: success_url || `${req.headers.get("origin") || "https://plingo.byavi.in"}/dashboard?payment=success`,
       metadata: {
         supabase_user_id: user.id,
       },
@@ -67,9 +67,9 @@ serve(async (req) => {
       checkoutPayload.amount = amount;
     }
 
-    console.log("Creating Polar checkout session:", {
+    console.log("Creating Polar checkout:", {
       productId: polarProductId,
-      userEmail: user.email,
+      email: user.email,
       userId: user.id,
       amount: checkoutPayload.amount,
     });
@@ -87,7 +87,7 @@ serve(async (req) => {
     const polarData = await polarResponse.json();
 
     if (!polarResponse.ok) {
-      console.error("Polar API error:", polarData);
+      console.error("Polar API error:", JSON.stringify(polarData));
       return new Response(
         JSON.stringify({
           error: "Failed to create checkout session",
@@ -100,9 +100,8 @@ serve(async (req) => {
       );
     }
 
-    console.log("Polar checkout created:", polarData.id);
+    console.log("Checkout created:", polarData.id, "URL:", polarData.url);
 
-    // Return the checkout URL to the frontend
     return new Response(
       JSON.stringify({
         checkout_url: polarData.url,
