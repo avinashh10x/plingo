@@ -712,7 +712,7 @@ serve(async (req) => {
     if (!schedule_id) {
       const cost = platform === "twitter" ? 10 : 5; // Twitter=10, LinkedIn=5
 
-      // Fetch current credits
+      // Fetch current credits (free + purchased)
       const { data: userCredits, error: creditError } = await supabase
         .from("user_credits")
         .select("*")
@@ -731,23 +731,27 @@ serve(async (req) => {
       }
 
       // Initialize or Reset Logic (Lazy Load)
-      let currentCredits = userCredits?.credits ?? 100;
+      let freeCredits = userCredits?.credits ?? 100;
+      let purchasedTokens = userCredits?.purchased_tokens ?? 0;
       const lastReset = userCredits?.last_reset_date
         ? new Date(userCredits.last_reset_date)
         : new Date(0);
       const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
       if (lastReset < currentMonth || !userCredits) {
-        currentCredits = 100;
+        freeCredits = 100;
         await supabase.from("user_credits").upsert({
           user_id: post.user_id,
           credits: 100,
+          purchased_tokens: purchasedTokens,
           last_reset_date: today,
         });
       }
 
-      if (currentCredits < cost) {
-        const msg = `Insufficient credits. Need ${cost}, have ${currentCredits}.`;
+      const totalAvailable = freeCredits + purchasedTokens;
+
+      if (totalAvailable < cost) {
+        const msg = `Insufficient tokens. Need ${cost}, have ${totalAvailable}.`;
         await supabase
           .from("posts")
           .update({ status: "failed", error_message: msg })
@@ -759,12 +763,21 @@ serve(async (req) => {
         });
       }
 
-      // DEDUCT CREDITS (Optimistic Lock)
+      // DEDUCT TOKENS: free credits first, then purchased_tokens
+      let deductFromFree = Math.min(freeCredits, cost);
+      let deductFromPurchased = cost - deductFromFree;
+
+      const newFreeCredits = freeCredits - deductFromFree;
+      const newPurchasedTokens = purchasedTokens - deductFromPurchased;
+
       const { error: deductError } = await supabase
         .from("user_credits")
-        .update({ credits: currentCredits - cost })
+        .update({
+          credits: newFreeCredits,
+          purchased_tokens: newPurchasedTokens,
+        })
         .eq("user_id", post.user_id)
-        .eq("credits", currentCredits);
+        .eq("credits", freeCredits); // Optimistic lock on free credits
 
       if (deductError) {
         return new Response(

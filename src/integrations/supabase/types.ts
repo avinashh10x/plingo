@@ -346,6 +346,42 @@ export type Database = {
         }
         Relationships: []
       }
+      token_transactions: {
+        Row: {
+          id: string
+          user_id: string
+          amount_cents: number
+          tokens_granted: number
+          polar_order_id: string | null
+          polar_checkout_id: string | null
+          customer_email: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          amount_cents: number
+          tokens_granted: number
+          polar_order_id?: string | null
+          polar_checkout_id?: string | null
+          customer_email?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          amount_cents?: number
+          tokens_granted?: number
+          polar_order_id?: string | null
+          polar_checkout_id?: string | null
+          customer_email?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       user_limits: {
         Row: {
           created_at: string

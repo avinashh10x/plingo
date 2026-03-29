@@ -102,7 +102,7 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
   const location = useLocation();
   const { theme, toggleTheme } = useAppStore();
   const isMobile = useIsMobile();
-  const { credits } = useCredits();
+  const { credits, purchasedTokens, totalTokens } = useCredits();
 
   const isActive = (path: string) => {
     if (path === "/dashboard") {
@@ -124,11 +124,11 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
         <div className="flex items-center gap-2">
           {/* Credits Badge - Mobile */}
           <div className="flex items-center gap-1">
-            <CreditsPanel credits={credits}>
+            <CreditsPanel credits={credits} purchasedTokens={purchasedTokens} totalTokens={totalTokens}>
               <button className="flex items-center gap-1 px-2 py-1 bg-primary/10 rounded-full border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer outline-none">
                 <Coins className="h-3.5 w-3.5 text-primary" />
                 <span className="text-xs font-medium text-primary">
-                  <AnimatedCredits value={credits} />
+                  <AnimatedCredits value={totalTokens} />
                 </span>
               </button>
             </CreditsPanel>
@@ -179,11 +179,11 @@ export const DashboardHeader = ({ title, subtitle }: DashboardHeaderProps) => {
       {/* Right side actions */}
       <div className="flex items-center gap-3">
         {/* Credits Badge */}
-        <CreditsPanel credits={credits}>
+        <CreditsPanel credits={credits} purchasedTokens={purchasedTokens} totalTokens={totalTokens}>
           <button className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 rounded-full border border-primary/20 hover:bg-primary/20 transition-colors cursor-pointer outline-none">
             <Coins className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">
-              <AnimatedCredits value={credits} /> Credits
+              <AnimatedCredits value={totalTokens} /> Tokens
             </span>
           </button>
         </CreditsPanel>
