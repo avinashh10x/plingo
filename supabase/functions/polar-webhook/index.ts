@@ -1,12 +1,54 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { WebhookVerificationError, validateEvent } from "npm:@polar-sh/sdk/webhooks";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, webhook-id, webhook-timestamp, webhook-signature, x-debug-bypass",
 };
+
+// ============================================================
+// Native Svix Webhook Verification (Zero Dependency for Deno)
+// ============================================================
+async function verifyPolarWebhook(rawBody: string, req: Request, secret: string) {
+  const id = req.headers.get("webhook-id");
+  const timestamp = req.headers.get("webhook-timestamp");
+  const signatureHeader = req.headers.get("webhook-signature");
+
+  if (!id || !timestamp || !signatureHeader) {
+    throw new Error("Missing Svix webhook headers");
+  }
+
+  // Polar secrets typically start with "polar_whs_"
+  const unencodedSecret = secret.startsWith("polar_whs_") ? secret.split("_")[2] : secret;
+  const b64 = unencodedSecret.replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(b64);
+  const secretBytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) secretBytes[i] = bin.charCodeAt(i);
+
+  const payload = `${id}.${timestamp}.${rawBody}`;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    secretBytes,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign", "verify"]
+  );
+  
+  const signatureBytes = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(payload)
+  );
+  
+  const expectedSigBase64 = btoa(String.fromCharCode(...new Uint8Array(signatureBytes)));
+  const signatures = signatureHeader.split(" ").map(s => s.split(",")[1]);
+  
+  if (!signatures.includes(expectedSigBase64)) {
+    throw new Error(`Signature mismatch. Received: ${signatures.join(", ")}`);
+  }
+  
+  return JSON.parse(rawBody);
+}
 
 // ============================================================
 // Token Calculation: $3 = 1500 tokens → 5 tokens per cent
@@ -39,7 +81,7 @@ serve(async (req) => {
 
   try {
     const rawBody = await req.text();
-    console.log("Webhook received. Validating signature...");
+    console.log("Webhook received. Validating natively...");
 
     let event: any;
     
@@ -49,10 +91,9 @@ serve(async (req) => {
       console.log("Using DEBUG BYPASS fake event");
     } else {
       try {
-        const headers = Object.fromEntries(req.headers.entries());
-        event = validateEvent(rawBody, headers, webhookSecret);
+        event = await verifyPolarWebhook(rawBody, req, webhookSecret);
       } catch (err: any) {
-        console.error("Invalid webhook signature:", err);
+        console.error("Invalid webhook signature natively:", err?.message || err);
         return new Response(JSON.stringify({ error: "Invalid signature", details: err?.message || err }), {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,7 +101,7 @@ serve(async (req) => {
       }
     }
 
-    console.log("Webhook signature verified ✓");
+    console.log("Webhook signature verified natively ✓");
     const eventType = event.type;
     console.log("Full event data keys:", Object.keys(event.data || {}));
 
