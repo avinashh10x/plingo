@@ -56,7 +56,7 @@ serve(async (req) => {
       product_id: polarProductId,
       customer_email: user.email,
       external_customer_id: user.id,
-      success_url: success_url || `${req.headers.get("origin") || "https://plingo.byavi.in"}/dashboard?payment=success`,
+      success_url: success_url || `${req.headers.get("origin") || "https://plingo.byavi.in"}/dashboard/billing/success?checkout_id={CHECKOUT_ID}`,
       metadata: {
         supabase_user_id: user.id,
       },

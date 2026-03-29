@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Coins,
   Info,
@@ -41,30 +42,10 @@ export const CreditsPanel = ({
   const total = totalTokens ?? freeCredits + purchasedTokens;
   const maxFree = 100;
   const freePercentage = Math.min(100, (freeCredits / maxFree) * 100);
+  const navigate = useNavigate();
 
-  const handleBuyTokens = async () => {
-    if (!user) return;
-
-    setIsCheckoutLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("polar-checkout", {
-        body: {},
-      });
-
-      if (error) {
-        console.error("Checkout error:", error);
-        return;
-      }
-
-      // Redirect to Polar checkout
-      if (data?.checkout_url) {
-        window.location.href = data.checkout_url;
-      }
-    } catch (error) {
-      console.error("Failed to create checkout:", error);
-    } finally {
-      setIsCheckoutLoading(false);
-    }
+  const handleBuyTokens = () => {
+    navigate("/dashboard/billing");
   };
 
   return (
