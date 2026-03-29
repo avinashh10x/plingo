@@ -15,7 +15,7 @@ import {
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/stores/appStore";
-import { useCredits } from "@/hooks/useCredits";
+import { useCredits, formatTokens } from "@/hooks/useCredits";
 import {
   Tooltip,
   TooltipContent,
@@ -91,7 +91,7 @@ const AnimatedCredits = ({ value }: { value: number | null }) => {
           animation === "down" && "animate-slide-down",
         )}
       >
-        {displayValue}
+        {formatTokens(displayValue)}
       </span>
     </span>
   );

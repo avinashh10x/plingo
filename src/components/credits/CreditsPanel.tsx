@@ -6,7 +6,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Zap,
-  ExternalLink,
+  CreditCard,
   Loader2,
   Sparkles,
 } from "lucide-react";
@@ -159,7 +159,7 @@ export const CreditsPanel = ({
                 </>
               ) : (
                 <>
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <CreditCard className="h-3.5 w-3.5" />
                   Buy Tokens
                 </>
               )}

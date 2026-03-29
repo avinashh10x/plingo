@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { Webhook } from "npm:standardwebhooks";
+import { WebhookVerificationError, validateEvent } from "npm:@polar-sh/sdk/webhooks";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,18 +39,12 @@ serve(async (req) => {
 
   try {
     const rawBody = await req.text();
-
     console.log("Webhook received. Validating signature...");
 
-    // standardwebhooks expects "whsec_" prefix (Standard Webhooks format)
-    // Polar uses "polar_whs_" prefix for their secrets, so we swap it to conform.
-    const standardSecret = webhookSecret.replace("polar_whs_", "whsec_");
-    const webhook = new Webhook(standardSecret);
-    
     let event: any;
     try {
       const headers = Object.fromEntries(req.headers.entries());
-      event = webhook.verify(rawBody, headers);
+      event = validateEvent(rawBody, headers, webhookSecret);
     } catch (err) {
       console.error("Invalid webhook signature:", err);
       return new Response(JSON.stringify({ error: "Invalid signature" }), {

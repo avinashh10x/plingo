@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import confetti from "canvas-confetti";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -20,8 +21,22 @@ export function useCredits() {
   const [credits, setCredits] = useState<number | null>(null);
   const [purchasedTokens, setPurchasedTokens] = useState<number>(0);
   const [loading, setLoading] = useState(true);
+  const [prevTokens, setPrevTokens] = useState<number | null>(null);
 
   const totalTokens = (credits ?? 0) + purchasedTokens;
+
+  // Trigger celebration animation on token increase
+  useEffect(() => {
+    if (prevTokens !== null && totalTokens > prevTokens) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ["#ffd700", "#ff8c00", "#2dd4bf", "#8b5cf6"],
+      });
+    }
+    setPrevTokens(totalTokens);
+  }, [totalTokens, prevTokens]);
 
   const fetchCredits = useCallback(async () => {
     if (!user) {
